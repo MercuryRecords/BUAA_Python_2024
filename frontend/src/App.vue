@@ -1,4 +1,4 @@
-<script setup lang="ts" name="App">
+<script setup lang="js" name="App">
 import {RouterView, RouterLink} from 'vue-router'
 import axios from 'axios'
 import {reactive, ref} from "vue"
@@ -11,7 +11,7 @@ const data = reactive(
     }
 )
 
-function sendMessage(inputValue: string) {
+function sendMessage(inputValue) {
   console.log('hello,world')
   /*axios.post('/api/register/',data).then(
       function(){
@@ -30,6 +30,7 @@ function sendMessage(inputValue: string) {
           function () {
             console.log("error!")
           })
+  inputValue.value = ''
 }
 </script>
 
