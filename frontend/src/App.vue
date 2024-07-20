@@ -2,12 +2,21 @@
 import {RouterView, RouterLink} from 'vue-router'
 import axios from 'axios'
 import {ref} from "vue";
+import API from "@/plugins/axios";
 
 const data = ref('')
 
 function sendMessage() {
   console.log('hello,world')
-  axios.post('/api/register/',data).then(
+  /*axios.post('/api/register/',data).then(
+      function(){
+        console.log("successfully registered")
+      })
+      .catch(
+          function(){
+            console.log("error!")
+          })*/
+  API.post('/api/register',data).then(
       function(){
         console.log("successfully registered")
       })
