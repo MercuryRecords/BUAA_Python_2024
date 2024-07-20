@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from models import User
+from django.shortcuts import render, HttpResponse
+from users.models import User
 
 
 def user_register(request):
@@ -10,10 +10,10 @@ def user_register(request):
         if users:
             # 用户名已经存在，不予注册，返回错误信息
             return render(request, 'register.html', {'error_message': '用户名已存在。'})
-            pass
         else:
             # 创建用户并加入到数据库中，返回注册成功信息
-            User.objects.create_user(username=username, password=password)
+            User.objects.create(username=username, password=password)
+            return HttpResponse("注册成功")
 
     return render(request, 'register.html')
 
