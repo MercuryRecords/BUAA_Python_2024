@@ -11,7 +11,7 @@ const data = reactive(
     }
 )
 
-function sendMessage(inputValue) {
+function sendMessage() {
   console.log('hello,world')
   /*axios.post('/api/register/',data).then(
       function(){
@@ -21,8 +21,14 @@ function sendMessage(inputValue) {
           function(){
             console.log("error!")
           })*/
-  data.message = inputValue
-  API.post('/message', data).then(
+  data.message = inputValue.value
+  console.log(data.message)
+  API.post('/message', data,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(
       function () {
         console.log("successfully registered")
       })
@@ -38,7 +44,7 @@ function sendMessage(inputValue) {
   <div class="navigate">
     <!--    <RouterLink to="/home">首页</RouterLink>-->
     <input v-model="inputValue" type="text">
-    <button @click="sendMessage(inputValue)">sendMessage</button>
+    <button @click="sendMessage()">sendMessage</button>
   </div>
 
   <div class="main-content">
