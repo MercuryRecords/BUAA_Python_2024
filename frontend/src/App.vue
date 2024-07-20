@@ -1,47 +1,37 @@
-<script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+<script setup lang="ts" name="App">
+import {RouterView, RouterLink} from 'vue-router'
+import axios from 'axios'
+import {ref} from "vue";
+
+const data = ref('')
+
+function sendMessage() {
+  console.log('hello,world')
+  axios.post('/api/register/',data).then(
+      function(){
+        console.log("successfully registered")
+      })
+      .catch(
+          function(){
+            console.log("error!")
+          })
+  data.value = ''
+
+}
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+  <div class="navigate">
+    <!--    <RouterLink to="/home">首页</RouterLink>-->
+    <input v-model="data" type="text">
+    <button @click="sendMessage">sendMessage</button>
+  </div>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <div class="main-content">
+    <RouterView></RouterView>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-}
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
 </style>
