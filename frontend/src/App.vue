@@ -1,17 +1,12 @@
 <script setup lang="ts" name="App">
 import {RouterView, RouterLink} from 'vue-router'
 import axios from 'axios'
-import {reactive, ref} from "vue"
-import API from "@/plugins/axios"
+import {ref} from "vue";
+import API from "@/plugins/axios";
 
-const inputValue = ref('')
-const data = reactive(
-    {
-      message: ''
-    }
-)
+const data = ref('')
 
-function sendMessage(inputValue: string) {
+function sendMessage() {
   console.log('hello,world')
   /*axios.post('/api/register/',data).then(
       function(){
@@ -21,23 +16,24 @@ function sendMessage(inputValue: string) {
           function(){
             console.log("error!")
           })*/
-  data.message = inputValue
-  API.post('/api/register', data).then(
-      function () {
+  API.post('/message',data).then(
+      function(){
         console.log("successfully registered")
       })
       .catch(
-          function () {
+          function(){
             console.log("error!")
           })
+  data.value = ''
+
 }
 </script>
 
 <template>
   <div class="navigate">
     <!--    <RouterLink to="/home">首页</RouterLink>-->
-    <input v-model="inputValue" type="text">
-    <button @click="sendMessage(inputValue)">sendMessage</button>
+    <input v-model="data" type="text">
+    <button @click="sendMessage">sendMessage</button>
   </div>
 
   <div class="main-content">
