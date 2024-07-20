@@ -16,7 +16,7 @@ function sendMessage() {
           function(){
             console.log("error!")
           })*/
-  API.post('/api/register',data).then(
+  API.post('/message', data.value).then(
       function(){
         console.log("successfully registered")
       })
