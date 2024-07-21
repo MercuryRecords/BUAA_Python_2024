@@ -11,7 +11,7 @@ onUnmounted(()=>{
 </script>
 
 <template>
-  <h2>hello world!</h2>
+  <h2>welcome to our shared platform!</h2>
 </template>
 
 <style scoped>
