@@ -1,7 +1,7 @@
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 
-from .models import User, Manager, Group, JoinRequest
+from .models import User, Manager, Group, JoinRequest, ProblemGroup
 
 
 @require_http_methods(["POST"])
@@ -42,7 +42,8 @@ def user_register(request):
             res = {"code": 200, "message": "管理员注册成功"}
             return JsonResponse(res)
         elif usertype == '1':
-            User.objects.create(username=username, password=password)
+            user = User.objects.create(username=username, password=password)
+            ProblemGroup.objects.create(user=user, title="默认分组")
             res = {"code": 200, "message": "用户注册成功"}
             return JsonResponse(res)
 
@@ -60,7 +61,7 @@ def user_login(request):
     elif usertype == '1':
         check = User.objects.filter(username=username)
 
-    if check is None:
+    if not check:
         return JsonResponse({"code": 401, "message": "用户名不存在"})
 
     # 检查密码是否正确
