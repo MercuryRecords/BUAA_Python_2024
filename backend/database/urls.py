@@ -12,4 +12,6 @@ urlpatterns = [
     path('group_get_groups', views.group_get_groups, name='group_get_groups'),
     path('group_delete_all', views.group_delete_all, name='group_delete_all'),
     path('group_search', views.group_search, name='group_search'),
+
+    path('pdf/text', views.pdf_text),
 ]

@@ -52,12 +52,12 @@ class Problem(models.Model):
     ans_count = models.SmallIntegerField() # 选择题选项数量，填空题空的个数，小于等于7
     answer = models.SmallIntegerField() # 仅限选择题
     field1 = models.CharField(max_length=100)
-    field2 = models.CharField(max_length=100)
-    field3 = models.CharField(max_length=100)
-    field4 = models.CharField(max_length=100)
-    field5 = models.CharField(max_length=100)
-    field6 = models.CharField(max_length=100)
-    field7 = models.CharField(max_length=100)
+    field2 = models.CharField(max_length=100, blank=True)
+    field3 = models.CharField(max_length=100, blank=True)
+    field4 = models.CharField(max_length=100, blank=True)
+    field5 = models.CharField(max_length=100, blank=True)
+    field6 = models.CharField(max_length=100, blank=True)
+    field7 = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 class ProblemPremission(models.Model):
