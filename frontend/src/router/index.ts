@@ -6,8 +6,23 @@ const router = createRouter({ //创建路由器
     history: createWebHistory(), //路由器的工作模式
     routes: [ //路由规则path-component
         {
-            path: '/home',
-            component: Home
+            path: '/login',
+            name: 'login',
+            component: () => import('@/views/Login.vue'),
+        },
+        {
+            path: '/',
+            component: () => import('@/views/Login.vue'),
+        },
+        {
+            path: '/user',
+            name: 'user',
+            component: ()=> import('@/views/User.vue')
+        },
+        {
+            path: '/register',
+            name: 'register',
+            component: ()=> import('@/views/Register.vue')
         }
     ]
 })
