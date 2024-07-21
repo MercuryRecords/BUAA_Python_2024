@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_ocr
 
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
@@ -13,5 +13,5 @@ urlpatterns = [
     path('group_delete_all', views.group_delete_all, name='group_delete_all'),
     path('group_search', views.group_search, name='group_search'),
 
-    path('pdf/text', views.pdf_text),
+    path('pdf/text', views_ocr.pdf_text),
 ]

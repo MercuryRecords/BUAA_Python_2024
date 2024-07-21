@@ -4,12 +4,6 @@ from django.views.decorators.http import require_http_methods
 
 from .models import User, Manager, Group, JoinRequest, ProblemGroup
 
-# OCR library
-import os
-import fitz
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
-
 @require_http_methods(["POST"])
 def message(request):
     mes = request.POST.get('message')
@@ -273,27 +267,3 @@ def group_search(request):
 
     sorted_results = sorted(related_count.items(), key=lambda x: x[1], reverse=True)
     return JsonResponse({"code": 200, "message": "搜索成功", "groups": [group for group, _ in sorted_results]})
-
-
-
-
-# OCR
-
-@require_http_methods(["POST"])
-def pdf_text(request):
-    pdf_file = request.FILES['file']
-    
-    fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'upload/pdf'))
-    filename = fs.save(pdf_file.name, pdf_file)
-    uploaded_file_path = fs.path(filename)
-
-    # print(uploaded_file_path)
-
-    doc = fitz.open(uploaded_file_path)
-    
-    text = ""
-    for page in doc:
-        text += page.get_text()
-    doc.close()
-
-    return JsonResponse({"code": 200, 'text': text})
