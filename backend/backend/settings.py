@@ -32,6 +32,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # CSRF_TRUSTED_ORIGINS = ['http://localhost:5173']
 
+# AUTH_USER_MODEL = 'database.User'
 
 ALLOWED_HOSTS = []
 

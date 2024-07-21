@@ -26,11 +26,11 @@ function userRegister() {
   data.password = password.value
   data.usertype = usertype.value
   console.log(data)
-  API.post('/user_register/', data,
+  API.post('/user_register', data,
       {
-        // headers: {
-        //   'Content-Type': 'application/x-www-form-urlencoded'
-        // }
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       }).then(
       function (response) {
         returnValue.code = response.data.code
