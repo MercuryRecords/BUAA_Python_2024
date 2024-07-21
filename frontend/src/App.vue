@@ -1,4 +1,4 @@
-<script setup lang="js" name="App">
+<script setup lang="ts" name="App">
 import {RouterView, RouterLink} from 'vue-router'
 import axios from 'axios'
 import {reactive, ref} from "vue"
