@@ -8,7 +8,6 @@ from django.db.models import Q
 class User(models.Model):
     username = models.CharField(max_length=100, unique=True)
     password = models.CharField(max_length=100)
-    # groups = models.ManyToManyField(Group, related_name='members')
 
 
 class Manager(models.Model):
@@ -40,8 +39,6 @@ class JoinRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     apply_reason = models.TextField(max_length=200, blank=True)
-    # status = models.CharField(max_length=20,
-    #                           choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('rejected', 'Rejected')])
 
 class ProblemGroup(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -67,3 +64,4 @@ class ProblemPremission(models.Model):
     group = models.ForeignKey(Group, blank=True, on_delete=models.CASCADE) # 用户群组
     problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE) # 问题群组
     permission = models.SmallIntegerField() # 权限，1只读，2可读可编辑
+    apply_reason = models.TextField(max_length=200, blank=True)

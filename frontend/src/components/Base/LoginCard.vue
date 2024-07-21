@@ -94,6 +94,7 @@ const jumpToRegister = (formEl: FormInstance | undefined) => {
       :rules="rules"
       label-width="auto"
       class="demo-ruleForm"
+      background-color:white
   >
     <el-form-item label="Name" prop="name">
       <el-input v-model.number="ruleForm.name"/>
@@ -103,8 +104,8 @@ const jumpToRegister = (formEl: FormInstance | undefined) => {
     </el-form-item>
     <el-form-item label="Mode">
       <el-radio-group v-model="ruleForm.mode">
-        <el-radio value=0>User</el-radio>
-        <el-radio value=1>Admin</el-radio>
+        <el-radio value=0>Admin</el-radio>
+        <el-radio value=1>User</el-radio>
       </el-radio-group>
     </el-form-item>
     <el-form-item>
