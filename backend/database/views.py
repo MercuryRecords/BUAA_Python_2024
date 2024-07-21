@@ -4,6 +4,7 @@ from django.views.decorators.http import require_http_methods
 
 from .models import User, Manager, Group, JoinRequest, ProblemGroup
 
+
 @require_http_methods(["POST"])
 def message(request):
     mes = request.POST.get('message')
@@ -267,3 +268,23 @@ def group_search(request):
 
     sorted_results = sorted(related_count.items(), key=lambda x: x[1], reverse=True)
     return JsonResponse({"code": 200, "message": "搜索成功", "groups": [group for group, _ in sorted_results]})
+
+
+@require_http_methods(["POST"])
+def admin_delete_user(request):
+    username = request.POST.get('username')
+    user = User.objects.filter(username=username)
+    if not user:
+        return JsonResponse({"code": 401, "message": "要删除的用户不存在"})
+    user.delete()
+    return JsonResponse({"code": 200, "message": "用户已删除"})
+
+
+@require_http_methods(["POST"])
+def admin_delete_group(request):
+    group_name = request.POST.get('group_name')
+    group = Group.objects.filter(group_name=group_name)
+    if not group:
+        return JsonResponse({"code": 401, "message": "要删除的群组不存在"})
+    group.delete()
+    return JsonResponse({"code": 200, "message": "群组已删除"})

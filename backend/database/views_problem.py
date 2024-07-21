@@ -3,6 +3,7 @@ from django.views.decorators.http import require_http_methods
 
 from .models import User, ProblemGroup, Problem, ProblemPremission
 
+
 @require_http_methods(["POST"])
 def problem_group_create(request):
     username = request.POST.get('username')
@@ -18,12 +19,13 @@ def problem_group_create(request):
 
     if len(description) > 200:
         return JsonResponse({"code": 403, "message": "描述长度不能超过200"})
-    
+
     if ProblemGroup.objects.filter(user=check[0], title=title):
         return JsonResponse({"code": 404, "message": "问题组已存在"})
 
     ProblemGroup.objects.create(user=check[0], title=title, description=description)
     return JsonResponse({"code": 200, "message": "问题组创建成功"})
+
 
 @require_http_methods(["POST"])
 def problem_create(request):
