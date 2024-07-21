@@ -61,14 +61,14 @@ def user_login(request):
     elif usertype == '1':
         check = User.objects.filter(username=username)
 
-    if check is None:
+    if not check:
         return JsonResponse({"code": 401, "message": "用户名不存在"})
 
     # 检查密码是否正确
-    print(check)
-    print(check[0])
-    print(check[0].password)
-    print(password)
+    # print(check)
+    # print(check[0])
+    # print(check[0].password)
+    # print(password)
     if check[0].password != password:
         return JsonResponse({"code": 402, "message": "密码错误"})
 
