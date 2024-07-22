@@ -12,7 +12,8 @@ const router = createRouter({ //创建路由器
         },
         {
             path: '/',
-            component: () => import('@/views/Login.vue'),
+            redirect: '/login',
+            // component: () => import('@/views/Login.vue'),
         },
         {
             path: '/user',
@@ -25,9 +26,24 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/Register.vue')
         },
         {
-            path: '/home',
-            name: 'home',
-            component: () => import('@/views/Home.vue'),
+            path: '/group',
+            name: 'group',
+            component: () => import('@/views/Group.vue'),
+        },
+        {
+            path: '/question',
+            name: 'question',
+            component: () => import('@/views/QuestionBank.vue'),
+        },
+        {
+            path: '/groupC',
+            name: 'groupCreated',
+            component: () => import('@/views/GroupCreated.vue'),
+        },
+        {
+            path: '/groupJ',
+            name: 'groupJoin',
+            component: () => import('@/views/GroupJoin.vue'),
         },
     ]
 })
