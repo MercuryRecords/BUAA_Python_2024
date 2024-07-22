@@ -66,7 +66,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
               router.push({
                     path: '/home',
                     query: {
-                      username: data.username
+                      username: data.username //logincard->/home，将username传给home,home的url带有username
                     },
                   }); //传入这个人的参数，它的数据库
             } else {

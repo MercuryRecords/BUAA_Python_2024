@@ -121,15 +121,17 @@
         <v-divider></v-divider>
 
         <v-list density="compact" nav>
-          <v-list-item prepend-icon="mdi-folder" title="我的题库" value="myfiles" :to="{name:'question' ,query: {username: 'gyk'}}"></v-list-item>
+          <v-list-item prepend-icon="mdi-folder" title="我的题库" value="myfiles"
+                       :to="{name:'question' ,query: {username: props.username}}"></v-list-item>
           <v-list-item prepend-icon="mdi-account-multiple" title="" value="mygroup">
             <v-list density="compact" nav>
               <v-list-item prepend-icon="mdi-folder" title="我创建的" value="create"
-              :to="{name:'groupCreated', query: {username: 'gyk'}}"
-              >
+                           :to="{name:'groupCreated', query: {username: props.username}}"
+              > <!--这里把username传给groupCreated模块了-->
               </v-list-item>
 
-              <v-list-item prepend-icon="mdi-account-multiple" title="我加入的" value="join" :to="{name:'groupJoin', query: {username: 'gyk'}}">
+              <v-list-item prepend-icon="mdi-account-multiple" title="我加入的" value="join"
+                           :to="{name:'groupJoin', query: {username: props.username}}">
               </v-list-item>
 
               <v-list-item prepend-icon="mdi-star" title="我收藏的" value="starred"></v-list-item>
@@ -145,4 +147,8 @@
 </template>
 
 <script setup lang="ts">
+import {onMounted, onUnmounted} from "vue";
+
+const props = defineProps(['username']) //Navigator拿到一直传进来的username，之后的函数操作都要有
+onMounted(()=>console.log(props.username))
 </script>
