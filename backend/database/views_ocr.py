@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import fitz
@@ -20,7 +21,7 @@ def pdf_to_images(pdf_path, output_folder):
 
 
 @require_http_methods(["POST"])
-def pdf_text(request):
+def ocr_view(request):
     upload_file = request.FILES['file']
     if upload_file.name.split('.')[-1] == 'pdf':
         text = []
