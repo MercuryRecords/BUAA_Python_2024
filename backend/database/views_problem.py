@@ -164,7 +164,7 @@ def problem_create(request):
                            answer=answer,
                            field1=field[0], field2=field[1], field3=field[2], field4=field[3], field5=field[4],
                            field6=field[5], field7=field[6],
-                           creater=user)
+                           creator=user)
 
     problem_group.problem_num = index
     problem_group.save()

@@ -51,10 +51,10 @@ class ProblemGroup(models.Model):
 class Problem(models.Model):
     problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE)
     index = models.IntegerField()
-    type = models.CharField(max_length=1) # 'c'(choice)选择题，'b'(blank)填空题
-    content = models.TextField(max_length=1000) # 题干
-    ans_count = models.SmallIntegerField() # 选择题选项数量，填空题空的个数，小于等于7
-    answer = models.CharField(max_length=1, blank=True) # 仅限选择题
+    type = models.CharField(max_length=1)  # 'c'(choice)选择题，'b'(blank)填空题
+    content = models.TextField(max_length=1000)  # 题干
+    ans_count = models.SmallIntegerField()  # 选择题选项数量，填空题空的个数，小于等于7
+    answer = models.CharField(max_length=1, blank=True)  # 仅限选择题
     field1 = models.CharField(max_length=100)
     field2 = models.CharField(max_length=100, blank=True)
     field3 = models.CharField(max_length=100, blank=True)
@@ -62,11 +62,11 @@ class Problem(models.Model):
     field5 = models.CharField(max_length=100, blank=True)
     field6 = models.CharField(max_length=100, blank=True)
     field7 = models.CharField(max_length=100, blank=True)
-    creater = models.ForeignKey(User, on_delete=models.CASCADE)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class ProblemPremission(models.Model):
-    group = models.ForeignKey(Group, blank=True, on_delete=models.CASCADE) # 用户群组
-    problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE) # 问题群组
-    permission = models.SmallIntegerField() # 权限，0 仅可查看，1 可查看并添加问题，2 全部权限
+    group = models.ForeignKey(Group, blank=True, on_delete=models.CASCADE)  # 用户群组
+    problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE)  # 问题群组
+    permission = models.SmallIntegerField()  # 权限，0 仅可查看，1 可查看并添加问题，2 全部权限
