@@ -1,15 +1,13 @@
-<script lang="ts">
+<script setup lang="ts" name="App">
 import Login from "@/views/Login.vue";
 import Register from "@/views/Register.vue";
 import User from '@/views/User.vue';
 import UserQuestionBank from '@/components/Base/Navigator.vue';
 import Navigator from "@/components/Base/Navigator.vue";
+import GroupCreated from "./views/GroupCreated.vue";
 
-export default {
-  name: "App",
-  components: {Navigator, UserQuestionBank, Login, Register, User}
-}
 </script>
+
 
 <template>
 <!--  <div class="common-layout">-->
@@ -25,10 +23,8 @@ export default {
 <!--        </el-aside>-->
 
 <!--        <el-container>-->
-          <el-main>
             <!--              主体内容-->
             <RouterView></RouterView>
-          </el-main>
 <!--        </el-container>-->
 <!--      </el-container>-->
 

@@ -21,6 +21,11 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/User.vue')
         },
         {
+            path: '/home',
+            name: 'home',
+            component: () => import('@/views/Home.vue')
+        },
+        {
             path: '/register',
             name: 'register',
             component: () => import('@/views/Register.vue')

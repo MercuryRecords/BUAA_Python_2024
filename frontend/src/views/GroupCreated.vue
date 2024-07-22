@@ -18,10 +18,10 @@ import Navigator from "@/components/Base/Navigator.vue";
         </el-aside>
 
         <el-container>
-          <el-main>
+          <el-main class="shifted-content">
             <h1>我创建的群组</h1>
             <!--              主体内容-->
-            <RouterView></RouterView>
+            <CreateGroup :username="$route.query.username"></CreateGroup>
           </el-main>
         </el-container>
       </el-container>
@@ -29,12 +29,13 @@ import Navigator from "@/components/Base/Navigator.vue";
     </el-container>
   </div>
 
-
-
-  <CreateGroup :username="$route.query.username"></CreateGroup>
 </template>
 
 <style scoped>
+.shifted-content {
+  margin-left: 80px;
+  margin-right: 80px;
+}
 .el-menu {
   border-right: none;
 }
