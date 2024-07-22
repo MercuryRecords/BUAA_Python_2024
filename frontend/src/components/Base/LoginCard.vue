@@ -63,7 +63,12 @@ const submitForm = (formEl: FormInstance | undefined) => {
             if (response.data.code === 200) {
               ElMessage.success(response.data.message);
               console.log(router)
-              router.push('/home')
+              router.push({
+                    path: '/home',
+                    query: {
+                      username: data.username
+                    },
+                  }); //传入这个人的参数，它的数据库
             } else {
               console.log(response.data.code)
               ElMessage.error(response.data.message)
