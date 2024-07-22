@@ -50,7 +50,7 @@ class ProblemGroup(models.Model):
 
 class Problem(models.Model):
     problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE)
-    index = models.IntegerField()
+    index = models.IntegerField(default=-1)
     type = models.CharField(max_length=1)  # 'c'(choice)选择题，'b'(blank)填空题
     content = models.TextField(max_length=1000)  # 题干
     ans_count = models.SmallIntegerField()  # 选择题选项数量，填空题空的个数，小于等于7
@@ -62,7 +62,7 @@ class Problem(models.Model):
     field5 = models.CharField(max_length=100, blank=True)
     field6 = models.CharField(max_length=100, blank=True)
     field7 = models.CharField(max_length=100, blank=True)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, blank=True)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
 
