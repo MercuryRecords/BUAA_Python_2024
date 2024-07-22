@@ -2,8 +2,6 @@
 // @ts-ignore
 import CreateGroup from "@/components/Base/CreateGroup.vue";
 import Navigator from "@/components/Base/Navigator.vue";
-
-const data = defineProps(['username'])
 </script>
 
 <template>
@@ -22,10 +20,6 @@ const data = defineProps(['username'])
         <el-container>
           <el-main>
             <h1>我创建的群组</h1>
-            <p>
-              哈哈
-              {{$route.query.username}}
-            </p>
             <!--              主体内容-->
             <RouterView></RouterView>
           </el-main>
