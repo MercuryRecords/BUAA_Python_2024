@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_ocr, views_admin
+from . import views, views_problem, views_ocr, views_admin
 
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
@@ -23,4 +23,13 @@ urlpatterns = [
     path("admin_edit_group_info", views_admin.admin_edit_group_info, name="admin_edit_group_info"),
 
     path('ocr', views_ocr.ocr_view),
+
+    path('problem_group_create', views_problem.problem_group_create),
+    path('problem_group_update', views_problem.problem_group_update),
+    path('problem_group_delete', views_problem.problem_group_delete),
+    path('problem_create', views_problem.problem_create),
+    path('problem_update', views_problem.problem_update),
+    path('problem_delete', views_problem.problem_delete),
+    path('problem_adjust_order', views_problem.problem_adjust_order),
+    
 ]
