@@ -125,6 +125,7 @@ def problem_group_delete(request):
     problem_group.delete()
     return _success("问题组删除成功")
 
+
 @require_http_methods(["POST"])
 def problem_create(request):
     problem_group = _get_problem_group(request, 1)

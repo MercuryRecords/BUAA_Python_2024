@@ -40,11 +40,13 @@ class JoinRequest(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     apply_reason = models.TextField(max_length=200, blank=True)
 
+
 class ProblemGroup(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
     description = models.TextField(max_length=200, blank=True)
     problem_num = models.IntegerField(default=0)
+
 
 class Problem(models.Model):
     problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE)
@@ -62,6 +64,7 @@ class Problem(models.Model):
     field7 = models.CharField(max_length=100, blank=True)
     creater = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
 
 class ProblemPremission(models.Model):
     group = models.ForeignKey(Group, blank=True, on_delete=models.CASCADE) # 用户群组

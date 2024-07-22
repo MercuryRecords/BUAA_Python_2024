@@ -4,6 +4,7 @@ from django.views.decorators.http import require_http_methods
 
 from .models import User, Manager, Group, JoinRequest, ProblemGroup
 
+
 @require_http_methods(["POST"])
 def message(request):
     mes = request.POST.get('message')
@@ -91,7 +92,7 @@ def group_create(request):
         return JsonResponse({"code": 402, "message": "群组名长度不能超过100"})
 
     # 检查群组名是否已经存在
-    if Group.objects.filter(group_name=group_name).exists():
+    if Group.objects.filter(name=group_name).exists():
         return JsonResponse({"code": 403, "message": "群组名已存在"})
 
     if len(group_description) > 200:
@@ -115,7 +116,7 @@ def group_apply_to_join(request):
         return JsonResponse({"code": 401, "message": "用户不存在"})
 
     # 检查群组是否存在
-    group = Group.objects.filter(group_name=group_name)
+    group = Group.objects.filter(name=group_name)
 
     if not group:
         return JsonResponse({"code": 402, "message": "群组不存在"})
@@ -146,7 +147,7 @@ def group_handle_join_request(request):
         return JsonResponse({"code": 401, "message": "用户不存在"})
 
     # 检查群组是否存在
-    group = Group.objects.filter(group_name=group_name)
+    group = Group.objects.filter(name=group_name)
     if not group:
         return JsonResponse({"code": 402, "message": "群组不存在"})
 
@@ -178,7 +179,7 @@ def group_delete_member(request):
         return JsonResponse({"code": 401, "message": "要删除的用户不存在"})
 
     # 检查群组是否存在
-    group = Group.objects.filter(group_name=group_name)
+    group = Group.objects.filter(name=group_name)
     if not group:
         return JsonResponse({"code": 402, "message": "群组不存在"})
 
@@ -207,7 +208,7 @@ def group_quit(request):
         return JsonResponse({"code": 401, "message": "用户不存在"})
 
     # 检查群组是否存在
-    group = Group.objects.filter(group_name=group_name)
+    group = Group.objects.filter(name=group_name)
     if not group:
         return JsonResponse({"code": 402, "message": "群组不存在"})
 
@@ -238,7 +239,7 @@ def group_delete_all(request):
     owner_name = request.POST.get('owner_name')
 
     # 检查群组是否存在
-    group = Group.objects.filter(group_name=group_name)
+    group = Group.objects.filter(name=group_name)
     if not group:
         return JsonResponse({"code": 401, "message": "群组不存在"})
 
@@ -247,7 +248,7 @@ def group_delete_all(request):
         return JsonResponse({"code": 402, "message": "群主不是该群组的创建者"})
 
     # 删除群组
-    Group.objects.filter(group_name=group_name).delete()
+    Group.objects.filter(name=group_name).delete()
 
 
 @require_http_methods(["POST"])
@@ -267,3 +268,23 @@ def group_search(request):
 
     sorted_results = sorted(related_count.items(), key=lambda x: x[1], reverse=True)
     return JsonResponse({"code": 200, "message": "搜索成功", "groups": [group for group, _ in sorted_results]})
+
+
+@require_http_methods(["POST"])
+def admin_delete_user(request):
+    username = request.POST.get('username')
+    user = User.objects.filter(username=username)
+    if not user:
+        return JsonResponse({"code": 401, "message": "要删除的用户不存在"})
+    user.delete()
+    return JsonResponse({"code": 200, "message": "用户已删除"})
+
+
+@require_http_methods(["POST"])
+def admin_delete_group(request):
+    group_name = request.POST.get('group_name')
+    group = Group.objects.filter(name=group_name)
+    if not group:
+        return JsonResponse({"code": 401, "message": "要删除的群组不存在"})
+    group.delete()
+    return JsonResponse({"code": 200, "message": "群组已删除"})

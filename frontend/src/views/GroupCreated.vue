@@ -1,3 +1,11 @@
+<script setup lang="ts">
+// @ts-ignore
+import CreateGroup from "@/components/Base/CreateGroup.vue";
+import Navigator from "@/components/Base/Navigator.vue";
+
+const data = defineProps(['username'])
+</script>
+
 <template>
   <div class="common-layout">
     <el-container>
@@ -8,11 +16,16 @@
       <el-container>
         <el-aside width="200px">
           <!--            导航栏-->
-          <Navigator :username="$route.query.username"></Navigator> <!--将username向下传给Navigator组件-->
+          <Navigator></Navigator> <!--挂上导航栏，点击即可跳转,现在的位置是home/username=?-->
         </el-aside>
 
         <el-container>
           <el-main>
+            <h1>我创建的群组</h1>
+            <p>
+              哈哈
+              {{$route.query.username}}
+            </p>
             <!--              主体内容-->
             <RouterView></RouterView>
           </el-main>
@@ -21,15 +34,13 @@
 
     </el-container>
   </div>
+
+
+
+  <CreateGroup :username="$route.query.username"></CreateGroup>
 </template>
 
-<script lang="ts" setup>
-
-import Navigator from "@/components/Base/Navigator.vue";
-
-</script>
-
-<style>
+<style scoped>
 .el-menu {
   border-right: none;
 }
