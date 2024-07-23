@@ -312,10 +312,11 @@ def group_delete_all(request):
 
     # 检查群主是否为该群组的创建者
     if group[0].created_by.username != owner_name:
-        return JsonResponse({"code": 402, "message": "群主不是该群组的创建者"})
+        return JsonResponse({"code": 402, "message": "操作者不是该群组的创建者"})
 
     # 删除群组
     Group.objects.filter(name=group_name).delete()
+    return JsonResponse({"code": 200, "message": "群组删除成功"})
 
 
 @require_http_methods(["POST"])
