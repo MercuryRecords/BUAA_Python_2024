@@ -13,6 +13,9 @@ urlpatterns = [
     path('group_delete_all', views.group_delete_all, name='group_delete_all'),
     path('group_search', views.group_search, name='group_search'),
 
+    # 初版接口
+    path('group_join_forced', views.group_join_forced, name='group_join_forced'),
+
     path('admin_register_user', views_admin.admin_register_user, name='admin_register_user'),
     path('admin_delete_user', views_admin.admin_delete_user, name='admin_delete_user'),
     path('admin_get_user_list', views_admin.admin_get_user_list, name='admin_get_user_list'),

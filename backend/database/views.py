@@ -107,6 +107,30 @@ def group_create(request):
 
 
 @require_http_methods(["POST"])
+def group_join_forced(request):
+    username = request.POST.get('username')
+    group_name = request.POST.get('group_name')
+
+    # 检查用户是否存在
+    check = User.objects.filter(username=username)
+    if not check:
+        return JsonResponse({"code": 401, "message": "用户不存在"})
+
+    # 检查群组是否存在
+    group = Group.objects.filter(name=group_name)
+    if not group:
+        return JsonResponse({"code": 402, "message": "群组不存在"})
+
+    # 检查用户是否已经在群组中
+    if check[0] in group[0].members.all():
+       return JsonResponse({"code": 403, "message": "用户已经在群组中"})
+
+    # 将用户添加到群组中
+    group[0].members.add(check[0])
+    return JsonResponse({"code": 200, "message": f"加入 {group_name} 成功"})
+
+
+@require_http_methods(["POST"])
 def group_apply_to_join(request):
     username = request.POST.get('username')
     group_name = request.POST.get('group_name')
@@ -272,22 +296,21 @@ def group_search(request):
     sorted_results = sorted(related_count.items(), key=lambda x: x[1], reverse=True)
     return JsonResponse({"code": 200, "message": "搜索成功", "groups": [group for group, _ in sorted_results]})
 
-
-@require_http_methods(["POST"])
-def admin_delete_user(request):
-    username = request.POST.get('username')
-    user = User.objects.filter(username=username)
-    if not user:
-        return JsonResponse({"code": 401, "message": "要删除的用户不存在"})
-    user.delete()
-    return JsonResponse({"code": 200, "message": "用户已删除"})
-
-
-@require_http_methods(["POST"])
-def admin_delete_group(request):
-    group_name = request.POST.get('group_name')
-    group = Group.objects.filter(name=group_name)
-    if not group:
-        return JsonResponse({"code": 401, "message": "要删除的群组不存在"})
-    group.delete()
-    return JsonResponse({"code": 200, "message": "群组已删除"})
+# @require_http_methods(["POST"])
+# def admin_delete_user(request):
+#     username = request.POST.get('username')
+#     user = User.objects.filter(username=username)
+#     if not user:
+#         return JsonResponse({"code": 401, "message": "要删除的用户不存在"})
+#     user.delete()
+#     return JsonResponse({"code": 200, "message": "用户已删除"})
+#
+#
+# @require_http_methods(["POST"])
+# def admin_delete_group(request):
+#     group_name = request.POST.get('group_name')
+#     group = Group.objects.filter(name=group_name)
+#     if not group:
+#         return JsonResponse({"code": 401, "message": "要删除的群组不存在"})
+#     group.delete()
+#     return JsonResponse({"code": 200, "message": "群组已删除"})
