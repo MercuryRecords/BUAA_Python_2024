@@ -96,7 +96,6 @@ function handleDelete(row: Group) {
   API.post('/group_delete_all', {
     username: data.username,
     group_name: row.name,
-    owner_name: data.username,
   }, {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'

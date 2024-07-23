@@ -103,6 +103,7 @@ function handleSearch() {
   searchVisible.value = true
   searchData.length = 0 //清空搜索结果
   API.post('/group_search', {
+    username: data.username,
     keywords: search.value
   }, {
     headers: {
