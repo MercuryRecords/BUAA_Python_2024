@@ -13,7 +13,6 @@ const form = reactive({
 let editVisible = ref(false);
 let deleteVisible = ref(false);
 let centerDialogVisible = ref(false)
-let searchVisible = ref(false)
 
 interface Group {
   name: string
@@ -92,35 +91,6 @@ function handleEdit() {
   editVisible.value = true;
 }
 
-function handleSearch() {
-  searchVisible.value = true
-  console.log(search.value)
-  API.post('/group_search', {
-    keywords: search.value
-  }, {
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded'
-    }
-  }).then(
-      function (response) {
-        if (response.data.code === 200) {
-          console.log(response.data)
-          for (let i = 0; i < response.data.groups.length; i++) {
-            searchData.push(response.data.groups[i])
-          }
-          ElMessage.success(response.data.message); //成功退出
-        } else {
-          ElMessage.error(response.data.message);
-        }
-        window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
-        showData();
-      }
-  ).catch(
-      function () {
-        console.log('error search!')
-      })
-}
-
 function handleDelete(row: Group) {
   deleteVisible.value = true;
   API.post('/group_delete_all', {
@@ -172,8 +142,8 @@ function handleDelete(row: Group) {
 
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="handleClose">取 消</el-button>
         <el-button type="primary" @click="handleSubmit">确 定</el-button>
+        <el-button @click="handleClose">取 消</el-button>
       </span>
     </el-dialog>
   </div>
@@ -211,9 +181,9 @@ function handleDelete(row: Group) {
 
       </el-table-column>
       <el-table-column align="center">
-        <template #header>
-          <el-input v-model="search" @keyup="handleSearch" size="large" placeholder="search the group!"/>
-        </template>
+<!--        <template #header>-->
+<!--          <el-input v-model="search" @keyup.enter="handleSearch" size="large" placeholder="输入完毕请按回车！"/>-->
+<!--        </template>-->
         <template #default="scope">
           <el-button size="large" @click="handleEdit()">
             Edit
