@@ -1,4 +1,4 @@
-from django.db.models import Q
+from django.db.models import Q, QuerySet
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 
@@ -123,7 +123,7 @@ def group_join_forced(request):
 
     # 检查用户是否已经在群组中
     if check[0] in group[0].members.all():
-       return JsonResponse({"code": 403, "message": "用户已经在群组中"})
+        return JsonResponse({"code": 403, "message": "用户已经在群组中"})
 
     # 将用户添加到群组中
     group[0].members.add(check[0])
@@ -247,6 +247,20 @@ def group_quit(request):
     return JsonResponse({"code": 200, "message": "用户已退出群组"})
 
 
+def groups_in_details(groups: QuerySet[Group]):
+    result = []
+    for group in groups:
+        members_count = group.members.count()
+        result.append({
+            'name': group.name,
+            'description': group.description,
+            'creator': group.created_by.username,
+            'created_time': group.created_at,
+            'members_count': members_count
+        })
+    return result
+
+
 @require_http_methods(["POST"])
 # 用户获取所在的所有组
 def group_get_groups(request):
@@ -256,7 +270,33 @@ def group_get_groups(request):
         return JsonResponse({"code": 401, "message": "用户不存在"})
 
     groups = check[0].groups.all()
-    return JsonResponse({"code": 200, "message": "获取成功", "groups": list(groups.values())})
+    return JsonResponse({"code": 200, "message": "获取成功", "groups": groups_in_details(groups)})
+
+
+@require_http_methods(["POST"])
+def group_get_groups_created(request):
+    username = request.POST.get('username')
+    check = User.objects.filter(username=username)
+    if not check:
+        return JsonResponse({"code": 401, "message": "用户不存在"})
+
+    groups = Group.objects.filter(created_by=check[0])
+    print("group_get_groups_created:")
+    print(groups_in_details(groups))
+    return JsonResponse({"code": 200, "message": "获取成功", "groups": groups_in_details(groups)})
+
+
+@require_http_methods(["POST"])
+def group_get_groups_joined(request):
+    username = request.POST.get('username')
+    check = User.objects.filter(username=username)
+    if not check:
+        return JsonResponse({"code": 401, "message": "用户不存在"})
+
+    groups = check[0].groups.all().exclude(Q(created_by=check[0]))
+    print("group_get_groups_joined:")
+    print(groups_in_details(groups))
+    return JsonResponse({"code": 200, "message": "获取成功", "groups": groups_in_details(groups)})
 
 
 @require_http_methods(["POST"])
