@@ -12,6 +12,7 @@ urlpatterns = [
     path('group_get_groups', views.group_get_groups, name='group_get_groups'),
     path('group_get_groups_created', views.group_get_groups_created, name='group_get_groups_created'),
     path('group_get_groups_joined', views.group_get_groups_joined, name='group_get_groups_joined'),
+    path('group_get_members', views.group_get_members, name='group_get_members'),
     path('group_delete_all', views.group_delete_all, name='group_delete_all'),
     path('group_search', views.group_search, name='group_search'),
 

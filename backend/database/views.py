@@ -338,6 +338,16 @@ def group_search(request):
     result = groups_in_details([group for group, _ in sorted_results])
     return JsonResponse({"code": 200, "message": "搜索成功", "groups": result})
 
+
+@require_http_methods(["POST"])
+def group_get_members(request):
+    group_name = request.POST.get('group_name')
+    group = Group.objects.filter(name=group_name)
+    if not group:
+        return JsonResponse({"code": 401, "message": "群组不存在"})
+    members = group[0].members.all()
+    return JsonResponse({"code": 200, "message": "获取成功", "members": [member.username for member in members]})
+
 # @require_http_methods(["POST"])
 # def admin_delete_user(request):
 #     username = request.POST.get('username')
