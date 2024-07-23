@@ -22,7 +22,7 @@ def user_register(request):
         check = Manager.objects.filter(username=username)
     elif usertype == '1':
         check = User.objects.filter(username=username)
-    print(f"usertype: {usertype}, username: {username}, password: {password}, check: {check}")
+    # print(f"usertype: {usertype}, username: {username}, password: {password}, check: {check}")
     if check:
         # 用户名已经存在，不予注册，返回错误信息
         res = {"code": 401, "message": "用户名已存在"}
@@ -54,7 +54,7 @@ def user_login(request):
     username = request.POST.get('username')
     password = request.POST.get('password')
     usertype = request.POST.get('usertype')
-    print(f"usertype: {usertype}, username: {username}, password: {password}")
+    # print(f"usertype: {usertype}, username: {username}, password: {password}")
 
     check = None
     if usertype == '0':
@@ -72,7 +72,7 @@ def user_login(request):
     # print(password)
     if check[0].password != password:
         return JsonResponse({"code": 402, "message": "密码错误"})
-
+    request.session["username"] = username
     return JsonResponse({"code": 200, "message": "登录成功"})
 
 
@@ -281,8 +281,8 @@ def group_get_groups_created(request):
         return JsonResponse({"code": 401, "message": "用户不存在"})
 
     groups = Group.objects.filter(created_by=check[0])
-    print("group_get_groups_created:")
-    print(groups_in_details(groups))
+    # print("group_get_groups_created:")
+    # print(groups_in_details(groups))
     return JsonResponse({"code": 200, "message": "获取成功", "groups": groups_in_details(groups)})
 
 
@@ -294,8 +294,8 @@ def group_get_groups_joined(request):
         return JsonResponse({"code": 401, "message": "用户不存在"})
 
     groups = check[0].groups.all().exclude(Q(created_by=check[0]))
-    print("group_get_groups_joined:")
-    print(groups_in_details(groups))
+    # print("group_get_groups_joined:")
+    # print(groups_in_details(groups))
     return JsonResponse({"code": 200, "message": "获取成功", "groups": groups_in_details(groups)})
 
 

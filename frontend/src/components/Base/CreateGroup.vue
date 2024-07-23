@@ -124,6 +124,7 @@ function handleSearch() {
 function handleDelete(row: Group) {
   deleteVisible.value = true;
   API.post('/group_delete_all', {
+    username: data.username,
     group_name: row.name,
     owner_name: data.username,
   }, {
