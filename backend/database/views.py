@@ -164,7 +164,7 @@ def group_apply_to_join(request):
 @require_http_methods(["POST"])
 # 根据审核意见处理申请
 def group_handle_join_request(request):
-    applier_name = request.POST.get('applier_name')
+    applier_name = request.POST.get('username')
     group_name = request.POST.get('group_name')
     owner_name = request.POST.get('owner_name')
     approval = request.POST.get('approval')
@@ -198,7 +198,7 @@ def group_handle_join_request(request):
 def group_delete_member(request):
     to_deleter = request.POST.get('to_deleter')
     group_name = request.POST.get('group_name')
-    owner_name = request.POST.get('owner_name')
+    owner_name = request.POST.get('username')
 
     # 检查用户是否存在
     check = User.objects.filter(username=to_deleter)
@@ -303,7 +303,7 @@ def group_get_groups_joined(request):
 # 群主删除组：group_delete_all
 def group_delete_all(request):
     group_name = request.POST.get('group_name')
-    owner_name = request.POST.get('owner_name')
+    owner_name = request.POST.get('username')
 
     # 检查群组是否存在
     group = Group.objects.filter(name=group_name)

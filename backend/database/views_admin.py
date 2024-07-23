@@ -7,7 +7,7 @@ from .models import User, Group, ProblemGroup
 @require_http_methods(["POST"])
 def admin_register_user(request):
     # 注册新用户
-    username = request.POST.get('username')
+    username = request.POST.get('name')
     password = request.POST.get('password')
     check = User.objects.filter(username=username)
     if check:
@@ -38,7 +38,7 @@ def admin_manage_user_profile(request):
 @require_http_methods(["POST"])
 def admin_delete_user(request):
     # 删除用户
-    username = request.POST.get('username')
+    username = request.POST.get('name')
     check = User.objects.filter(username=username)
     if not check:
         # 用户不存在，返回错误信息
@@ -69,7 +69,7 @@ def admin_delete_group(request):
 @require_http_methods(["POST"])
 def admin_add_user_to_group(request):
     # 使用户加入用户组
-    username = request.POST.get('username')
+    username = request.POST.get('name')
     group_name = request.POST.get('group_name')
     check = User.objects.filter(username=username)
     check2 = Group.objects.filter(name=group_name)
@@ -86,7 +86,7 @@ def admin_add_user_to_group(request):
 @require_http_methods(["POST"])
 def admin_remove_user_from_group(request):
     # 使用户退出用户组
-    username = request.POST.get('username')
+    username = request.POST.get('name')
     group_name = request.POST.get('group_name')
     check = User.objects.filter(username=username)
     check2 = Group.objects.filter(name=group_name)
