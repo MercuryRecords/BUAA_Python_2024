@@ -41,6 +41,11 @@ class JoinRequest(models.Model):
     apply_reason = models.TextField(max_length=200, blank=True)
 
 
+class Tag(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+    description = models.TextField(blank=True)
+
+
 class ProblemGroupManager(models.Manager):
     def search(self, query):
         lookups = (
@@ -55,6 +60,7 @@ class ProblemGroup(models.Model):
     title = models.CharField(max_length=50)
     description = models.TextField(max_length=200, blank=True)
     problem_num = models.IntegerField(default=0)
+    tags = models.ManyToManyField(Tag, related_name='problem_groups')
 
     objects = ProblemGroupManager()
 
@@ -95,6 +101,7 @@ class Problem(models.Model):
     field7 = models.CharField(max_length=100, blank=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
+    tags = models.ManyToManyField(Tag, related_name='problems')
 
     objects = ProblemManager()
 

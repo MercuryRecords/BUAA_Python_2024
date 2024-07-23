@@ -26,6 +26,7 @@ const validatePass = (rule: any, value: any, callback: any) => {
   }
 }
 const validateName = (rule: any, value: any, callback: any) => {
+  console.log("value:", value)
   if (value === '') {
     callback(new Error('Please input the name'))
   } else {
