@@ -247,7 +247,7 @@ def group_quit(request):
     return JsonResponse({"code": 200, "message": "用户已退出群组"})
 
 
-def groups_in_details(groups: QuerySet[Group]):
+def groups_in_details(groups):
     result = []
     for group in groups:
         members_count = group.members.count()
@@ -335,7 +335,8 @@ def group_search(request):
                 related_count[group] = 1
 
     sorted_results = sorted(related_count.items(), key=lambda x: x[1], reverse=True)
-    return JsonResponse({"code": 200, "message": "搜索成功", "groups": [group for group, _ in sorted_results]})
+    result = groups_in_details([group for group, _ in sorted_results])
+    return JsonResponse({"code": 200, "message": "搜索成功", "groups": result})
 
 # @require_http_methods(["POST"])
 # def admin_delete_user(request):
