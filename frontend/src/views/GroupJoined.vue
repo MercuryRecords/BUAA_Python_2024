@@ -1,7 +1,8 @@
 <script setup lang="ts">
-// @ts-ignore
+
 import CreateGroup from "@/components/Base/CreateGroup.vue";
 import Navigator from "@/components/Base/Navigator.vue";
+import JoinGroup from "@/components/Base/JoinGroup.vue";
 </script>
 
 <template>
@@ -19,16 +20,15 @@ import Navigator from "@/components/Base/Navigator.vue";
 
         <el-container>
           <el-main class="shifted-content">
-            <h1>我创建的群组</h1>
+            <h1>我加入的群组</h1>
             <!--              主体内容-->
-            <CreateGroup :username="$route.query.username"></CreateGroup>
+            <JoinGroup :username="$route.query.username"></JoinGroup>
           </el-main>
         </el-container>
       </el-container>
 
     </el-container>
   </div>
-
 </template>
 
 <style scoped>
@@ -36,6 +36,7 @@ import Navigator from "@/components/Base/Navigator.vue";
   margin-left: 80px;
   margin-right: 80px;
 }
+
 .el-menu {
   border-right: none;
 }

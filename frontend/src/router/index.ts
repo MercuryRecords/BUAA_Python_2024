@@ -48,7 +48,7 @@ const router = createRouter({ //创建路由器
         {
             path: '/groupJ',
             name: 'groupJoin',
-            component: () => import('@/views/GroupJoin.vue'),
+            component: () => import('@/views/GroupJoined.vue'),
         },
         {
             path: '/home',

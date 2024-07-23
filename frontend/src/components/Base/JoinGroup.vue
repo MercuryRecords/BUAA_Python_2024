@@ -3,7 +3,7 @@ import {ref, reactive, onMounted, computed} from 'vue';
 import {ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage} from 'element-plus';
 import 'element-plus/dist/index.css';
 import API from '@/plugins/axios';
-import Navigator from "@/components/Base/Navigator.vue";
+
 
 const data = defineProps(['username']) //从Navigator拿到的username
 const dialogVisible = ref(false);
@@ -21,37 +21,8 @@ interface Group {
   number: number
 }
 
-const tableData: Group[] = [
-  {
-    name: '第一组',
-    creator: 'gykk',
-    number: 0
-  },
-  {
-    name: '第二组',
-    creator: 'gyk',
-    number: 1
-  },
-  {
-    name: '曼波',
-    creator: 'hy',
-    number: 3
-  },
-  {
-    name: 'Man',
-    creator: 'kobe',
-    number: 2
-  },
-]
+const tableData: Group[] = reactive([]) //存储这个人所在的组
 const search = ref('')
-const filterTableData = computed(() =>
-    tableData.filter(
-        (data) =>
-            !search.value ||
-            data.name.toLowerCase().includes(search.value.toLowerCase())
-    )
-)
-
 onMounted(async () => showData());
 
 function showData() {
@@ -66,9 +37,12 @@ function showData() {
         }
       }).then(
       function (response) {
-        if (response.data.code === 200) { // 成功接收
+        if (response.data.code === 200) { // 成功接收，得到了这个人所加入的群
+          for (let i = 0; i < response.data.groups.length; i++) {
+            tableData.push(response.data.groups[i]) //将群组加入tableData，准备在挂载的时候显示出来
+          }
           console.log(response.data)
-        } else if (response.data.code === 401) { // 用户不存在的情况，才会报错
+        } else if (response.data.code === 401) { //用户不存在的情况报错，否则只是没有加入的群显示罢了
           ElMessage.error(response.data.message);
         }
       }
@@ -84,11 +58,12 @@ function handleSubmit() {
   // console.log(form.name)
   // console.log(form.description)
   // TODO 向后端发送对应的信息
-  API.post('/group_create',
+  console.log(data.username)
+  console.log(form.name)
+  API.post('/group_join_forced',
       {
         username: data.username,
         group_name: form.name,
-        group_description: form.description,
       }, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
@@ -98,9 +73,9 @@ function handleSubmit() {
         if (response.data.code === 200) {
           ElMessage.success(response.data.message);
         } else {
-          ElMessage.error(response.data.message);
+          ElMessage.error("handleSubmit" + response.data.message);
         }
-        showData();
+        //showData();
       }
   ).catch(
       function () {
@@ -130,16 +105,16 @@ function handleDelete() {
 <template>
 
   <div>
-    <el-button type="primary" @click="handleClick">新建群组</el-button>
+    <el-button type="primary" @click="handleClick">加入群组</el-button>
 
-    <el-dialog title="新建" v-model="dialogVisible" width="30%">
+    <el-dialog title="加入" v-model="dialogVisible" width="30%">
       <el-form :model="form" label-width="80px">
 
         <el-form-item label="群组名称">
           <el-input v-model="form.name" autocomplete="off"/>
         </el-form-item>
 
-        <el-form-item label="描述">
+        <el-form-item label="申请理由">
           <el-input
               v-model="form.description"
               style="width: 240px"
@@ -151,15 +126,15 @@ function handleDelete() {
 
       </el-form>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="handleClose">取 消</el-button>
         <el-button type="primary" @click="handleSubmit">确 定</el-button>
+        <el-button @click="handleClose">取 消</el-button>
       </span>
     </el-dialog>
   </div>
 
   <!--  展示所有的群组-->
   <div>
-    <el-table :data="filterTableData" style="width: 100%">
+    <el-table :data="tableData" style="width: 100%">
       <el-table-column label="群组名称" prop="name"/>
       <el-table-column label="创建者" prop="creator"/>
       <el-table-column label="人数" prop="number"/>
