@@ -5,7 +5,7 @@ from django.db.models import F, QuerySet
 from .models import User, ProblemGroup, Problem
 
 E_USER_NOT_FIND = JsonResponse(
-    {"code": 401, "message": "用户不存在"})  # 当前用户 username 或问题组创建者 problem_group_creater 不存在
+    {"code": 401, "message": "用户不存在"})  # 当前用户 username 或问题组创建者 problem_group_creator 不存在
 E_PROBLEM_GROUP_REPEAT = JsonResponse({"code": 402, "message": "问题组已存在"})
 E_PROBLEM_GROUP_NOT_FIND = JsonResponse({"code": 402, "message": "问题组不存在"})
 E_PERMISSON_DENIED = JsonResponse({"code": 403, "message": "当前用户没有权限"})
@@ -26,10 +26,10 @@ def _success(text):
 
 def _get_problem_group(request, permisson):  # 0 仅可查看，1 可查看并添加问题，2 全部权限
     username = request.POST.get('username')
-    problem_group_creater = request.POST.get('problem_group_creater')
+    problem_group_creator = request.POST.get('problem_group_creator')
     problem_group_title = request.POST.get('problem_group_title')
 
-    check = User.objects.filter(username=problem_group_creater)
+    check = User.objects.filter(username=problem_group_creator)
     if not check:
         return E_USER_NOT_FIND
 
@@ -39,7 +39,7 @@ def _get_problem_group(request, permisson):  # 0 仅可查看，1 可查看并�
 
     problem_group = check[0]
 
-    if permisson >= 0 and username != problem_group_creater:
+    if permisson >= 0 and username != problem_group_creator:
         check = User.objects.filter(username=username)
         if not check:
             return E_USER_NOT_FIND
@@ -68,10 +68,10 @@ def _get_problem(request, group_permisson, permisson):
         return E_PROBLEM_NOT_FIND
     problem = check[0]
 
-    if permisson >= 2 and username != problem.creater.username:
+    if permisson >= 2 and username != problem.creator.username:
         return E_PERMISSON_DENIED
 
-    if permisson == 1 and username != problem.creater.username and username != problem_group.user.username:
+    if permisson == 1 and username != problem.creator.username and username != problem_group.user.username:
         return E_PERMISSON_DENIED
 
     return problem_group, problem
