@@ -25,10 +25,10 @@ const tableData: Group[] = reactive([]) //存储这个人所在的组
 const search = ref('')
 onMounted(async () => showData());
 
-function showData() {
+function showData() { //只显示加入的群聊，与创建的群聊隔开
   console.log("showing data");
   console.log(data.username)
-  API.post('/group_get_groups',
+  API.post('/group_get_groups_joined',
       {
         username: data.username,
       }, {
@@ -41,9 +41,8 @@ function showData() {
           for (let i = 0; i < response.data.groups.length; i++) {
             tableData.push(response.data.groups[i]) //将群组加入tableData，准备在挂载的时候显示出来
           }
-          console.log(response.data)
         } else if (response.data.code === 401) { //用户不存在的情况报错，否则只是没有加入的群显示罢了
-          ElMessage.error(response.data.message);
+          ElMessage.error("JG showData " + response.data.message);
         }
       }
   ).catch(
@@ -54,12 +53,6 @@ function showData() {
 
 function handleSubmit() {
   dialogVisible.value = false;
-  // console.log(data.username)
-  // console.log(form.name)
-  // console.log(form.description)
-  // TODO 向后端发送对应的信息
-  console.log(data.username)
-  console.log(form.name)
   API.post('/group_join_forced',
       {
         username: data.username,
@@ -75,7 +68,8 @@ function handleSubmit() {
         } else {
           ElMessage.error("handleSubmit" + response.data.message);
         }
-        //showData();
+        window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
+        showData();
       }
   ).catch(
       function () {
@@ -96,8 +90,29 @@ function handleEdit() {
   editVisible.value = true;
 }
 
-function handleDelete() {
+function handleDelete(row: Group) {
   deleteVisible.value = true;
+  API.post('/group_quit', {
+    username: data.username,
+    group_name: row.name
+  }, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          ElMessage.success(response.data.message); //成功退出
+        } else {
+          ElMessage.error(response.data.message);
+        }
+        window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
+        showData();
+      }
+  ).catch(
+      function () {
+        console.log('error delete!')
+      })
 }
 </script>
 
@@ -175,9 +190,9 @@ function handleDelete() {
           <el-button
               size="large"
               type="danger"
-              @click="handleDelete()"
+              @click="handleDelete(scope.row)"
           >
-            Delete
+            Quit
           </el-button>
         </template>
       </el-table-column>

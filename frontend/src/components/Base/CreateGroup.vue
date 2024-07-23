@@ -3,7 +3,6 @@ import {ref, reactive, onMounted, computed} from 'vue';
 import {ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage} from 'element-plus';
 import 'element-plus/dist/index.css';
 import API from '@/plugins/axios';
-import Navigator from "@/components/Base/Navigator.vue";
 
 const data = defineProps(['username']) //从Navigator拿到的username
 const dialogVisible = ref(false);
@@ -14,6 +13,7 @@ const form = reactive({
 let editVisible = ref(false);
 let deleteVisible = ref(false);
 let centerDialogVisible = ref(false)
+let searchVisible = ref(false)
 
 interface Group {
   name: string
@@ -21,43 +21,15 @@ interface Group {
   number: number
 }
 
-const tableData: Group[] = [
-  {
-    name: '第一组',
-    creator: 'gykk',
-    number: 0
-  },
-  {
-    name: '第二组',
-    creator: 'gyk',
-    number: 1
-  },
-  {
-    name: '曼波',
-    creator: 'hy',
-    number: 3
-  },
-  {
-    name: 'Man',
-    creator: 'kobe',
-    number: 2
-  },
-]
+const tableData: Group[] = reactive([])
 const search = ref('')
-const filterTableData = computed(() =>
-    tableData.filter(
-        (data) =>
-            !search.value ||
-            data.name.toLowerCase().includes(search.value.toLowerCase())
-    )
-)
-
+const searchData: Group[] = reactive([])
 onMounted(async () => showData());
 
 function showData() {
   console.log("showing data");
   console.log(data.username)
-  API.post('/group_get_groups',
+  API.post('/group_get_groups_created',
       {
         username: data.username,
       }, {
@@ -67,9 +39,11 @@ function showData() {
       }).then(
       function (response) {
         if (response.data.code === 200) { // 成功接收
-          console.log(response.data)
+          for (let i = 0; i < response.data.groups.length; i++) {
+            tableData.push(response.data.groups[i]) //将群组加入tableData，准备在挂载的时候显示出来
+          }
         } else if (response.data.code === 401) { // 用户不存在的情况，才会报错
-          ElMessage.error(response.data.message);
+          ElMessage.error("CG showData " + response.data.message);
         }
       }
   ).catch(
@@ -80,10 +54,6 @@ function showData() {
 
 function handleSubmit() {
   dialogVisible.value = false;
-  // console.log(data.username)
-  // console.log(form.name)
-  // console.log(form.description)
-  // TODO 向后端发送对应的信息
   API.post('/group_create',
       {
         username: data.username,
@@ -98,8 +68,9 @@ function handleSubmit() {
         if (response.data.code === 200) {
           ElMessage.success(response.data.message);
         } else {
-          ElMessage.error(response.data.message);
+          ElMessage.error("CG handleSubmit" + response.data.message);
         }
+        window.location.reload(); // 在点击确定之后刷新页面，更新所创建的群组
         showData();
       }
   ).catch(
@@ -121,8 +92,58 @@ function handleEdit() {
   editVisible.value = true;
 }
 
-function handleDelete() {
+function handleSearch() {
+  searchVisible.value = true
+  console.log(search.value)
+  API.post('/group_search', {
+    keywords: search.value
+  }, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          console.log(response.data)
+          for (let i = 0; i < response.data.groups.length; i++) {
+            searchData.push(response.data.groups[i])
+          }
+          ElMessage.success(response.data.message); //成功退出
+        } else {
+          ElMessage.error(response.data.message);
+        }
+        window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
+        showData();
+      }
+  ).catch(
+      function () {
+        console.log('error search!')
+      })
+}
+
+function handleDelete(row: Group) {
   deleteVisible.value = true;
+  API.post('/group_delete_all', {
+    group_name: row.name,
+    owner_name: data.username,
+  }, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          ElMessage.success(response.data.message); //成功退出
+        } else {
+          ElMessage.error(response.data.message);
+        }
+        window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
+        showData();
+      }
+  ).catch(
+      function () {
+        console.log('error delete!')
+      })
 }
 </script>
 
@@ -159,13 +180,13 @@ function handleDelete() {
 
   <!--  展示所有的群组-->
   <div>
-    <el-table :data="filterTableData" style="width: 100%">
+    <el-table :data="search.length===0?tableData:searchData" style="width: 100%">
       <el-table-column label="群组名称" prop="name"/>
       <el-table-column label="创建者" prop="creator"/>
       <el-table-column label="人数" prop="number"/>
       <el-table-column label="详情">
 
-        <div>
+        <div> <!--对话框-->
           <el-button size="large" @click="centerDialogVisible = true">
             Click to open the Dialog
           </el-button>
@@ -191,7 +212,7 @@ function handleDelete() {
       </el-table-column>
       <el-table-column align="center">
         <template #header>
-          <el-input v-model="search" size="large" placeholder="Type to search"/>
+          <el-input v-model="search" @keyup="handleSearch" size="large" placeholder="search the group!"/>
         </template>
         <template #default="scope">
           <el-button size="large" @click="handleEdit()">
@@ -200,7 +221,7 @@ function handleDelete() {
           <el-button
               size="large"
               type="danger"
-              @click="handleDelete()"
+              @click="handleDelete(scope.row)"
           >
             Delete
           </el-button>
