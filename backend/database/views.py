@@ -100,6 +100,9 @@ def group_create(request):
 
     # 创建群组
     Group.objects.create(name=group_name, description=group_description, created_by=check[0])
+    # 将创建者添加到该群组中
+    group = Group.objects.filter(name=group_name)[0]
+    group.members.add(check[0])
     return JsonResponse({"code": 200, "message": "群组创建成功"})
 
 
