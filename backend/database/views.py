@@ -256,7 +256,7 @@ def groups_in_details(groups: QuerySet[Group]):
             'description': group.description,
             'creator': group.created_by.username,
             'created_time': group.created_at,
-            'members_count': members_count
+            'number': members_count
         })
     return result
 
