@@ -41,11 +41,42 @@ class JoinRequest(models.Model):
     apply_reason = models.TextField(max_length=200, blank=True)
 
 
+class ProblemGroupManager(models.Manager):
+    def search(self, query):
+        lookups = (
+                Q(title__icontains=query) |
+                Q(description__icontains=query)
+        )
+        return self.get_queryset().filter(lookups).distinct()
+
+
 class ProblemGroup(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
     description = models.TextField(max_length=200, blank=True)
     problem_num = models.IntegerField(default=0)
+
+    objects = ProblemGroupManager()
+
+
+class ProblemManager(models.Manager):
+    def search(self, query, in_fields=True):
+        lookups = (
+            Q(content__icontains=query)
+        )
+        if in_fields:
+            for field in ['field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7']:
+                lookups |= Q(**{field: query})
+        return self.get_queryset().filter(lookups).distinct()
+
+    def search_regex(self, pattern, in_fields=True):
+        lookups = (
+            Q(content__regex=pattern)
+        )
+        if in_fields:
+            for field in ['field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7']:
+                lookups |= Q(**{field: pattern})
+        return self.get_queryset().filter(lookups).distinct()
 
 
 class Problem(models.Model):
@@ -65,8 +96,10 @@ class Problem(models.Model):
     creator = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    objects = ProblemManager()
+
 
 class ProblemPremission(models.Model):
-    group = models.ForeignKey(Group, blank=True, on_delete=models.CASCADE)  # 用户群组
+    group = models.ForeignKey(Group, blank=True, on_delete=models.CASCADE, related_name="permissions")  # 用户群组
     problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE)  # 问题群组
     permission = models.SmallIntegerField()  # 权限，0 仅可查看，1 可查看并添加问题，2 全部权限

@@ -9,7 +9,6 @@ https://docs.djangoproject.com/en/5.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
-import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -34,7 +33,12 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # AUTH_USER_MODEL = 'database.User'
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = []
+
+LANGUAGE_CODE = 'zh-hans'
+TIME_ZONE = 'Asia/Shanghai'
+
+USE_TZ = False
 
 # Application definition
 

@@ -1,10 +1,11 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.db.models import F
+from django.db.models import F, QuerySet
 
-from .models import User, ProblemGroup, Problem, ProblemPremission
+from .models import User, ProblemGroup, Problem
 
-E_USER_NOT_FIND = JsonResponse({"code": 401, "message": "用户不存在"})  # 当前用户 username 或问题组创建者 problem_group_creater 不存在
+E_USER_NOT_FIND = JsonResponse(
+    {"code": 401, "message": "用户不存在"})  # 当前用户 username 或问题组创建者 problem_group_creater 不存在
 E_PROBLEM_GROUP_REPEAT = JsonResponse({"code": 402, "message": "问题组已存在"})
 E_PROBLEM_GROUP_NOT_FIND = JsonResponse({"code": 402, "message": "问题组不存在"})
 E_PERMISSON_DENIED = JsonResponse({"code": 403, "message": "当前用户没有权限"})
@@ -254,3 +255,56 @@ def problem_adjust_order(request):
     problem.index = newindex
     problem.save()
     return _success("题目顺序更改成功")
+
+
+# 获取用户有权限的所有问题
+def _get_problems_with_permissions(username: str) -> JsonResponse | QuerySet[Problem]:
+    user = User.objects.get(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    else:
+        user = user[0]
+    groups = user.groups.all()
+
+    if not groups:
+        return JsonResponse({"code": 402, "msg": "用户不在任何组中"})
+
+    permissions = [group.permissions.all() for group in groups]
+    problem_groups = [per.problem_group.all() for per in permissions]
+
+    if not problem_groups:
+        return JsonResponse({"code": 403, "msg": "用户没有权限查看任何题目组"})
+
+    # 问题组合并到一个QuerySet
+    total_problem_groups = problem_groups[0].union(*problem_groups[1:]) if len(problem_groups) > 1 else problem_groups[
+        0]
+
+    problems = QuerySet()
+
+    # 获取所有问题并合并到一个 QuerySet
+    for problem_group in total_problem_groups:
+        problems.union(Problem.objects.filter(problem_group=problem_group))
+
+    return problems
+
+
+@require_http_methods(["POST"])
+# 高级搜索问题
+def problem_search_advanced(request):
+    username = request.POST.get("username")
+    problems = _get_problems_with_permissions(username)
+    if isinstance(problems, JsonResponse):
+        return problems
+
+    use_regex = request.POST.get("use_regex")
+    use_regex = use_regex == "true"
+    pattern = request.POST.get("pattern")
+    keywords = request.POST.get("keywords").split(" ")
+    result = QuerySet()
+
+    if not use_regex:
+        for keyword in keywords:
+            result.union(problems.all().objects.search(keyword))
+    else:
+        result = problems.all().objects.search_regex(pattern)
+    return _success(result)
