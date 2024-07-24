@@ -59,6 +59,11 @@ const router = createRouter({ //创建路由器
             path: '/groupQuestion',
             name: 'QuestionBank4SpecificGroup',
             component: () => import('@/views/SheetCreated.vue'),
+        },
+        {
+            path: '/upload',
+            name: 'upload',
+            component: () => import('@/views/QuestionUploaded.vue')
         }
     ]
 })
