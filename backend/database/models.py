@@ -101,7 +101,7 @@ class Problem(models.Model):
     field6 = models.CharField(max_length=100, blank=True)
     field7 = models.CharField(max_length=100, blank=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
+    create_time = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField(Tag, related_name='problems')
 
     objects = ProblemManager()
