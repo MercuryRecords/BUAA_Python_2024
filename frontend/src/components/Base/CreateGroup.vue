@@ -331,8 +331,10 @@ import {all} from "axios";
           <el-dialog
               v-model="centerDialogVisible"
               width="50%"
+              title="群组描述"
+
           >
-            <span>群组描述：{{ currentDescription }}</span>
+            <span>{{ currentDescription }}</span>
             <template #footer>
               <div class="dialog-footer">
                 <el-button @click="centerDialogVisible = false">Cancel</el-button>

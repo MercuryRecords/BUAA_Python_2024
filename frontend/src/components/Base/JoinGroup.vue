@@ -14,6 +14,7 @@ const form = reactive({
 let editVisible = ref(false);
 let deleteVisible = ref(false);
 let centerDialogVisible = ref(false)
+let searchVisible = ref(false)
 
 interface Group {
   name: string
@@ -23,6 +24,8 @@ interface Group {
 
 const tableData: Group[] = reactive([]) //存储这个人所在的组
 const search = ref('')
+const searchData: Group[] = reactive([])
+const dialogTitle = computed(() => search.value.length === 0 ? '加入群组' : '加入搜索到的群组');
 onMounted(async () => showData());
 
 function showData() { //只显示加入的群聊，与创建的群聊隔开
@@ -65,10 +68,16 @@ function handleSubmit() {
       function (response) {
         if (response.data.code === 200) {
           ElMessage.success(response.data.message);
-          window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
-          showData();
+          if (search.value) {
+            // 如果是从搜索结果加入，刷新搜索结果
+            handleSearch();
+            window.location.reload()
+          } else {
+            // 如果是直接加入，刷新页面
+            window.location.reload();
+          }
         } else {
-          ElMessage.error(response.data.message);
+          ElMessage.error("handleSubmit " + response.data.message);
         }
       }
   ).catch(
@@ -88,6 +97,36 @@ function handleClose() {
 
 function handleEdit() {
   editVisible.value = true;
+}
+
+function handleSearch() {
+  searchVisible.value = true
+  searchData.length = 0 //清空搜索结果
+  API.post('/group_search', {
+    username: data.username,
+    keywords: search.value,
+  }, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          console.log(response.data)
+          for (let i = 0; i < response.data.groups.length; i++) {
+            searchData.push(response.data.groups[i])
+          }
+          ElMessage.success(response.data.message); //成功退出
+        } else {
+          ElMessage.error(response.data.message);
+        }
+        //window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
+        //showData();
+      }
+  ).catch(
+      function () {
+        console.log('error search!')
+      })
 }
 
 function handleDelete(row: Group) {
@@ -114,6 +153,14 @@ function handleDelete(row: Group) {
         console.log('error delete!')
       })
 }
+
+function handleJoin(row: Group) {
+  form.name = row.name; // 设置群组名称
+  form.description = ''; // 清空申请理由
+  dialogVisible.value = true; // 显示对话框
+}
+
+
 </script>
 
 
@@ -122,7 +169,7 @@ function handleDelete(row: Group) {
   <div>
     <el-button type="primary" @click="handleClick">加入群组</el-button>
 
-    <el-dialog title="加入" v-model="dialogVisible" width="30%">
+    <el-dialog :title="search.length === 0 ? '加入群组' : '加入搜索到的群组'" v-model="dialogVisible" width="30%">
       <el-form :model="form" label-width="80px">
 
         <el-form-item label="群组名称">
@@ -149,13 +196,13 @@ function handleDelete(row: Group) {
 
   <!--  展示所有的群组-->
   <div>
-    <el-table :data="tableData" style="width: 100%">
+    <el-table :data="search.length===0?tableData:searchData" style="width: 100%">
       <el-table-column label="群组名称" prop="name"/>
       <el-table-column label="创建者" prop="creator"/>
       <el-table-column label="人数" prop="number"/>
       <el-table-column label="详情">
 
-        <div>
+        <div> <!--对话框-->
           <el-button size="large" @click="centerDialogVisible = true">
             Click to open the Dialog
           </el-button>
@@ -181,19 +228,30 @@ function handleDelete(row: Group) {
       </el-table-column>
       <el-table-column align="center">
         <template #header>
-          <el-input v-model="search" size="large" placeholder="Type to search"/>
+          <el-input v-model="search" @keyup.enter="handleSearch" size="large" placeholder="输入完毕请按回车！"/>
         </template>
         <template #default="scope">
-          <el-button size="large" @click="handleEdit()">
-            Edit
-          </el-button>
-          <el-button
-              size="large"
-              type="danger"
-              @click="handleDelete(scope.row)"
-          >
-            Quit
-          </el-button>
+          <template v-if="search.length === 0">
+            <el-button size="large" @click="handleEdit()">
+              Edit
+            </el-button>
+            <el-button
+                size="large"
+                type="danger"
+                @click="handleDelete(scope.row)"
+            >
+              Delete
+            </el-button>
+          </template>
+          <template v-else>
+            <el-button
+                size="large"
+                type="danger"
+                @click="handleJoin(scope.row)"
+            >
+              Join
+            </el-button>
+          </template>
         </template>
       </el-table-column>
     </el-table>
@@ -201,5 +259,3 @@ function handleDelete(row: Group) {
 
 
 </template>
-
-
