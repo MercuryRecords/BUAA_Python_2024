@@ -201,7 +201,7 @@
 | regex | 是否使用正则表达式 | 否 | 字符串 | | 'y'（yes，默认）或'n'（no），下同 |
 | search_title | 是否搜索标题 | 否 | 字符串|||
 | search_content | 是否搜索题干 | 否 |字符串|||
-| search_options_and_answer | 是否搜索选项和答案 | 否 |整数|||
+| search_options_and_answer | 是否搜索选项和答案 | 否 |字符串|||
 | sort_by | 排序方式 | 否 | 字符串 || 'id','title','create_time'之一（待定，可加）|
 | reverse | 是否逆序 | 否 | 字符串 || '+'正序（默认），'-'逆序 |
 | page | 页码 | 是    | 整数 | 1        | 从1开始                        |
@@ -237,7 +237,7 @@
 | regex | 是否使用正则表达式 | 否 | 字符串 | | 'y'（yes，默认）或'n'（no），下同 |
 | search_title | 是否搜索标题 | 否 | 字符串|||
 | search_content | 是否搜索题干 | 否 |字符串|||
-| search_options_and_answer | 是否搜索选项和答案 | 否 |整数|||
+| search_options_and_answer | 是否搜索选项和答案 | 否 |字符串|||
 - 成功信息：{"code": 200, "message": "问题查询成功", "data": 题目数量（整数）}
 - 失败信息：{"code": 401, "message": "用户不存在"}
 
