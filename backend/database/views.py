@@ -346,7 +346,12 @@ def group_get_members(request):
     if not group:
         return JsonResponse({"code": 401, "message": "群组不存在"})
     members = group[0].members.all()
-    return JsonResponse({"code": 200, "message": "获取成功", "members": [member.username for member in members]})
+    sorted_members = sorted(members, key=lambda x: x.username)
+    creator = group[0].created_by
+    sorted_members.remove(creator)
+    sorted_members.insert(0, creator)
+    return JsonResponse({"code": 200, "message": "获取成功", "members": [member.username for member in sorted_members]})
+
 
 # @require_http_methods(["POST"])
 # def admin_delete_user(request):
