@@ -121,8 +121,7 @@
         <v-divider></v-divider>
 
         <v-list density="compact" nav>
-          <v-list-item prepend-icon="mdi-folder" title="我的题库" value="myfiles"
-                       :to="{name:'question' ,query: {username: props.username}}">
+          <v-list-item prepend-icon="mdi-folder" title="我的题库" value="myfiles">
             <v-list density="compact" nav>
               <v-list-item prepend-icon="mdi-folder" title="我创建的题单" value="create"
                            :to="{name:'myQuestionSheet', query: {username: props.username}}"
@@ -133,7 +132,7 @@
                            :to="{name:'groupJoin', query: {username: props.username}}">
               </v-list-item>
 
-              <v-list-item prepend-icon="mdi-star" title="我收藏的" value="starred"></v-list-item>
+              <v-list-item prepend-icon="mdi-star" title="题库" value="starred" :to="{name:'question' ,query: {username: props.username}}"></v-list-item>
             </v-list>
           </v-list-item>
           <v-list-item prepend-icon="mdi-account-multiple" title="" value="mygroup">

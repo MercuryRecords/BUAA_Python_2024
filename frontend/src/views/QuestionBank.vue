@@ -1,54 +1,149 @@
 <script lang="ts" setup>
-import {ref, reactive} from 'vue'
-import {ElMessage} from 'element-plus'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
+import router from "@/router";
 
 const searchForm = reactive({
-  difficulty: '',
-  keyword: ''
+  keyword: '',
+  tags: [] as string[],
+  selectedTags: [] as string[]
 })
 
-const problems = ref([
-  {id: 'P1000', title: '超级玛丽游戏', difficulty: '入门'},
-  {id: 'P1001', title: 'A+B Problem', difficulty: '入门'},
-  {id: 'P1002', title: '[NOIP2002 普及组] 过河卒', source: 'NOIP普及组', year: '2002', difficulty: '普及'},
-  // ... 添加更多题目
+interface data {
+  id: string,
+  title: string,
+  uploader: string,
+  source: string,
+  tags: string[],
+  accuracy: number
+}
+
+const allProblems = ref<data[]>([
+  {id: 'P1000', title: '超级玛丽游戏', uploader: 'gyk', source: 'problem_sheet1', tags: ['选择题', '动态规划'], accuracy: 0.9},
+  {id: 'P1001', title: 'A+B Problem', uploader: 'mamba', source: 'problem_sheet2', tags: ['填空题', '数学'], accuracy: 0.8},
+  {id: 'P1002', title: '过河卒', uploader: 'admin', source: 'NOIP2002普及组', tags: ['算法', '动态规划'], accuracy: 0.7},
+  {id: 'P1003', title: '铺地毯', uploader: 'admin', source: 'NOIP2011提高组', tags: ['算法', '模拟'], accuracy: 0.6},
+  {id: 'P1004', title: '方格取数', uploader: 'admin', source: 'NOIP2000提高组', tags: ['算法', '动态规划'], accuracy: 0.5},
+  {id: 'P1005', title: '矩阵取数游戏', uploader: 'admin', source: 'NOIP2007提高组', tags: ['算法', '动态规划', '数学'], accuracy: 0.25},
+  // ... 其他问题数据
 ])
 
 const currentPage = ref(1)
 const pageSize = ref(20)
-const total = ref(10243)
+
+const tagDialogVisible = ref(false)
+const tagCategories = ref([
+  { name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串'] },
+  { name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆'] },
+  { name: '题目类型', tags: ['选择题' ,'填空题'] },
+])
+
+const filterProblems = computed(() => {
+  return allProblems.value.filter(problem => {
+    const matchKeyword = searchForm.keyword === '' ||
+        problem.title.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
+        problem.id.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
+        problem.uploader.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
+        problem.source.toLowerCase().includes(searchForm.keyword.toLowerCase())
+    const matchTags = searchForm.selectedTags.length === 0 || searchForm.selectedTags.every(tag => problem.tags.includes(tag))
+    return matchKeyword && matchTags
+  })
+})
+
+const problems = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filterProblems.value.slice(start, end)
+})
+
+const total = computed(() => filterProblems.value.length)
 
 const onSearch = () => {
-  // 实现搜索逻辑
-  ElMessage.success('搜索功能待实现')
+  currentPage.value = 1
+  ElMessage.success(`找到 ${total.value} 个匹配的题目`)
 }
 
-const handleSizeChange = (val: any) => {
+const handleSizeChange = (val: number) => {
   pageSize.value = val
-  // 重新加载数据
+  currentPage.value = 1
 }
 
-const handleCurrentChange = (val: any) => {
+const handleCurrentChange = (val: number) => {
   currentPage.value = val
-  // 重新加载数据
 }
 
-const getDifficultyType = (difficulty: any) => {
-  switch (difficulty) {
-    case '入门':
-      return 'success'
-    case '普及':
-      return 'warning'
-    case '提高':
-      return 'danger'
-    default:
-      return 'info'
+const handleSolve = (problem: data) => {
+  ElMessage.success(`准备解决题目: ${problem.title}`)
+}
+
+const clearFilters = () => {
+  searchForm.keyword = ''
+  searchForm.tags = []
+  searchForm.selectedTags = []
+  onSearch()
+}
+
+const openTagDialog = () => {
+  tagDialogVisible.value = true
+}
+
+const confirmTagSelection = () => {
+  tagDialogVisible.value = false
+  searchForm.selectedTags = [...searchForm.tags]
+  onSearch()
+}
+
+const removeTag = (tag: string) => {
+  searchForm.selectedTags = searchForm.selectedTags.filter(t => t !== tag)
+  searchForm.tags = searchForm.tags.filter(t => t !== tag)
+  onSearch()
+}
+
+const getAccuracyColor = (accuracy: number) => {
+  if (accuracy >= 0.7) return 'success'
+  if (accuracy < 0.3) return 'danger'
+  return 'warning'
+}
+
+const fetchProblems = async () => {
+  try {
+    const response = await axios.get('/api/problems')
+    allProblems.value = response.data
+  } catch (error) {
+    console.error('获取问题列表失败:', error)
+    ElMessage.error('获取问题列表失败，请稍后重试')
   }
 }
 
-const handleSolve = (problem: any) => {
-  ElMessage.success(`准备解决题目: ${problem.title}`)
+onMounted(() => {
+  //fetchProblems()
+})
+
+// ----------------------测试----------------
+// TODO 实现下拉选择用户组
+// 定义用户组数据
+const userGroups = ref([
+  "第一个组",
+  "第二个组",
+  "第三个组",
+  // 可以根据需要添加更多组
+])
+
+const selectedGroup = ref('')
+
+const handleCommand = (command) => {
+  selectedGroup.value = command
+  if (command !== '') {
+    // 路由跳转到指定组件，并传递选中的标签
+    router.push({
+      name: 'QuestionBank4SpecificGroup', // 替换为你要跳转的组件名称
+      params: { groupLabel: command }
+    })
+  } else {
+    // 无需处理
+  }
 }
 </script>
 
@@ -56,54 +151,73 @@ const handleSolve = (problem: any) => {
   <div class="common-layout">
     <el-container>
       <el-header>
-        <!--          <h1>Shared Platform</h1>-->
+        <h1>题目列表</h1>
       </el-header>
 
       <el-container>
         <el-aside width="200px">
-          <!--            导航栏-->
-          <Navigator :username="$route.query.username"></Navigator> <!--挂上导航栏，点击即可跳转,现在的位置是home/username=?-->
+          <Navigator :username="$route.query.username"></Navigator>
         </el-aside>
 
         <el-container>
           <el-main class="shifted-content">
-            <!--            <h1>我创建的群组</h1>-->
-            <!--              主体内容-->
-            <!--            <CreateGroup :username="$route.query.username"></CreateGroup>-->
             <div class="problem-list">
               <el-card>
                 <el-form :inline="true" :model="searchForm" class="demo-form-inline">
-                  <el-form-item label="筛选条件">
-                    <el-select v-model="searchForm.difficulty" placeholder="难度">
-                      <el-option label="全部难度" value=""></el-option>
-                      <el-option label="入门" value="入门"></el-option>
-                      <el-option label="普及" value="普及"></el-option>
-                      <el-option label="提高" value="提高"></el-option>
-                    </el-select>
+                  <el-form-item>
+                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）" style="width: 310px"></el-input>
                   </el-form-item>
                   <el-form-item>
-                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词"></el-input>
+                    <el-button @click="openTagDialog">选择标签</el-button>
                   </el-form-item>
                   <el-form-item>
-                    <el-button type="primary" @click="onSearch">搜索</el-button>
+                    <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
                   </el-form-item>
+                    <el-dropdown @command="handleCommand">
+                      <span class="el-dropdown-link">
+                        {{ selectedGroup || '选择用户组' }}
+                        <el-icon class="el-icon--right"></el-icon>
+                      </span>
+                      <template #dropdown>
+                        <el-dropdown-menu>
+                          <el-dropdown-item command="">全部用户组</el-dropdown-item>
+                          <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
+                            {{ group }}
+                          </el-dropdown-item>
+                        </el-dropdown-menu>
+                     </template>
+                  </el-dropdown>
                 </el-form>
+                <!-- 显示选中标签的区域 -->
+                <div v-if="searchForm.selectedTags.length > 0" style="margin-top: 10px;">
+                  <el-tag
+                      v-for="tag in searchForm.selectedTags"
+                      :key="tag"
+                      closable
+                      @close="removeTag(tag)"
+                      style="margin-right: 5px;"
+                  >
+                    {{ tag }}
+                  </el-tag>
+                </div>
               </el-card>
 
               <el-table :data="problems" style="width: 100%">
                 <el-table-column prop="id" label="题号" width="100"></el-table-column>
                 <el-table-column prop="title" label="题目名称"></el-table-column>
-                <el-table-column label="来源" width="180">
+                <el-table-column prop="uploader" label="上传者" width="100"></el-table-column>
+                <el-table-column prop="source" label="所属题单" width="180"></el-table-column>
+                <el-table-column label="标签" width="200">
                   <template #default="scope">
-                    <el-tag v-if="scope.row.source" size="small">{{ scope.row.source }}</el-tag>
-                    <el-tag v-if="scope.row.year" size="small" type="info">{{ scope.row.year }}</el-tag>
+                    <el-tag v-for="tag in scope.row.tags" :key="tag" size="small" style="margin-right: 5px;">
+                      {{ tag }}
+                    </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="难度" width="100">
+                <el-table-column prop="accuracy" label="正确率" width="100">
                   <template #default="scope">
-                    <el-tag :type="getDifficultyType(scope.row.difficulty)" size="small">{{
-                        scope.row.difficulty
-                      }}
+                    <el-tag :type="getAccuracyColor(scope.row.accuracy)" size="small">
+                      {{ (scope.row.accuracy * 100).toFixed(2) }}%
                     </el-tag>
                   </template>
                 </el-table-column>
@@ -115,6 +229,7 @@ const handleSolve = (problem: any) => {
               </el-table>
 
               <el-pagination
+                  class="pages"
                   @size-change="handleSizeChange"
                   @current-change="handleCurrentChange"
                   :current-page="currentPage"
@@ -127,13 +242,120 @@ const handleSolve = (problem: any) => {
           </el-main>
         </el-container>
       </el-container>
-
     </el-container>
+
+    <!-- 标签选择对话框 -->
+    <el-dialog v-model="tagDialogVisible" title="选择标签" width="50%">
+      <el-tabs type="border-card">
+        <el-tab-pane v-for="category in tagCategories" :key="category.name" :label="category.name">
+          <el-checkbox-group v-model="searchForm.tags">
+            <el-checkbox v-for="tag in category.tags" :key="tag" :label="tag">{{ tag }}</el-checkbox>
+          </el-checkbox-group>
+        </el-tab-pane>
+      </el-tabs>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="tagDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="confirmTagSelection">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <style scoped>
+.shifted-content {
+  margin-left: 80px;
+  margin-right: 80px;
+}
 .problem-list {
   padding: 20px;
+}
+.pages {
+  margin-top: 10px;
+}
+.filter-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
+
+.el-dropdown-link {
+  cursor: pointer;
+  color: #409EFF;
+  display: flex;
+  align-items: center;
+}
+
+.selected-filters {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #606266;
+}
+
+.total-count {
+  margin-left: 10px;
+  color: #909399;
+}
+
+.groups {
+  width: 100px;
+}
+
+.user-group-dropdown {
+  display: inline-block;
+}
+
+.el-dropdown-link {
+  cursor: pointer;
+  color: #606266;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.el-dropdown-link:hover {
+  color: #409EFF;
+  border-color: #c6e2ff;
+  background-color: #ecf5ff;
+}
+
+.el-icon--right {
+  margin-left: 5px;
+  transition: transform 0.3s;
+}
+
+.el-dropdown-link:hover .el-icon--right {
+  transform: rotate(180deg);
+}
+
+:deep(.el-dropdown-menu) {
+  padding: 5px 0;
+}
+
+:deep(.el-dropdown-menu__item) {
+  padding: 8px 20px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+:deep(.el-dropdown-menu__item:hover) {
+  background-color: #f5f7fa;
+  color: #409EFF;
+}
+
+:deep(.el-dropdown-menu__item:focus) {
+  background-color: #f5f7fa;
+  color: #409EFF;
+}
+
+:deep(.el-dropdown-menu__item.is-disabled) {
+  color: #c0c4cc;
+  cursor: not-allowed;
 }
 </style>
