@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const API = axios.create({
 
-    timeout: 20000,                  //请求超时设置，单位ms
+    timeout: 50000,                  //请求超时设置，单位ms
     headers: {'X-Requested-With': 'XMLHttpRequest'},
     baseURL: 'http://localhost:8000/api/',
     withCredentials : true

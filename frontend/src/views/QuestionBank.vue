@@ -1,9 +1,12 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import {ref, reactive, computed, onMounted} from 'vue'
+import {ElMessage} from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
+import {useRoute} from 'vue-router'
+
+const route = useRoute()
 
 const searchForm = reactive({
   keyword: '',
@@ -21,12 +24,47 @@ interface data {
 }
 
 const allProblems = ref<data[]>([
-  {id: 'P1000', title: '超级玛丽游戏', uploader: 'gyk', source: 'problem_sheet1', tags: ['选择题', '动态规划'], accuracy: 0.9},
-  {id: 'P1001', title: 'A+B Problem', uploader: 'mamba', source: 'problem_sheet2', tags: ['填空题', '数学'], accuracy: 0.8},
-  {id: 'P1002', title: '过河卒', uploader: 'admin', source: 'NOIP2002普及组', tags: ['算法', '动态规划'], accuracy: 0.7},
+  {
+    id: 'P1000',
+    title: '超级玛丽游戏',
+    uploader: 'gyk',
+    source: 'problem_sheet1',
+    tags: ['选择题', '动态规划'],
+    accuracy: 0.9
+  },
+  {
+    id: 'P1001',
+    title: 'A+B Problem',
+    uploader: 'mamba',
+    source: 'problem_sheet2',
+    tags: ['填空题', '数学'],
+    accuracy: 0.8
+  },
+  {
+    id: 'P1002',
+    title: '过河卒',
+    uploader: 'admin',
+    source: 'NOIP2002普及组',
+    tags: ['算法', '动态规划'],
+    accuracy: 0.7
+  },
   {id: 'P1003', title: '铺地毯', uploader: 'admin', source: 'NOIP2011提高组', tags: ['算法', '模拟'], accuracy: 0.6},
-  {id: 'P1004', title: '方格取数', uploader: 'admin', source: 'NOIP2000提高组', tags: ['算法', '动态规划'], accuracy: 0.5},
-  {id: 'P1005', title: '矩阵取数游戏', uploader: 'admin', source: 'NOIP2007提高组', tags: ['算法', '动态规划', '数学'], accuracy: 0.25},
+  {
+    id: 'P1004',
+    title: '方格取数',
+    uploader: 'admin',
+    source: 'NOIP2000提高组',
+    tags: ['算法', '动态规划'],
+    accuracy: 0.5
+  },
+  {
+    id: 'P1005',
+    title: '矩阵取数游戏',
+    uploader: 'admin',
+    source: 'NOIP2007提高组',
+    tags: ['算法', '动态规划', '数学'],
+    accuracy: 0.25
+  },
   // ... 其他问题数据
 ])
 
@@ -35,9 +73,9 @@ const pageSize = ref(20)
 
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
-  { name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串'] },
-  { name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆'] },
-  { name: '题目类型', tags: ['选择题' ,'填空题'] },
+  {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
+  {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
+  {name: '题目类型', tags: ['选择题', '填空题']},
 ])
 
 const filterProblems = computed(() => {
@@ -133,13 +171,16 @@ const userGroups = ref([
 
 const selectedGroup = ref('')
 
-const handleCommand = (command) => {
+const handleCommand = (command: any) => {
   selectedGroup.value = command
   if (command !== '') {
     // 路由跳转到指定组件，并传递选中的标签
     router.push({
       name: 'QuestionBank4SpecificGroup', // 替换为你要跳转的组件名称
-      params: { groupLabel: command }
+      query: {
+        username: route.query.username,
+        groupLabel: command,
+      }
     })
   } else {
     // 无需处理
@@ -165,7 +206,8 @@ const handleCommand = (command) => {
               <el-card>
                 <el-form :inline="true" :model="searchForm" class="demo-form-inline">
                   <el-form-item>
-                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）" style="width: 310px"></el-input>
+                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
+                              style="width: 310px"></el-input>
                   </el-form-item>
                   <el-form-item>
                     <el-button @click="openTagDialog">选择标签</el-button>
@@ -173,19 +215,19 @@ const handleCommand = (command) => {
                   <el-form-item>
                     <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
                   </el-form-item>
-                    <el-dropdown @command="handleCommand">
+                  <el-dropdown @command="handleCommand">
                       <span class="el-dropdown-link">
                         {{ selectedGroup || '选择用户组' }}
                         <el-icon class="el-icon--right"></el-icon>
                       </span>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item command="">全部用户组</el-dropdown-item>
-                          <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
-                            {{ group }}
-                          </el-dropdown-item>
-                        </el-dropdown-menu>
-                     </template>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="">全部用户组</el-dropdown-item>
+                        <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
+                          {{ group }}
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
                   </el-dropdown>
                 </el-form>
                 <!-- 显示选中标签的区域 -->
@@ -268,12 +310,15 @@ const handleCommand = (command) => {
   margin-left: 80px;
   margin-right: 80px;
 }
+
 .problem-list {
   padding: 20px;
 }
+
 .pages {
   margin-top: 10px;
 }
+
 .filter-container {
   display: flex;
   flex-direction: column;
