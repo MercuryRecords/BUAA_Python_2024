@@ -55,6 +55,11 @@ const router = createRouter({ //创建路由器
             name: 'home',
             component: () => import('@/views/Home.vue'),
         },
+        {
+            path: '/myQuestionSheet',
+            name: 'myQuestionSheet',
+            component: () => import('@/views/SheetCreated.vue'),
+        }
     ]
 })
 

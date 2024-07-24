@@ -122,7 +122,20 @@
 
         <v-list density="compact" nav>
           <v-list-item prepend-icon="mdi-folder" title="我的题库" value="myfiles"
-                       :to="{name:'question' ,query: {username: props.username}}"></v-list-item>
+                       :to="{name:'question' ,query: {username: props.username}}">
+            <v-list density="compact" nav>
+              <v-list-item prepend-icon="mdi-folder" title="我创建的题单" value="create"
+                           :to="{name:'myQuestionSheet', query: {username: props.username}}"
+              > <!--这里把username传给groupCreated模块了-->
+              </v-list-item>
+
+              <v-list-item prepend-icon="mdi-account-multiple" title="我加入的" value="join"
+                           :to="{name:'groupJoin', query: {username: props.username}}">
+              </v-list-item>
+
+              <v-list-item prepend-icon="mdi-star" title="我收藏的" value="starred"></v-list-item>
+            </v-list>
+          </v-list-item>
           <v-list-item prepend-icon="mdi-account-multiple" title="" value="mygroup">
             <v-list density="compact" nav>
               <v-list-item prepend-icon="mdi-folder" title="我创建的" value="create"
