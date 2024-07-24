@@ -161,8 +161,9 @@ def problem_create(request):
             return E_PROBLEM_OPTIONS_OR_BLANK_FORMAT
 
     index = problem_group.problem_num + 1
+    title = content[:30]
     Problem.objects.create(problem_group=problem_group, index=index, type=type, content=content, ans_count=ans_count,
-                           answer=answer,
+                           answer=answer, title=title,
                            field1=field[0], field2=field[1], field3=field[2], field4=field[3], field5=field[4],
                            field6=field[5], field7=field[6],
                            creator=user)
@@ -186,6 +187,8 @@ def problem_update(request):
     content = content if content else problem.content
     ans_count = request.POST.get('ans_count')
     ans_count = int(ans_count) if ans_count else problem.ans_count
+    title = request.POST.get('title')
+    title = title if title else problem.title
 
     if type not in ['c', 'b']:
         return E_UNKNOWN_TYPE
@@ -210,6 +213,7 @@ def problem_update(request):
         if len(field[i]) > 100:
             return E_PROBLEM_OPTIONS_OR_BLANK_FORMAT
 
+    problem.title = title
     problem.type, problem.content, problem.ans_count, problem.answer = type, content, ans_count, answer
     problem.field1, problem.field2, problem.field3, problem.field4, problem.field5, problem.field6, problem.field7 = field
     problem.save()
