@@ -1,30 +1,12 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.db.models import F, QuerySet
+from django.db.models import F, Q, QuerySet
 
-from .models import User, ProblemGroup, Problem
+from .models import User, ProblemGroup, Problem, ProblemPermission, Tag, Record
 
-E_USER_NOT_FIND = JsonResponse(
-    {"code": 401, "message": "用户不存在"})  # 当前用户 username 或问题组创建者 problem_group_creator 不存在
-E_PROBLEM_GROUP_REPEAT = JsonResponse({"code": 402, "message": "问题组已存在"})
-E_PROBLEM_GROUP_NOT_FIND = JsonResponse({"code": 402, "message": "问题组不存在"})
-E_PERMISSON_DENIED = JsonResponse({"code": 403, "message": "当前用户没有权限"})
-E_PROBLEM_NOT_FIND = JsonResponse({"code": 405, "message": "问题不存在"})
-E_TITLE_FORMAT = JsonResponse({"code": 406, "message": "标题非空且长度不能超过50"})
-E_DESCRIPTION_FORMAT = JsonResponse({"code": 406, "message": "描述长度不能超过200"})
-E_UNKNOWN_TYPE = JsonResponse({"code": 407, "message": "未知题目类型"})
-E_PROBLEM_CONTENT_FORMAT = JsonResponse({"code": 407, "message": "题干非空且长度不能超过1000"})
-E_PROBLEM_OPTIONS_OR_BLANK_TOO_MUCH = JsonResponse({"code": 407, "message": "选项或填空数量不能超过7"})
-E_ILLIGAL_ANSWER = JsonResponse({"code": 407, "message": "答案不合法"})
-E_PROBLEM_OPTIONS_OR_BLANK_FORMAT = JsonResponse({"code": 407, "message": "选项或填空内容非空且长度不能超过100"})
-E_BAD_POS = JsonResponse({"code": 408, "message": "题目位置不合法"})
+from .error import *
 
-
-def _success(text):
-    return JsonResponse({"code": 200, "message": text})
-
-
-def _get_problem_group(request, permisson):  # 0 仅可查看，1 可查看并添加问题，2 全部权限
+def _get_problem_group(request, permisson):  # 0 仅可查看，1 可修改
     username = request.POST.get('username')
     problem_group_creator = request.POST.get('problem_group_creator')
     problem_group_title = request.POST.get('problem_group_title')
@@ -36,25 +18,24 @@ def _get_problem_group(request, permisson):  # 0 仅可查看，1 可查看并�
     check = ProblemGroup.objects.filter(user=check[0], title=problem_group_title)
     if not check:
         return E_PROBLEM_GROUP_NOT_FIND
-
     problem_group = check[0]
 
     if permisson >= 0 and username != problem_group_creator:
         check = User.objects.filter(username=username)
         if not check:
             return E_USER_NOT_FIND
+        user = check[0]
 
-        # TODO
-
-        return E_PERMISSON_DENIED
+        groups = user.groups.all()
+        if not ProblemPermission.objects.filter(group__in=groups, problem_group=problem_group, permisson__gte=permisson).exists():
+            return E_PERMISSON_DENIED
 
     return problem_group
 
 
 def _get_problem(request, group_permisson, permisson):
-    # 对 permisson 参数，同上
-    # 对 permisson 参数，0 仅可查看，1 可查看/删除，2 可查看/删除/修改
-    # 对该问题组有查看权限同样对该问题有查看权限
+    # 对 group_permisson 参数，同上
+    # 对 permisson 参数，0 无需权限，1 删除问题权限，2 修改问题权限
     # 题目上传者和问题组拥有者可以删除该题目
     # 仅题目上传者可修改该题目
     problem_group = _get_problem_group(request, group_permisson)
@@ -76,6 +57,19 @@ def _get_problem(request, group_permisson, permisson):
 
     return problem_group, problem
 
+def _get_and_create_tags(request):
+    tag_names = request.POST.getlist('tags')
+
+    tags_to_add = []
+    for tag_name in tag_names:
+        check = Tag.objects.filter(name=tag_name)
+        if check:
+            tag = check[0]
+        else:
+            tag = Tag.objects.create(name=tag_name)
+        tags_to_add.append(tag)
+
+    return tags_to_add
 
 @require_http_methods(["POST"])
 def problem_group_create(request):
@@ -97,8 +91,11 @@ def problem_group_create(request):
     if ProblemGroup.objects.filter(user=check[0], title=title).exists():
         return E_PROBLEM_GROUP_REPEAT
 
-    ProblemGroup.objects.create(user=check[0], title=title, description=description)
-    return _success("问题组创建成功")
+    tags = _get_and_create_tags(request)
+    problem = ProblemGroup.objects.create(user=check[0], title=title, description=description)
+    problem.tags.add(*tags)
+
+    return success("问题组创建成功")
 
 
 @require_http_methods(["POST"])
@@ -120,7 +117,7 @@ def problem_group_update(request):
     problem_group.title = newtitle
     problem_group.description = description
     problem_group.save()
-    return _success("问题组修改成功")
+    return success("问题组修改成功")
 
 
 @require_http_methods(["POST"])
@@ -130,7 +127,7 @@ def problem_group_delete(request):
         return problem_group
 
     problem_group.delete()
-    return _success("问题组删除成功")
+    return success("问题组删除成功")
 
 
 @require_http_methods(["POST"])
@@ -171,7 +168,7 @@ def problem_create(request):
     problem_group.problem_num = index
     problem_group.save()
 
-    return _success("题目创建成功")
+    return success("题目创建成功")
 
 
 @require_http_methods(["POST"])
@@ -217,7 +214,7 @@ def problem_update(request):
     problem.type, problem.content, problem.ans_count, problem.answer = type, content, ans_count, answer
     problem.field1, problem.field2, problem.field3, problem.field4, problem.field5, problem.field6, problem.field7 = field
     problem.save()
-    return _success("题目修改成功")
+    return success("题目修改成功")
 
 
 @require_http_methods(["POST"])
@@ -233,7 +230,7 @@ def problem_delete(request):
     Problem.objects.filter(problem_group=problem_group, index__gt=index).update(index=F('index') - 1)
     problem_group.problem_num -= 1
     problem_group.save()
-    return _success("题目删除成功")
+    return success("题目删除成功")
 
 
 @require_http_methods(["POST"])
@@ -258,38 +255,129 @@ def problem_adjust_order(request):
 
     problem.index = newindex
     problem.save()
-    return _success("题目顺序更改成功")
+    return success("题目顺序更改成功")
 
+def _cut_to_page(request, query_set, sort_key, reverse=''):
+    page = int(request.POST.get('page')) - 1
+    number_per_page = int(request.POST.get('number_per_page'))
 
-# 获取用户有权限的所有问题
-def _get_problems_with_permissions(username: str) -> JsonResponse | QuerySet[Problem]:
+    if page * number_per_page >= query_set.count():
+        return E_PAGE_OVERFLOW
+    
+    if reverse != '-':
+        reverse = ''
+    object = object.order_by(reverse + sort_key)
+
+    if (page + 1) * number_per_page >= query_set.count():
+        query_set = query_set[number_per_page * page:]
+    else:
+        query_set = query_set[number_per_page * page:number_per_page * (page + 1)]
+
+    return query_set
+
+def _problem_groups_to_list(problem_groups):
+    result = []
+    for problem_group in problem_groups:
+        result.append({
+            'creator': problem_group.user,
+            'title': problem_group.title,
+            'description': problem_group.description,
+            'tags': [tag.name for tag in problem_group.tags.all()],
+            'problem_num': problem_group.problem_num,
+        })
+    return result
+
+@require_http_methods(["POST"])
+def get_created_problem_groups_num(request):
+    username = request.POST.get('username')
     user = User.objects.get(username=username)
     if not user:
         return E_USER_NOT_FIND
-    else:
-        user = user[0]
-    groups = user.groups.all()
+    
+    problem_groups = user.created_problem_groups.all()
+    return success_data("问题组数量查询成功", problem_groups.count())
 
-    if not groups:
-        return JsonResponse({"code": 402, "msg": "用户不在任何组中"})
-
-    permissions = [group.permissions.all() for group in groups]
-    problem_groups = [per.problem_group.all() for per in permissions]
-
+@require_http_methods(["POST"])
+def get_created_problem_groups(request):
+    username = request.POST.get('username')
+    user = User.objects.get(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    
+    problem_groups = user.created_problem_groups.all()
     if not problem_groups:
-        return JsonResponse({"code": 403, "msg": "用户没有权限查看任何题目组"})
+        return E_NO_PROBLEM_GROUP
 
-    # 问题组合并到一个QuerySet
-    total_problem_groups = problem_groups[0].union(*problem_groups[1:]) if len(problem_groups) > 1 else problem_groups[
-        0]
+    problem_groups = _cut_to_page(request, problem_groups, "title")
+    return success_data("问题组查询成功", _problem_groups_to_list(problem_groups))
+
+def _get_problems_with_permissions(user):
+    groups = user.groups.all()
+    query = Q(group__isnull=True) | Q(group__in=groups)
+    permissions = ProblemPermission.objects.filter(query)
+    problem_group_ids = permissions.values_list('problem_group', flat=True)
+    problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)
 
     problems = QuerySet()
-
-    # 获取所有问题并合并到一个 QuerySet
-    for problem_group in total_problem_groups:
-        problems.union(Problem.objects.filter(problem_group=problem_group))
-
+    for problem_group in problem_groups:
+        problems.union(problem_group.problems.all())
     return problems
+
+def _problems_to_list(user, problems):
+    result = []
+    for problem in problems:
+        all_record = Record.objects.filter(problem=problem)
+        all_right_record = all_record.filter(result=True)
+        user_record = all_record.filter(user=user)
+        user_right_record = user_record.filter(result=True)
+        result.append({
+            'title': problem.title,
+            # 需要同时返回 problem_group_creator，problem_group_title，index
+            # 因为 problem_group_creator 和 problem_group_title 唯一确定一个题单（问题组）
+            # 问题组和 index 唯一确定一个问题
+            'problem_group_creator': problem.problem_group.user.username,
+            'problem_group_title': problem.problem_group.title,
+            'index': problem.index,
+            'tags': [tag.name for tag in problem.tags.all()],
+            'creator': problem.creator.username,
+            # 用于展示用户是否做过此题（user_count）并计算个人正确率、总正确率
+            'user_right_count': user_right_record.count(),
+            'user_count': user_record.count(),
+            'all_right_count': all_right_record.count(),
+            'all_count': all_record.count(),
+        })
+    return result
+
+@require_http_methods(["POST"])
+def get_problem_num_with_permissions(request):
+    username = request.POST.get('username')
+    user = User.objects.get(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    user = user[0]
+
+    problems = _get_problems_with_permissions(user)
+    return success_data("问题数量查询成功", problems.count())
+
+@require_http_methods(["POST"])
+def get_problems_with_permissions(request):
+    username = request.POST.get('username')
+    user = User.objects.get(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    user = user[0]
+
+    problems = _get_problems_with_permissions(user)
+    if not problems:
+        return E_NO_PROBLEM
+    
+    sort_key = request.POST.get('sort_key')
+    reverse = request.POST.get('reverse')
+
+    problems = _cut_to_page(request, problems, sort_key, reverse)
+
+    return success_data("问题查询成功", _problems_to_list(user, problems))
+    
 
 
 @require_http_methods(["POST"])
@@ -311,4 +399,4 @@ def problem_search_advanced(request):
             result.union(problems.all().objects.search(keyword))
     else:
         result = problems.all().objects.search_regex(pattern)
-    return _success(result)
+    return success(result)

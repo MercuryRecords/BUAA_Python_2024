@@ -43,7 +43,7 @@ class JoinRequest(models.Model):
 
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    description = models.TextField(blank=True)
+    description = models.TextField(max_length=200, blank=True)
 
 
 class ProblemGroupManager(models.Manager):
@@ -56,12 +56,12 @@ class ProblemGroupManager(models.Manager):
 
 
 class ProblemGroup(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_problem_groups')
     title = models.CharField(max_length=50)
     description = models.TextField(max_length=200, blank=True)
-    problem_num = models.IntegerField(default=0)
     tags = models.ManyToManyField(Tag, related_name='problem_groups')
-
+    problem_num = models.IntegerField(default=0)
+    
     objects = ProblemGroupManager()
 
 
@@ -86,8 +86,8 @@ class ProblemManager(models.Manager):
 
 
 class Problem(models.Model):
-    problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE)
-    index = models.IntegerField(default=-1)
+    problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE, related_name="problems")
+    index = models.IntegerField()
     type = models.CharField(max_length=1)  # 'c'(choice)选择题，'b'(blank)填空题
     title = models.CharField(max_length=30)  # 题目，默认情况下需要截取
     content = models.TextField(max_length=1000)  # 题干
@@ -100,30 +100,23 @@ class Problem(models.Model):
     field5 = models.CharField(max_length=100, blank=True)
     field6 = models.CharField(max_length=100, blank=True)
     field7 = models.CharField(max_length=100, blank=True)
-    creator = models.ForeignKey(User, on_delete=models.CASCADE, default=None)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField(Tag, related_name='problems')
 
     objects = ProblemManager()
 
 
-class ProblemPremission(models.Model):
+class ProblemPermission(models.Model):
     group = models.ForeignKey(Group, blank=True, on_delete=models.CASCADE, related_name="permissions")  # 用户群组
-    problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE)  # 问题群组
-    permission = models.SmallIntegerField()  # 权限，0 仅可查看，1 可查看并添加问题，2 全部权限
+    problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE, related_name="permissions")  # 问题群组
+    permission = models.SmallIntegerField()  # 权限，0 仅可查看，1 可查看并添加问题
 
 
 # 做题记录
 class Record(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
-    field1 = models.CharField(max_length=100)
-    field2 = models.CharField(max_length=100, blank=True)
-    field3 = models.CharField(max_length=100, blank=True)
-    field4 = models.CharField(max_length=100, blank=True)
-    field5 = models.CharField(max_length=100, blank=True)
-    field6 = models.CharField(max_length=100, blank=True)
-    field7 = models.CharField(max_length=100, blank=True)
     result = models.BooleanField(default=False)  # 是否正确
     created_at = models.DateTimeField(auto_now_add=True)
 
