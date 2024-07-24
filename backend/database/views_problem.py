@@ -74,7 +74,7 @@ def _get_and_create_tags(request):
 @require_http_methods(["POST"])
 def problem_group_create(request):
     username = request.POST.get('username')
-    title = request.POST.get('problem_group_title')
+    title = request.POST.get('title')
     description = request.POST.get('description')
     description = description if description else ''
 
