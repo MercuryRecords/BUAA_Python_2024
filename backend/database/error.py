@@ -17,6 +17,7 @@ E_NO_PROBLEM_GROUP = JsonResponse({"code": 409, "message": "问题组列表为�
 E_NO_PROBLEM = JsonResponse({"code": 409, "message": "题目列表为空"})
 E_PAGE_OVERFLOW = JsonResponse({"code": 410, "message": "页码越界"})
 E_GROUP_NOT_FIND = JsonResponse({"code": 411, "message": "用户组不存在"})
+E_USER_NOT_IN_GROUP = JsonResponse({"code": 411, "message": "用户不在此用户组中"})
 E_PERMISSION_REPEAT = JsonResponse({"code": 412, "message": "分享已存在"})
 
 def success(text):

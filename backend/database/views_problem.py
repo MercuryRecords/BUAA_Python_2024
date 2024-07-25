@@ -150,12 +150,16 @@ def problem_share(request):
     if isinstance(problem_group, JsonResponse):
         return problem_group
     
+    user = User.objects.get(username=request.POST.get('username'))
     group_name = request.POST.get('group_name')
     if group_name:
         group = Group.objects.filter(name=group_name)
         if not group:
             return E_GROUP_NOT_FIND
         group = group[0]
+
+        if not user in group.members.all():
+            return E_USER_NOT_IN_GROUP
     else:
         group = None
 
@@ -314,16 +318,17 @@ def problem_adjust_order(request):
     return success("题目顺序更改成功")
 
 
-def _cut_to_page(request, query_set, sort_key, reverse=''):
-    page = int(request.POST.get('page')) - 1
-    number_per_page = int(request.POST.get('number_per_page'))
+def _cut_to_page(request, query_set):
+    page = request.POST.get('page')
+    number_per_page = request.POST.get('number_per_page')
+    if not page or not number_per_page:
+        return query_set
+    
+    page = int(page) - 1
+    number_per_page = int(number_per_page)
 
     if page * number_per_page >= query_set.count():
         return E_PAGE_OVERFLOW
-
-    if reverse != '-':
-        reverse = ''
-    object = object.order_by(reverse + sort_key)
 
     if (page + 1) * number_per_page >= query_set.count():
         query_set = query_set[number_per_page * page:]
@@ -372,9 +377,19 @@ def get_created_problem_groups(request):
     return success_data("问题组查询成功", _problem_groups_to_list(problem_groups))
 
 
-def _get_problems_with_permissions(user, group):
-    if group:
-        permisson = ProblemPermission.objects.filter(group=group)
+def _get_problems_with_permissions(user, group_name):
+    if group_name == '_shared_to_all':
+        permissions = ProblemPermission.objects.filter(group__isnull=True)
+    elif group_name:
+        group = Group.objects.filter(name=group_name)
+        if not group:
+            return E_GROUP_NOT_FIND
+        group = group[0]
+
+        if not user in group.members.all():
+            return E_USER_NOT_IN_GROUP
+        
+        permissions = ProblemPermission.objects.filter(group=group)
     else:
         groups = user.groups.all()
         query = Q(group__isnull=True) | Q(group__in=groups)
@@ -382,9 +397,7 @@ def _get_problems_with_permissions(user, group):
     problem_group_ids = permissions.values_list('problem_group', flat=True)
     problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)
 
-    problems = QuerySet()
-    for problem_group in problem_groups:
-        problems.union(problem_group.problems.all())
+    problems = Problem.objects.filter(problem_group__in=problem_groups)
     return problems
 
 
@@ -396,15 +409,24 @@ def _problems_to_list(user, problems):
         user_record = all_record.filter(user=user)
         user_right_record = user_record.filter(result=True)
         result.append({
-            'title': problem.title,
-            # 需要同时返回 problem_group_creator，problem_group_title，index
-            # 因为 problem_group_creator 和 problem_group_title 唯一确定一个题单（问题组）
-            # 问题组和 index 唯一确定一个问题
-            'problem_group_creator': problem.problem_group.user.username,
-            'problem_group_title': problem.problem_group.title,
-            'index': problem.index,
+            'id': problem.id,
+            'type': problem.type,
+            'problem_title': problem.title,
+            'content': problem.content,
+            'ans_count': problem.ans_count,
+            'field1': problem.field1,
+            'field2': problem.field2,
+            'field3': problem.field3,
+            'field4': problem.field4,
+            'field5': problem.field5,
+            'field6': problem.field6,
+            'field7': problem.field7,
             'tags': [tag.name for tag in problem.tags.all()],
             'creator': problem.creator.username,
+            
+            'problem_group_id': problem.problem_group.id,
+            'problem_group_title': problem.problem_group.title,
+            
             # 用于展示用户是否做过此题（user_count）并计算个人正确率、总正确率
             'user_right_count': user_right_record.count(),
             'user_count': user_record.count(),
@@ -417,28 +439,38 @@ def _problems_to_list(user, problems):
 @require_http_methods(["POST"])
 def get_problem_num_with_permissions(request):
     username = request.POST.get('username')
-    user = User.objects.get(username=username)
+    user = User.objects.filter(username=username)
     if not user:
         return E_USER_NOT_FIND
     user = user[0]
 
-    problems = _get_problems_with_permissions(user)
+    filter_group = request.POST.get('filter_group')
+    problems = _get_problems_with_permissions(user, filter_group)
+    if isinstance(problems, JsonResponse):
+        return problems
+    
     return success_data("问题数量查询成功", problems.count())
 
 
 @require_http_methods(["POST"])
 def get_problems_with_permissions(request):
     username = request.POST.get('username')
-    user = User.objects.get(username=username)
+    user = User.objects.filter(username=username)
     if not user:
         return E_USER_NOT_FIND
     user = user[0]
 
-    problems = _get_problems_with_permissions(user)
+    filter_group = request.POST.get('filter_group')
+    problems = _get_problems_with_permissions(user, filter_group)
+    if isinstance(problems, JsonResponse):
+        return problems
+    
     if not problems:
         return E_NO_PROBLEM
 
-    problems = _cut_to_page(request, problems, sort_key, reverse)
+    problems = _cut_to_page(request, problems)
+    if isinstance(problems, JsonResponse):
+        return problems
 
     return success_data("问题查询成功", _problems_to_list(user, problems))
 
@@ -465,41 +497,42 @@ def problem_search_advanced(request):
     return success(result)
 
 
-data = [
-    {
-        "id": 1,
-        "problem_title": "如何计算矩阵的行列式？",
-        "problem_group_title": "Math Questions",
-        "problem_group_id": 101,
-        "tags": ["矩阵", "行列式"],
-        "creator": "user123",
-        "user_right_count": 5,
-        "user_count": 10,
-        "all_right_count": 150,
-        "all_count": 300,
-    },
-    {
-        "id": 2,
-        "problem_title": "求解线性方程组的解",
-        "problem_group_title": "Math Questions",
-        "problem_group_id": 101,
-        "tags": ["线性代数", "方程组"],
-        "creator": "user456",
-        "user_right_count": 3,
-        "user_count": 8,
-        "all_right_count": 200,
-        "all_count": 400,
-    },
-]
+
+# data = [
+#     {
+#         "id": 1,
+#         "problem_title": "如何计算矩阵的行列式？",
+#         "problem_group_title": "Math Questions",
+#         "problem_group_id": 101,
+#         "tags": ["矩阵", "行列式"],
+#         "creator": "user123",
+#         "user_right_count": 5,
+#         "user_count": 10,
+#         "all_right_count": 150,
+#         "all_count": 300,
+#     },
+#     {
+#         "id": 2,
+#         "problem_title": "求解线性方程组的解",
+#         "problem_group_title": "Math Questions",
+#         "problem_group_id": 101,
+#         "tags": ["线性代数", "方程组"],
+#         "creator": "user456",
+#         "user_right_count": 3,
+#         "user_count": 8,
+#         "all_right_count": 200,
+#         "all_count": 400,
+#     },
+# ]
 
 
-# 视图函数
-@require_http_methods(["POST"])
-def get_problems_fake(request):
-    # 构建成功响应的数据结构
-    response_data = {
-        "code": 200,
-        "message": "问题查询成功",
-        "data": data
-    }
-    return JsonResponse(response_data, safe=False)  # 使用safe=False允许返回非字典类型的数据
+# # 视图函数
+# @require_http_methods(["POST"])
+# def get_problems_fake(request):
+#     # 构建成功响应的数据结构
+#     response_data = {
+#         "code": 200,
+#         "message": "问题查询成功",
+#         "data": data
+#     }
+#     return JsonResponse(response_data, safe=False)  # 使用safe=False允许返回非字典类型的数据

@@ -4,6 +4,7 @@ from django.http import JsonResponse
 
 class Authentication(MiddlewareMixin):
     def process_request(self, request):
+        # print(request.POST)
         if request.method != "POST":
             return JsonResponse({"code": 400, "message": "请求方式错误"})
 

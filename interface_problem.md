@@ -208,11 +208,21 @@
 | 参数名                   | 参数说明   | 类型  | 例子               | 备注                       |
 |-----------------------|--------|-----|------------------|--------------------------|
 | id              | 问题id    | 整数 | 1        |                          |
+| type | 问题类型 | 字符串 |  'c'或'b' |  |
 | problem_title | 问题标题 | 字符串 |||
-| problem_group_title | 问题组标题 | 字符串 | "Math Questions"        |                         |
-| problem_group_id | 所属问题组id | 整数 | | |
+| content | 问题题干 | 字符串 |||
+| ans_count | | 整数 |||
+| field1 || 字符串 |||
+| field2 || 字符串 |||
+| field3 || 字符串 |||
+| field4 || 字符串 |||
+| field5 || 字符串 |||
+| field6 || 字符串 |||
+| field7 || 字符串 |||
 | tags | 问题标签 | 列表 | ["矩阵", "行列式", ...]| ||
 | creator | 上传者用户名 | 字符串 |||
+| problem_group_id | 所属问题组id | 整数 | | |
+| problem_group_title | 问题组标题 | 字符串 | "Math Questions"        |                         |
 | user_right_count | 当前用户此题正确次数 |整数|||
 | user_count | 当前用户做此题的总次数 | 整数|||
 | all_right_count | 所有用户此题总正确次数 |整数|||

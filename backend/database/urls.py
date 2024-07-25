@@ -39,5 +39,5 @@ urlpatterns = [
     path('problem_delete', views_problem.problem_delete),
     path('problem_adjust_order', views_problem.problem_adjust_order),
     
-    path('get_problems', views_problem.get_problems_fake, name='get_problems'),
+    path('get_problems', views_problem.get_problems_with_permissions),
 ]
