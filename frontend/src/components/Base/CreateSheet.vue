@@ -76,11 +76,18 @@ const openCreateDialog = () => {
 const createNewProblemGroup = async () => {
   try {
     console.log(newProblemGroup.value)
-    const response = await API.post('/problem_group_create', newProblemGroup.value);
+    const response = await API.post('/problem_group_create', newProblemGroup.value,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
     if (response.data.code === 200) {
-      ElMessage.success('题目创建成功');
+      ElMessage.success('新题单创建成功');
       createDialogVisible.value = false;
-      fetchProblems();
+      await fetchProblems();
+      console.log("问题组id为"+response.data.data);
+      console.log(problems.value)
     } else {
       console.log(response.data.code)
       ElMessage.error('题目创建失败');
