@@ -219,7 +219,7 @@ const decreaseAnswerCount = () => {
 
 const submitProblem = () => {
   // 准备提交数据
-  console.log(data.username)
+
   const submitData: Record<string, any> = {
     username: data.username,
     title: problemForm.title,
@@ -237,31 +237,14 @@ const submitProblem = () => {
     field7: problemForm.field7,
     tags: problemForm.tags
   }
-
   // 根据ans_count设置答案
   for (let i = 0; i < problemForm.ans_count; i++) {
     submitData[`field${i + 1}`] = problemForm.answers[i]
   }
   console.log(submitData)
   // 发送请求到后端
-  API.post('/problem_create',
+  API.post('/problem_create', submitData,
       {
-        username: data.username,
-        title: problemForm.title,
-        problem_group_id: data.sheetId,
-        type: problemForm.type,
-        content: problemForm.content,
-        ans_count: problemForm.ans_count,
-        answer: problemForm.answer,
-        field1: problemForm.field1,
-        field2: problemForm.field2,
-        field3: problemForm.field3,
-        field4: problemForm.field4,
-        field5: problemForm.field5,
-        field6: problemForm.field6,
-        field7: problemForm.field7,
-        tags: problemForm.tags
-      }, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded'
         }
