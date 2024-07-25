@@ -6,21 +6,16 @@ from .models import User, ProblemGroup, Problem, ProblemPermission, Tag, Record
 
 from .error import *
 
-def _get_problem_group(request, permisson):  # 0 仅可查看，1 可修改
+def _get_problem_group(request, permisson):
     username = request.POST.get('username')
-    problem_group_creator = request.POST.get('problem_group_creator')
-    problem_group_title = request.POST.get('problem_group_title')
+    problem_group_id = request.POST.get('problem_group_id')
 
-    check = User.objects.filter(username=problem_group_creator)
-    if not check:
-        return E_USER_NOT_FIND
-
-    check = ProblemGroup.objects.filter(user=check[0], title=problem_group_title)
+    check = ProblemGroup.objects.filter(id=problem_group_id)
     if not check:
         return E_PROBLEM_GROUP_NOT_FIND
     problem_group = check[0]
 
-    if permisson >= 0 and username != problem_group_creator:
+    if permisson >= 0 and username != problem_group.user.username:
         check = User.objects.filter(username=username)
         if not check:
             return E_USER_NOT_FIND
@@ -91,32 +86,42 @@ def problem_group_create(request):
     if ProblemGroup.objects.filter(user=check[0], title=title).exists():
         return E_PROBLEM_GROUP_REPEAT
 
-    tags = _get_and_create_tags(request)
-    problem = ProblemGroup.objects.create(user=check[0], title=title, description=description)
-    problem.tags.add(*tags)
+    problem_group = ProblemGroup.objects.create(user=check[0], title=title, description=description)
+    
+    if 'tags' in request.POST:
+        tags = _get_and_create_tags(request)
+        problem_group.tags.set(tags)
 
     return success("问题组创建成功")
 
 
 @require_http_methods(["POST"])
 def problem_group_update(request):
-    problem_group = _get_problem_group(request, 2)
+    problem_group = _get_problem_group(request, 1)
     if isinstance(problem_group, JsonResponse):
         return problem_group
 
-    newtitle = request.POST.get('newtitle')
+    newtitle = request.POST.get('title')
     newtitle = newtitle if newtitle else problem_group.title
     if len(newtitle) > 50:
         return E_TITLE_FORMAT
 
-    description = request.POST.get('newdescription')
-    description = description if description is not None else problem_group.description
+    if 'description' in request.POST:
+        description = request.POST.get('description')
+    else:
+        description = problem_group.description
+    
     if len(description) > 200:
         return E_DESCRIPTION_FORMAT
 
     problem_group.title = newtitle
     problem_group.description = description
     problem_group.save()
+
+    if 'tags' in request.POST:
+        tags = _get_and_create_tags(request)
+        problem_group.tags.set(tags)
+
     return success("问题组修改成功")
 
 
@@ -134,6 +139,7 @@ def problem_group_delete(request):
 def problem_create(request):
     problem_group = _get_problem_group(request, 1)
     user = User.objects.get(username=request.POST.get('username'))
+    title = request.POST.get('title')
     type = request.POST.get('type')
     content = request.POST.get('content')
     ans_count = int(request.POST.get('ans_count'))
