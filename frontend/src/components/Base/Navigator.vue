@@ -132,7 +132,9 @@
                            :to="{name:'groupJoin', query: {username: props.username}}">
               </v-list-item>
 
-              <v-list-item prepend-icon="mdi-star" title="题库" value="starred" :to="{name:'question' ,query: {username: props.username}}"></v-list-item>
+              <v-list-item prepend-icon="mdi-star" title="题库" value="starred"
+                           :to="{name:'question' ,query: {username: props.username}}">
+              </v-list-item>
             </v-list>
           </v-list-item>
           <v-list-item prepend-icon="mdi-account-multiple" title="" value="mygroup">
