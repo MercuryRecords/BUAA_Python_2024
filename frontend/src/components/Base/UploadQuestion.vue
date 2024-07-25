@@ -261,6 +261,10 @@ const submitProblem = () => {
         field6: problemForm.field6,
         field7: problemForm.field7,
         tags: problemForm.tags
+      }, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
       })
       .then(response => {
         if (response.data.code === 200) {

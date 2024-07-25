@@ -21,7 +21,8 @@ const shareDialogVisible = ref(false);
 const newProblemGroup = ref({
   username: '',
   title: '',
-  description: ''
+  description: '',
+  tag: [],
 });
 const updateProblemGroup = ref({
   username: '',
@@ -36,12 +37,12 @@ onMounted(() => {
 
 const fetchProblems = async () => {
   try {
-    const response = await API.post('/problem_groups', {
-      params: {
-        username: data.username,
-        page: currentPage.value,
-        page_size: pageSize.value
-      }
+    const response = await API.post('/get_problem_groups', {
+      username: data.username,
+      mode: 2,
+      filter_group: '',
+      page: currentPage.value,
+      number_per_page: pageSize.value
     });
     if (response.data.code === 200) {
       problems.value = response.data.data.problems;
@@ -74,12 +75,21 @@ const openCreateDialog = () => {
 
 const createNewProblemGroup = async () => {
   try {
-    const response = await API.post('/problem_group_create', newProblemGroup.value);
+    console.log(newProblemGroup.value)
+    const response = await API.post('/problem_group_create', newProblemGroup.value,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
     if (response.data.code === 200) {
-      ElMessage.success('题目创建成功');
+      ElMessage.success('新题单创建成功');
       createDialogVisible.value = false;
-      fetchProblems();
+      await fetchProblems();
+      console.log("问题组id为"+response.data.data);
+      console.log(problems.value)
     } else {
+      console.log(response.data.code)
       ElMessage.error('题目创建失败');
     }
   } catch (error) {
