@@ -2,11 +2,11 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import F, Q, QuerySet
 
-from .models import User, ProblemGroup, Problem, ProblemPermission, Tag, Record
+from .models import User, Group, ProblemGroup, Problem, ProblemPermission, Tag, Record
 
 from .error import *
 
-def _get_problem_group(request, permisson):
+def _get_problem_group(request, permission):
     username = request.POST.get('username')
     problem_group_id = request.POST.get('problem_group_id')
 
@@ -15,42 +15,48 @@ def _get_problem_group(request, permisson):
         return E_PROBLEM_GROUP_NOT_FIND
     problem_group = check[0]
 
-    if permisson >= 0 and username != problem_group.user.username:
+    if permission >= 0 and username != problem_group.user.username:
         check = User.objects.filter(username=username)
         if not check:
             return E_USER_NOT_FIND
         user = check[0]
 
         groups = user.groups.all()
-        if not ProblemPermission.objects.filter(group__in=groups, problem_group=problem_group,
-                                                permisson__gte=permisson).exists():
-            return E_PERMISSON_DENIED
+        if not ProblemPermission.objects.filter(group__isnull=True, problem_group=problem_group,
+                permission__gte=permission).exists() and not ProblemPermission.objects.filter(group__in=groups,
+                problem_group=problem_group, permission__gte=permission).exists():
+            return E_PERMISSION_DENIED
 
     return problem_group
 
 
-def _get_problem(request, group_permisson, permisson):
-    # 对 group_permisson 参数，同上
-    # 对 permisson 参数，0 无需权限，1 删除问题权限，2 修改问题权限
-    # 题目上传者和问题组拥有者可以删除该题目
+def _get_problem(request, permission):
+    # 对 permission 参数，0 题目上传者和问题组管理者 1 题目上传者
+    # 题目上传者和问题组管理者可以删除该题目
     # 仅题目上传者可修改该题目
-    problem_group = _get_problem_group(request, group_permisson)
-    if isinstance(problem_group, JsonResponse):
-        return problem_group
-
     username = request.POST.get('username')
-    index = int(request.POST.get('index'))
-    check = Problem.objects.filter(problem_group=problem_group, index=index)
+    problem_id = request.POST.get('problem_id')
+    check = Problem.objects.filter(id=problem_id)
     if not check:
         return E_PROBLEM_NOT_FIND
     problem = check[0]
+    problem_group = problem.problem_group
 
-    if permisson >= 2 and username != problem.creator.username:
-        return E_PERMISSON_DENIED
+    if permission >= 1 and username != problem.creator.username:
+        return E_PERMISSION_DENIED
 
-    if permisson == 1 and username != problem.creator.username and username != problem_group.user.username:
-        return E_PERMISSON_DENIED
+    if permission == 0 and username != problem.creator.username and username != problem_group.user.username:
+        check = User.objects.filter(username=username)
+        if not check:
+            return E_USER_NOT_FIND
+        user = check[0]
 
+        groups = user.groups.all()
+        if not ProblemPermission.objects.filter(group__isnull=True, problem_group=problem_group,
+                permission__gte=1).exists() and not ProblemPermission.objects.filter(group__in=groups,
+                problem_group=problem_group, permission__gte=1).exists():
+            return E_PERMISSION_DENIED
+        
     return problem_group, problem
 
 
@@ -95,7 +101,7 @@ def problem_group_create(request):
         tags = _get_and_create_tags(request)
         problem_group.tags.set(tags)
 
-    return success("问题组创建成功")
+    return success_data("问题组创建成功", problem_group.id)
 
 
 @require_http_methods(["POST"])
@@ -139,6 +145,36 @@ def problem_group_delete(request):
 
 
 @require_http_methods(["POST"])
+def problem_share(request):
+    problem_group = _get_problem_group(request, 1)
+    if isinstance(problem_group, JsonResponse):
+        return problem_group
+    
+    group_name = request.POST.get('group_name')
+    if group_name:
+        group = Group.objects.filter(name=group_name)
+        if not group:
+            return E_GROUP_NOT_FIND
+        group = group[0]
+    else:
+        group = None
+
+    newpermission = int(request.POST.get('permission'))
+    check = ProblemPermission.objects.filter(group=group, problem_group=problem_group)
+    if check:
+        permission = check[0]
+    else:
+        permission = ProblemPermission.objects.create(group=group, problem_group=problem_group, permission=-1)
+    
+    
+    if permission.permission >= newpermission:
+        return E_PERMISSION_REPEAT
+    
+    permission.permission = newpermission
+    permission.save()
+    return success("问题组分享成功")
+    
+@require_http_methods(["POST"])
 def problem_create(request):
     problem_group = _get_problem_group(request, 1)
     user = User.objects.get(username=request.POST.get('username'))
@@ -146,6 +182,7 @@ def problem_create(request):
     type = request.POST.get('type')
     content = request.POST.get('content')
     ans_count = int(request.POST.get('ans_count'))
+    title = title if title else content[:30]
 
     if type not in ['c', 'b']:
         return E_UNKNOWN_TYPE
@@ -167,34 +204,37 @@ def problem_create(request):
             return E_PROBLEM_OPTIONS_OR_BLANK_FORMAT
 
     index = problem_group.problem_num + 1
-    title = content[:30]
-    Problem.objects.create(problem_group=problem_group, index=index, type=type, content=content, ans_count=ans_count,
-                           answer=answer, title=title,
+    
+    problem = Problem.objects.create(problem_group=problem_group, index=index, type=type, title=title, content=content,
+                           ans_count=ans_count, answer=answer, 
                            field1=field[0], field2=field[1], field3=field[2], field4=field[3], field5=field[4],
                            field6=field[5], field7=field[6],
                            creator=user)
+    if 'tags' in request.POST:
+        tags = _get_and_create_tags(request)
+        problem.tags.set(tags)
 
     problem_group.problem_num = index
     problem_group.save()
 
-    return success("题目创建成功")
+    return success_data("题目创建成功", problem.id)
 
 
 @require_http_methods(["POST"])
 def problem_update(request):
-    res = _get_problem(request, -1, 2)
+    res = _get_problem(request, 1)
     if isinstance(res, JsonResponse):
         return res
 
     problem_group, problem = res
+    title = request.POST.get('title')
+    title = title if title else problem.title
     type = request.POST.get('type')
     type = type if type else problem.type
     content = request.POST.get('content')
     content = content if content else problem.content
     ans_count = request.POST.get('ans_count')
     ans_count = int(ans_count) if ans_count else problem.ans_count
-    title = request.POST.get('title')
-    title = title if title else problem.title
 
     if type not in ['c', 'b']:
         return E_UNKNOWN_TYPE
@@ -219,23 +259,27 @@ def problem_update(request):
         if len(field[i]) > 100:
             return E_PROBLEM_OPTIONS_OR_BLANK_FORMAT
 
-    problem.title = title
-    problem.type, problem.content, problem.ans_count, problem.answer = type, content, ans_count, answer
+    problem.type, problem.title, problem.content, problem.ans_count, problem.answer = type, title, content, ans_count, answer
     problem.field1, problem.field2, problem.field3, problem.field4, problem.field5, problem.field6, problem.field7 = field
     problem.save()
+
+    if 'tags' in request.POST:
+        tags = _get_and_create_tags(request)
+        problem.tags.set(tags)
+
     return success("题目修改成功")
 
 
 @require_http_methods(["POST"])
 def problem_delete(request):
-    res = _get_problem(request, -1, 1)
+    res = _get_problem(request, 0)
     if isinstance(res, JsonResponse):
         return res
 
     problem_group, problem = res
+    index = problem.index
     problem.delete()
 
-    index = int(request.POST.get("index"))
     Problem.objects.filter(problem_group=problem_group, index__gt=index).update(index=F('index') - 1)
     problem_group.problem_num -= 1
     problem_group.save()
@@ -244,12 +288,12 @@ def problem_delete(request):
 
 @require_http_methods(["POST"])
 def problem_adjust_order(request):
-    res = _get_problem(request, 2, -1)
+    res = _get_problem(request, 0)
     if isinstance(res, JsonResponse):
         return res
 
     problem_group, problem = res
-    index = int(request.POST.get("index"))
+    index = problem.index
     newindex = int(request.POST.get("newindex"))
     maxindex = problem_group.problem_num
     if newindex < 1 or newindex > maxindex:

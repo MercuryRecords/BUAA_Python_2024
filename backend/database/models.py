@@ -108,7 +108,7 @@ class Problem(models.Model):
 
 
 class ProblemPermission(models.Model):
-    group = models.ForeignKey(Group, blank=True, on_delete=models.CASCADE, related_name="permissions")  # 用户群组
+    group = models.ForeignKey(Group, null=True, on_delete=models.CASCADE, related_name="permissions")  # 用户群组
     problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE, related_name="permissions")  # 问题群组
     permission = models.SmallIntegerField()  # 权限，0 仅可查看，1 可查看并添加问题
 

@@ -33,6 +33,7 @@ urlpatterns = [
     path('problem_group_create', views_problem.problem_group_create),
     path('problem_group_update', views_problem.problem_group_update),
     path('problem_group_delete', views_problem.problem_group_delete),
+    path('problem_share', views_problem.problem_share),
     path('problem_create', views_problem.problem_create),
     path('problem_update', views_problem.problem_update),
     path('problem_delete', views_problem.problem_delete),
