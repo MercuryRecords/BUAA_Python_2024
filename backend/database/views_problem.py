@@ -369,10 +369,13 @@ def get_created_problem_groups(request):
     return success_data("问题组查询成功", _problem_groups_to_list(problem_groups))
 
 
-def _get_problems_with_permissions(user):
-    groups = user.groups.all()
-    query = Q(group__isnull=True) | Q(group__in=groups)
-    permissions = ProblemPermission.objects.filter(query)
+def _get_problems_with_permissions(user, group):
+    if group:
+        permisson = ProblemPermission.objects.filter(group=group)
+    else:
+        groups = user.groups.all()
+        query = Q(group__isnull=True) | Q(group__in=groups)
+        permissions = ProblemPermission.objects.filter(query)
     problem_group_ids = permissions.values_list('problem_group', flat=True)
     problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)
 
@@ -431,9 +434,6 @@ def get_problems_with_permissions(request):
     problems = _get_problems_with_permissions(user)
     if not problems:
         return E_NO_PROBLEM
-
-    sort_key = request.POST.get('sort_key')
-    reverse = request.POST.get('reverse')
 
     problems = _cut_to_page(request, problems, sort_key, reverse)
 
