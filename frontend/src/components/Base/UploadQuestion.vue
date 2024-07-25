@@ -242,15 +242,32 @@ const submitProblem = () => {
   for (let i = 0; i < problemForm.ans_count; i++) {
     submitData[`field${i + 1}`] = problemForm.answers[i]
   }
-
+  console.log(submitData)
   // 发送请求到后端
-  API.post('/api/problem_create', submitData)
+  API.post('/problem_create',
+      {
+        username: data.username,
+        title: problemForm.title,
+        problem_group_id: data.sheetId,
+        type: problemForm.type,
+        content: problemForm.content,
+        ans_count: problemForm.ans_count,
+        answer: problemForm.answer,
+        field1: problemForm.field1,
+        field2: problemForm.field2,
+        field3: problemForm.field3,
+        field4: problemForm.field4,
+        field5: problemForm.field5,
+        field6: problemForm.field6,
+        field7: problemForm.field7,
+        tags: problemForm.tags
+      })
       .then(response => {
         if (response.data.code === 200) {
           console.log('提交成功:', response.data)
           ElMessage.success('题目提交成功')
         } else {
-          console.log('提交失败:',response.data)
+          console.log('提交失败:', response.data)
           ElMessage.error('题目提交失败')
         }
       })
@@ -259,21 +276,6 @@ const submitProblem = () => {
         ElMessage.error('题目提交失败，请重试')
       })
 }
-
-// 初始化函数，用于获取题目组树
-const initGroupTree = () => {
-  API.get('/api/problem_groups')
-      .then(response => {
-        groupTree.value = response.data
-      })
-      .catch(error => {
-        console.error('获取题目组失败:', error)
-        ElMessage.error('获取题目组失败，请刷新页面重试')
-      })
-}
-
-// 在组件挂载时调用初始化函数
-initGroupTree()
 </script>
 
 <style scoped>
