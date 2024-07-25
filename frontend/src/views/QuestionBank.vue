@@ -5,6 +5,7 @@ import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
 import {useRoute} from 'vue-router'
+import API from "@/plugins/axios";
 
 const route = useRoute()
 
@@ -16,55 +17,18 @@ const searchForm = reactive({
 
 interface data {
   id: string,
-  title: string,
-  uploader: string,
-  source: string,
+  problem_title: string,
+  creator: string,
+  problem_group_title: string,
   tags: string[],
+  all_count: number,
+  all_right_count: number,
+  user_count: number,
+  user_right_count: number,
   accuracy: number
 }
 
 const allProblems = ref<data[]>([
-  {
-    id: 'P1000',
-    title: '超级玛丽游戏',
-    uploader: 'gyk',
-    source: 'problem_sheet1',
-    tags: ['选择题', '动态规划'],
-    accuracy: 0.9
-  },
-  {
-    id: 'P1001',
-    title: 'A+B Problem',
-    uploader: 'mamba',
-    source: 'problem_sheet2',
-    tags: ['填空题', '数学'],
-    accuracy: 0.8
-  },
-  {
-    id: 'P1002',
-    title: '过河卒',
-    uploader: 'admin',
-    source: 'NOIP2002普及组',
-    tags: ['算法', '动态规划'],
-    accuracy: 0.7
-  },
-  {id: 'P1003', title: '铺地毯', uploader: 'admin', source: 'NOIP2011提高组', tags: ['算法', '模拟'], accuracy: 0.6},
-  {
-    id: 'P1004',
-    title: '方格取数',
-    uploader: 'admin',
-    source: 'NOIP2000提高组',
-    tags: ['算法', '动态规划'],
-    accuracy: 0.5
-  },
-  {
-    id: 'P1005',
-    title: '矩阵取数游戏',
-    uploader: 'admin',
-    source: 'NOIP2007提高组',
-    tags: ['算法', '动态规划', '数学'],
-    accuracy: 0.25
-  },
   // ... 其他问题数据
 ])
 
@@ -73,6 +37,7 @@ const pageSize = ref(20)
 
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
+  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
   {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
   {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
   {name: '题目类型', tags: ['选择题', '填空题']},
@@ -81,10 +46,10 @@ const tagCategories = ref([
 const filterProblems = computed(() => {
   return allProblems.value.filter(problem => {
     const matchKeyword = searchForm.keyword === '' ||
-        problem.title.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
+        problem.problem_title.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
         problem.id.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-        problem.uploader.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-        problem.source.toLowerCase().includes(searchForm.keyword.toLowerCase())
+        problem.creator.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
+        problem.problem_group_title.toLowerCase().includes(searchForm.keyword.toLowerCase())
     const matchTags = searchForm.selectedTags.length === 0 || searchForm.selectedTags.every(tag => problem.tags.includes(tag))
     return matchKeyword && matchTags
   })
@@ -113,7 +78,7 @@ const handleCurrentChange = (val: number) => {
 }
 
 const handleSolve = (problem: data) => {
-  ElMessage.success(`准备解决题目: ${problem.title}`)
+  ElMessage.success(`准备解决题目: ${problem.problem_title}`)
 }
 
 const clearFilters = () => {
@@ -145,18 +110,75 @@ const getAccuracyColor = (accuracy: number) => {
   return 'warning'
 }
 
+function getProblems(page: number) {
+  API.post('/get_problems',
+      {
+        username: route.query.username,
+        page: page,
+        number_per_page: 10
+      }, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(
+      function (response) {
+        if (response.data.code === 200) { // 成功接收
+          // for (let i = 0; i < response.data.groups.length; i++) {
+          //   if (response.data.groups[i].creator == data.username) {
+          //     tableData.push(response.data.groups[i]) //将群组加入tableData，准备在挂载的时候显示出来
+          //   }
+          // }
+          for (let i = 0; i < response.data.data.length; i++) {
+            console.log(response.data.data[i]);
+            allProblems.value[i] = response.data.data[i];
+            allProblems.value[i].accuracy = response.data.data[i].all_right_count / response.data.data[i].all_count
+          }
+        } else { // 接收失败
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      })
+}
+
+function getProblemsNumber() {
+  let number = 0;
+  console.log(route.query.username)
+  API.post('/get_problems_num',
+      {
+        username: route.query.username,
+      }, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(
+      function (response) {
+        if (response.data.code === 200) { // 成功接收
+          number = response.data;
+          console.log(number);
+        } else { // 接收失败
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      })
+  return number;
+}
+
 const fetchProblems = async () => {
-  try {
-    const response = await axios.get('/api/problems')
-    allProblems.value = response.data
-  } catch (error) {
-    console.error('获取问题列表失败:', error)
-    ElMessage.error('获取问题列表失败，请稍后重试')
+  // let number = getProblemsNumber();
+  let number = 20;
+  for (let i = 1; i <= Math.floor(number/10)+1; i++) {
+    getProblems(i);
   }
 }
 
 onMounted(() => {
-  //fetchProblems()
+  fetchProblems()
 })
 
 // ----------------------测试----------------
@@ -246,9 +268,9 @@ const handleCommand = (command: any) => {
 
               <el-table :data="problems" style="width: 100%">
                 <el-table-column prop="id" label="题号" width="100"></el-table-column>
-                <el-table-column prop="title" label="题目名称"></el-table-column>
-                <el-table-column prop="uploader" label="上传者" width="100"></el-table-column>
-                <el-table-column prop="source" label="所属题单" width="180"></el-table-column>
+                <el-table-column prop="problem_title" label="题目名称"></el-table-column>
+                <el-table-column prop="creator" label="上传者" width="100"></el-table-column>
+                <el-table-column prop="problem_group_title" label="所属题单" width="180"></el-table-column>
                 <el-table-column label="标签" width="200">
                   <template #default="scope">
                     <el-tag v-for="tag in scope.row.tags" :key="tag" size="small" style="margin-right: 5px;">
