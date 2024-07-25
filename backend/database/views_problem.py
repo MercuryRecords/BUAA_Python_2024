@@ -177,6 +177,9 @@ def problem_share(request):
 @require_http_methods(["POST"])
 def problem_create(request):
     problem_group = _get_problem_group(request, 1)
+    if isinstance(problem_group, JsonResponse):
+        return problem_group
+    
     user = User.objects.get(username=request.POST.get('username'))
     title = request.POST.get('title')
     type = request.POST.get('type')
