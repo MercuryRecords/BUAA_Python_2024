@@ -672,8 +672,10 @@ def problem_check(request):
         field = [problem.field1, problem.field2, problem.field3, problem.field4, problem.field5, problem.field6, problem.field7]
         correct_detail = ['' for _ in range(7)]
         for i in range(ans_count):
-            correct_detail[i] = 'T' if request.POST.get('user_field' + str(i + 1)) == field[i] else 'F'
-            if correct_detail[i] == 'F':
+            if request.POST.get('user_field' + str(i + 1)).strip() == field[i].strip():
+                correct_detail[i] = 'T'
+            else:
+                correct_detail[i] == 'F'
                 correct = 'F'
         
         data = {
