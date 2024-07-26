@@ -352,7 +352,7 @@ def _problem_groups_to_list(problem_groups):
 
 
 @require_http_methods(["POST"])
-def get_created_problem_groups_num(request):
+def get_problem_groups_num(request):
     username = request.POST.get('username')
     user = User.objects.get(username=username)
     if not user:
@@ -361,15 +361,45 @@ def get_created_problem_groups_num(request):
     problem_groups = user.created_problem_groups.all()
     return success_data("问题组数量查询成功", problem_groups.count())
 
+def _get_problem_groups_with_permissions(user, group_name, permission):
+    if group_name == '_shared_to_all':
+        permissions = ProblemPermission.objects.filter(group__isnull=True, permisson__gte=permission)
+    elif group_name:
+        group = Group.objects.filter(name=group_name)
+        if not group:
+            return E_GROUP_NOT_FIND
+        group = group[0]
+
+        if not user in group.members.all():
+            return E_USER_NOT_IN_GROUP
+        
+        permissions = ProblemPermission.objects.filter(group=group, permisson__gte=permission)
+    else:
+        groups = user.groups.all()
+        query = Q(group__isnull=True) | Q(group__in=groups)
+        permissions = ProblemPermission.objects.filter(query, permission__gte=permission)
+    
+    problem_group_ids = permissions.values_list('problem_group', flat=True).distinct()
+    problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)  
+
+    return problem_groups
+
 
 @require_http_methods(["POST"])
-def get_created_problem_groups(request):
+def get_problem_groups(request):
     username = request.POST.get('username')
     user = User.objects.get(username=username)
     if not user:
         return E_USER_NOT_FIND
 
-    problem_groups = user.created_problem_groups.all()
+    mode = int(request.POST.get('mode'))
+    if mode >= 2:
+        problem_groups = user.created_problem_groups.all()
+    else:
+        filter_group = request.POST.get('filter_group')
+        problem_groups = _get_problem_groups_with_permissions(user, filter_group, mode)
+
+
     if not problem_groups:
         return E_NO_PROBLEM_GROUP
 
@@ -483,26 +513,26 @@ def get_problems_with_permissions(request):
     return success_data("问题查询成功", _problems_to_list(user, problems))
 
 
-@require_http_methods(["POST"])
-# 高级搜索问题
-def problem_search_advanced(request):
-    username = request.POST.get("username")
-    problems = _get_problems_with_permissions(username)
-    if isinstance(problems, JsonResponse):
-        return problems
+# @require_http_methods(["POST"])
+# # 高级搜索问题
+# def problem_search_advanced(request):
+#     username = request.POST.get("username")
+#     problems = _get_problems_with_permissions(username)
+#     if isinstance(problems, JsonResponse):
+#         return problems
 
-    use_regex = request.POST.get("use_regex")
-    use_regex = use_regex == "true"
-    pattern = request.POST.get("pattern")
-    keywords = request.POST.get("keywords").split(" ")
-    result = QuerySet()
+#     use_regex = request.POST.get("use_regex")
+#     use_regex = use_regex == "true"
+#     pattern = request.POST.get("pattern")
+#     keywords = request.POST.get("keywords").split(" ")
+#     result = QuerySet()
 
-    if not use_regex:
-        for keyword in keywords:
-            result.union(problems.all().objects.search(keyword))
-    else:
-        result = problems.all().objects.search_regex(pattern)
-    return success(result)
+#     if not use_regex:
+#         for keyword in keywords:
+#             result.union(problems.all().objects.search(keyword))
+#     else:
+#         result = problems.all().objects.search_regex(pattern)
+#     return success(result)
 
 
 
