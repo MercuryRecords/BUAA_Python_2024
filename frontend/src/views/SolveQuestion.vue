@@ -10,8 +10,11 @@
         <div v-if="currentQuestion.type === 'c'" class="options">
           <div v-for="index in currentQuestion.ans_count" :key="index"
                class="option"
-               :class="{ 'selected': userAnswer === currentQuestion[`field${index}`] }"
-               @click="selectAnswer(currentQuestion[`field${index}`])">
+               :class="{
+                 'selected': userAnswer === ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1],
+                 'correct': !isCorrect && correctAnswer === ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1]
+               }"
+               @click="selectAnswer(index - 1)">
             <span class="option-label">{{ ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1] }}.</span>
             {{ currentQuestion[`field${index}`] }}
           </div>
@@ -34,14 +37,26 @@
           {{ feedback }}
         </div>
 
+        <!-- 填空题错误答案展示 -->
+        <div v-if="!isCorrect && currentQuestion.type === 'b'" class="correct-answers">
+          <h3>正确答案：</h3>
+          <div v-for="(answer, index) in correctAnswers" :key="index" class="correct-answer-item">
+            <span>第{{ index + 1 }}空：{{ answer }}</span>
+          </div>
+        </div>
+
         <div v-if="showStatistics" class="statistics">
-          <p>总尝试次数: {{ currentQuestion.all_count }}</p>
-          <p>总正确次数: {{ currentQuestion.all_right_count }}</p>
           <p>您的尝试次数: {{ currentQuestion.user_count }}</p>
           <p>您的正确次数: {{ currentQuestion.user_right_count }}</p>
-          <p>正确率:
+          <p>您的正确率:
             <el-tag :type="getAccuracyColor(accuracy)">
               {{ (accuracy * 100).toFixed(2) }}%
+            </el-tag>
+          </p>
+          <p>
+            总正确率：
+            <el-tag :type="getAccuracyColor(accuracy)">
+              {{ (total_accuracy * 100).toFixed(2) }}%
             </el-tag>
           </p>
         </div>
@@ -68,7 +83,6 @@
         >
           <el-menu-item v-for="(question, index) in problems" :key="index" :index="index.toString()">
             <span class="question-item">
-<!--              <span class="question-number">{{ index + 1 }}</span>-->
               <span class="question-title">{{ question.problem_title }}</span>
             </span>
           </el-menu-item>
@@ -115,6 +129,8 @@ const problems = ref<Question[]>([]);
 const currentIndex = ref(parseInt(route.query.index as string, 10) || 0);
 const totalQuestions = computed(() => problems.value.length);
 const currentQuestion = computed(() => problems.value[currentIndex.value]);
+const correctAnswer = ref('');
+const correctAnswers = ref<string[]>([]);
 
 const userAnswer = ref<string | string[]>('');
 const feedback = ref('');
@@ -124,14 +140,70 @@ const showQuestionDrawer = ref(false);
 
 const accuracy = computed(() => {
   if (currentQuestion.value) {
+    if (currentQuestion.value.user_count == 0) {
+      return 0;
+    }
+    return currentQuestion.value.user_right_count / currentQuestion.value.user_count;
+  }
+  return 0;
+});
+
+const total_accuracy = computed(() => {
+  if (currentQuestion.value) {
+    if (currentQuestion.value.all_count == 0) {
+      return 0;
+    }
     return currentQuestion.value.all_right_count / currentQuestion.value.all_count;
   }
   return 0;
 });
 
-const selectAnswer = (option: string) => {
-  userAnswer.value = option;
+const selectAnswer = (index: number) => {
+  userAnswer.value = ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index];
 };
+
+const checkAnswer = () => {
+  API.post('/problem_check', {
+    username: route.query.username,
+    problem_id: currentQuestion.value.id,
+    user_answer: userAnswer.value,
+    user_field1: Array.isArray(userAnswer.value) ? userAnswer.value[0] : '',
+    user_field2: Array.isArray(userAnswer.value) ? userAnswer.value[1] : '',
+    user_field3: Array.isArray(userAnswer.value) ? userAnswer.value[2] : '',
+    user_field4: Array.isArray(userAnswer.value) ? userAnswer.value[3] : '',
+    user_field5: Array.isArray(userAnswer.value) ? userAnswer.value[4] : '',
+    user_field6: Array.isArray(userAnswer.value) ? userAnswer.value[5] : '',
+    user_field7: Array.isArray(userAnswer.value) ? userAnswer.value[6] : ''
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          isCorrect.value = (response.data.data.correct == 'T');
+          currentQuestion.value.user_right_count = response.data.data.user_right_count;
+          currentQuestion.value.user_count = response.data.data.user_count;
+          currentQuestion.value.all_count = response.data.data.all_count;
+          currentQuestion.value.all_right_count = response.data.data.all_right_count;
+
+          // 存储正确答案
+          if (currentQuestion.value.type === 'c') {
+            correctAnswer.value = response.data.data.answer;
+          } else if (currentQuestion.value.type === 'b') {
+
+          }
+
+          feedback.value = isCorrect.value ? '回答正确！' : '回答错误，请查看正确答案。';
+          showStatistics.value = true;
+        } else {
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      }
+  )
+}
 
 const submitAnswer = () => {
   if (currentQuestion.value.type === 'c') {
@@ -139,27 +211,13 @@ const submitAnswer = () => {
       ElMessage.warning('请先选择一个答案');
       return;
     }
-    isCorrect.value = userAnswer.value === currentQuestion.value.field1;
   } else if (currentQuestion.value.type === 'b') {
     if (!(userAnswer.value as string[]).every(answer => answer)) {
       ElMessage.warning('请填写所有空格');
       return;
     }
-    isCorrect.value = (userAnswer.value as string[]).every((answer, index) =>
-        answer === currentQuestion.value[`field${index + 1}` as keyof Question]
-    );
   }
-
-  feedback.value = isCorrect.value ? '回答正确！' : '回答错误，请重试。';
-
-  currentQuestion.value.all_count++;
-  currentQuestion.value.user_count++;
-  if (isCorrect.value) {
-    currentQuestion.value.all_right_count++;
-    currentQuestion.value.user_right_count++;
-  }
-
-  showStatistics.value = true;
+  checkAnswer();
 };
 
 const previousQuestion = () => {
@@ -181,6 +239,8 @@ const resetQuestion = () => {
   feedback.value = '';
   isCorrect.value = false;
   showStatistics.value = false;
+  correctAnswer.value = '';
+  correctAnswers.value = [];
 };
 
 const getAccuracyColor = (accuracy: number) => {
@@ -290,6 +350,11 @@ h2, h3 {
 .option.selected {
   background-color: #e1f5fe;
   border-color: #03a9f4;
+}
+
+.option.correct {
+  background-color: #e8f5e9;
+  border-color: #4caf50;
 }
 
 .option-label {
