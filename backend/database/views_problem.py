@@ -327,7 +327,7 @@ def _cut_to_page(request, query_set):
     page = int(page) - 1
     number_per_page = int(number_per_page)
 
-    if page * number_per_page >= query_set.count():
+    if page < 0 or page * number_per_page >= query_set.count():
         return E_PAGE_OVERFLOW
 
     if (page + 1) * number_per_page >= query_set.count():
@@ -378,24 +378,32 @@ def get_created_problem_groups(request):
 
 
 def _get_problems_with_permissions(user, group_name):
-    if group_name == '_shared_to_all':
-        permissions = ProblemPermission.objects.filter(group__isnull=True)
-    elif group_name:
-        group = Group.objects.filter(name=group_name)
-        if not group:
-            return E_GROUP_NOT_FIND
-        group = group[0]
-
-        if not user in group.members.all():
-            return E_USER_NOT_IN_GROUP
-        
-        permissions = ProblemPermission.objects.filter(group=group)
+    if group_name == '_created_by_self':
+        problem_groups = ProblemGroup.objects.filter(user=user)
     else:
-        groups = user.groups.all()
-        query = Q(group__isnull=True) | Q(group__in=groups)
-        permissions = ProblemPermission.objects.filter(query)
-    problem_group_ids = permissions.values_list('problem_group', flat=True)
-    problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)
+        if group_name == '_shared_to_all':
+            permissions = ProblemPermission.objects.filter(group__isnull=True)
+        elif group_name:
+            group = Group.objects.filter(name=group_name)
+            if not group:
+                return E_GROUP_NOT_FIND
+            group = group[0]
+
+            if not user in group.members.all():
+                return E_USER_NOT_IN_GROUP
+            
+            permissions = ProblemPermission.objects.filter(group=group)
+        else:
+            groups = user.groups.all()
+            query = Q(group__isnull=True) | Q(group__in=groups)
+            permissions = ProblemPermission.objects.filter(query)
+        problem_group_ids = permissions.values_list('problem_group', flat=True)
+
+        query = Q(id__in=problem_group_ids)
+        if not group_name:
+            query |= Q(user=user)
+        
+        problem_groups = ProblemGroup.objects.filter(query)  
 
     problems = Problem.objects.filter(problem_group__in=problem_groups)
     return problems
