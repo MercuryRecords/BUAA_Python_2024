@@ -101,7 +101,7 @@ class Problem(models.Model):
     field6 = models.CharField(max_length=100, blank=True)
     field7 = models.CharField(max_length=100, blank=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
-    create_time = models.DateTimeField(auto_now_add=True)
+    # create_time = models.DateTimeField(auto_now_add=True)
     tags = models.ManyToManyField(Tag, related_name='problems')
 
     objects = ProblemManager()
@@ -118,7 +118,7 @@ class Record(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
     result = models.BooleanField(default=False)  # 是否正确
-    created_at = models.DateTimeField(auto_now_add=True)
+    # created_at = models.DateTimeField(auto_now_add=True)
 
 class TemporaryProblemGroup(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

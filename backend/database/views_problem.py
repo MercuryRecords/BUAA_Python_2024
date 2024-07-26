@@ -239,7 +239,7 @@ def problem_update(request):
     if isinstance(res, JsonResponse):
         return res
 
-    problem_group, problem = res
+    problem = res[1]
     title = request.POST.get('title')
     title = title if title else problem.title
     type = request.POST.get('type')
@@ -343,18 +343,20 @@ def _cut_to_page(request, query_set):
 
     return query_set
 
+def _problem_group_to_dict(problem_group):
+    return {
+        'id': problem_group.id,
+        'title': problem_group.title,
+        'creator': problem_group.user.username,
+        'description': problem_group.description,
+        'tags': [tag.name for tag in problem_group.tags.all()],
+        'problem_num': problem_group.problem_num,
+    }
 
 def _problem_groups_to_list(problem_groups):
     result = []
     for problem_group in problem_groups:
-        result.append({
-            'id': problem_group.id,
-            'title': problem_group.title,
-            'creator': problem_group.user.username,
-            'description': problem_group.description,
-            'tags': [tag.name for tag in problem_group.tags.all()],
-            'problem_num': problem_group.problem_num,
-        })
+        result.append(_problem_group_to_dict(problem_group))
     return result
 
 def _get_problem_groups_with_permissions(user, group_name, permission):
@@ -456,39 +458,42 @@ def _get_problems_with_permissions(user, group_name):
     problems = Problem.objects.filter(problem_group__in=problem_groups)
     return problems
 
+def _problem_to_dict(user, problem):
+    all_record = Record.objects.filter(problem=problem)
+    all_right_record = all_record.filter(result=True)
+    user_record = all_record.filter(user=user)
+    user_right_record = user_record.filter(result=True)
+    return {
+        'id': problem.id,
+        'type': problem.type,
+        'problem_title': problem.title,
+        'content': problem.content,
+        'ans_count': problem.ans_count,
+        'answer': problem.answer,
+        'field1': problem.field1,
+        'field2': problem.field2,
+        'field3': problem.field3,
+        'field4': problem.field4,
+        'field5': problem.field5,
+        'field6': problem.field6,
+        'field7': problem.field7,
+        'tags': [tag.name for tag in problem.tags.all()],
+        'creator': problem.creator.username,
+        
+        'problem_group_id': problem.problem_group.id,
+        'problem_group_title': problem.problem_group.title,
+        
+        # 用于展示用户是否做过此题（user_count）并计算个人正确率、总正确率
+        'user_right_count': user_right_record.count(),
+        'user_count': user_record.count(),
+        'all_right_count': all_right_record.count(),
+        'all_count': all_record.count(),
+    }
 
 def _problems_to_list(user, problems):
     result = []
     for problem in problems:
-        all_record = Record.objects.filter(problem=problem)
-        all_right_record = all_record.filter(result=True)
-        user_record = all_record.filter(user=user)
-        user_right_record = user_record.filter(result=True)
-        result.append({
-            'id': problem.id,
-            'type': problem.type,
-            'problem_title': problem.title,
-            'content': problem.content,
-            'ans_count': problem.ans_count,
-            'field1': problem.field1,
-            'field2': problem.field2,
-            'field3': problem.field3,
-            'field4': problem.field4,
-            'field5': problem.field5,
-            'field6': problem.field6,
-            'field7': problem.field7,
-            'tags': [tag.name for tag in problem.tags.all()],
-            'creator': problem.creator.username,
-            
-            'problem_group_id': problem.problem_group.id,
-            'problem_group_title': problem.problem_group.title,
-            
-            # 用于展示用户是否做过此题（user_count）并计算个人正确率、总正确率
-            'user_right_count': user_right_record.count(),
-            'user_count': user_record.count(),
-            'all_right_count': all_right_record.count(),
-            'all_count': all_record.count(),
-        })
+        result.append(_problem_to_dict(user, problem))
     return result
 
 
@@ -554,6 +559,7 @@ def temporary_problem_group_create(request):
 def temporary_problem_group_clear(user):
     TemporaryProblemGroup.objects.filter(user=user).delete()
 
+@require_http_methods(["POST"])
 def get_problem_group_content(request):
     username = request.POST.get('username')
     user = User.objects.filter(username=username)
@@ -590,6 +596,108 @@ def get_problem_group_content(request):
     
     return success_data("问题组内容获取成功", _problems_to_list(user, problems))
 
+@require_http_methods(["POST"])
+def get_single_problem_group_detail(request):
+    username = request.POST.get('username')
+    user = User.objects.filter(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    user = user[0]
+
+    is_temporary = request.POST.get('is_temporary')
+    if is_temporary == 'y':
+        group_id = request.POST.get('problem_group_id')
+        temp_group = TemporaryProblemGroup.objects.filter(id=group_id)
+        if not temp_group:
+            return E_PROBLEM_GROUP_NOT_FIND
+        temp_group = temp_group[0]
+
+        if user != temp_group.user:
+            return E_PERMISSION_DENIED
+
+        problem_num = temp_group.problems.count()
+        data = {'problem_num': problem_num}
+    else:
+        problem_group = _get_problem_group(request, 0)
+        if isinstance(problem_group, JsonResponse):
+            return problem_group
+        
+        data = _problem_group_to_dict(problem_group)
+    
+    return success_data("问题组详情查询成功", data)
+
+@require_http_methods(["POST"])
+def get_single_problem_detail(request):
+    username = request.POST.get('username')
+    user = User.objects.filter(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    user = user[0]
+
+    res = _get_problem(request, 0)
+    if isinstance(res, JsonResponse):
+        return res
+    
+    data = _problem_to_dict(user, res[1])
+
+    return success_data("问题详情查询成功", data)
+
+
+@require_http_methods(["POST"])
+def problem_check(request):
+    username = request.POST.get('username')
+    user = User.objects.filter(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    user = user[0]
+
+    res = _get_problem(request, 0)
+    if isinstance(res, JsonResponse):
+        return res
+    
+    problem = res[1]
+    ans_count = problem.ans_count
+    if problem.type == 'c':
+        user_answer = request.POST.get('user_answer')
+        if not user_answer or len(user_answer) > 1 or ord(user_answer) - ord('A') not in range(ans_count):
+            return E_ILLIGAL_ANSWER
+        
+        correct = 'T' if user_answer == problem.answer else 'F'
+        data = {
+            'correct': correct,
+            'answer': problem.answer,
+        }
+    else:
+        correct = 'T'
+        field = [problem.field1, problem.field2, problem.field3, problem.field4, problem.field5, problem.field6, problem.field7]
+        correct_detail = ['' for _ in range(7)]
+        for i in range(ans_count):
+            correct_detail[i] = 'T' if request.POST.get('user_field' + str(i + 1)) == field[i] else 'F'
+            if correct_detail[i] == 'F':
+                correct = 'F'
+        
+        data = {
+            'correct': correct,
+        }
+        for i in range(7):
+            data.update({
+                'field' + str(i + 1): field[i],
+                'correct' + str(i + 1): correct_detail[i],
+            })
+    
+    Record.objects.create(user=user, problem=problem, result=(correct=='T'))
+
+    all_record = Record.objects.filter(problem=problem)
+    all_right_record = all_record.filter(result=True)
+    user_record = all_record.filter(user=user)
+    user_right_record = user_record.filter(result=True)
+    data.update({
+        'user_right_count': user_right_record.count(),
+        'user_count': user_record.count(),
+        'all_right_count': all_right_record.count(),
+        'all_count': all_record.count(),
+    })
+    return success_data("判题成功", data)
 
 # @require_http_methods(["POST"])
 # # 高级搜索问题

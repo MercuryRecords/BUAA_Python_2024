@@ -74,17 +74,22 @@ def user_login(request):
     if check[0].password != password:
         return JsonResponse({"code": 402, "message": "密码错误"})
     
-    temporary_problem_group_clear(check[0])
+    if usertype == '1':
+        temporary_problem_group_clear(check[0])
+    
     request.session["username"] = username
+    request.session["usertype"] = usertype
     return JsonResponse({"code": 200, "message": "登录成功"})
 
 # 退出登录可清除cookie并删除为此用户创建的临时题单
 @require_http_methods(["POST"])
 def user_logout(request):
-    username = request.POST.get('username')
-    user = User.objects.filter(username=username)
-    if user:
-        temporary_problem_group_clear(user[0])
+    user_type = request.session.get("usertype")
+    if user_type == '1':
+        username = request.POST.get('username')
+        user = User.objects.filter(username=username)
+        if user:
+            temporary_problem_group_clear(user[0])
     
     request.session.flush()
     return JsonResponse({"code": 200, "message": "退出登录成功"})

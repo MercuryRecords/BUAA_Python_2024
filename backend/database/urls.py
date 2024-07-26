@@ -46,4 +46,8 @@ urlpatterns = [
     path('get_problems_num', views_problem.get_problem_num_with_permissions),
     path('temporary_problem_group_create', views_problem.temporary_problem_group_create),
     path('get_problem_group_content', views_problem.get_problem_group_content),
+
+    path('get_problem_group_detail', views_problem.get_single_problem_group_detail),
+    path('get_problem_detail', views_problem.get_single_problem_detail),
+    path('problem_check', views_problem.problem_check),
 ]
