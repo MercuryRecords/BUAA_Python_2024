@@ -4,22 +4,25 @@
     <div class="content-wrapper">
       <div class="question-container" v-if="currentQuestion">
         <h2>题目 {{ currentIndex + 1 }} / {{ totalQuestions }}</h2>
-        <p class="question-title">{{ currentQuestion.contents }}</p>
+        <p class="question-title">{{ currentQuestion.content }}</p>
 
         <!-- 选择题 -->
         <div v-if="currentQuestion.type === 'c'" class="options">
-          <div v-for="(option, index) in currentQuestion.options" :key="index"
+          <div v-for="index in currentQuestion.ans_count" :key="index"
                class="option"
-               :class="{ 'selected': userAnswer === option }"
-               @click="selectAnswer(option)">
-            <span class="option-label">{{ ['A', 'B', 'C', 'D'][index] }}.</span>
-            {{ option }}
+               :class="{ 'selected': userAnswer === currentQuestion[`field${index}`] }"
+               @click="selectAnswer(currentQuestion[`field${index}`])">
+            <span class="option-label">{{ ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1] }}.</span>
+            {{ currentQuestion[`field${index}`] }}
           </div>
         </div>
 
         <!-- 填空题 -->
         <div v-else-if="currentQuestion.type === 'b'" class="fill-in-blank">
-          <el-input v-model="userAnswer" placeholder="请输入您的答案"></el-input>
+          <div v-for="index in currentQuestion.ans_count" :key="index" class="fill-in-blank-item">
+<!--            <label>空 {{ index }}:</label>-->
+            <el-input v-model="userAnswer[index - 1]" :placeholder="`请输入第${index}空的答案`"></el-input>
+          </div>
         </div>
 
         <div class="navigation">
@@ -38,8 +41,8 @@
           <p>您的尝试次数: {{ currentQuestion.user_count }}</p>
           <p>您的正确次数: {{ currentQuestion.user_right_count }}</p>
           <p>正确率:
-            <el-tag :type="getAccuracyColor(currentQuestion.accuracy)">
-              {{ (currentQuestion.accuracy * 100).toFixed(2) }}%
+            <el-tag :type="getAccuracyColor(accuracy)">
+              {{ (accuracy * 100).toFixed(2) }}%
             </el-tag>
           </p>
         </div>
@@ -72,102 +75,77 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import Navigator from "@/components/Base/Navigator.vue";
+import API from "@/plugins/axios";
 
 interface Question {
-  id: string,
-  problem_title: string,
-  creator: string,
-  problem_group_title: string,
-  tags: string[],
-  all_count: number,
-  all_right_count: number,
-  user_count: number,
-  user_right_count: number,
-  accuracy: number,
-  type: 'b' | 'c',
-  contents: string
-  options?: string[];
-  correct_answer: string;
+  id: number;
+  type: 'c' | 'b';
+  problem_title: string;
+  content: string;
+  ans_count: number;
+  field1: string;
+  field2: string;
+  field3: string;
+  field4: string;
+  field5: string;
+  field6: string;
+  field7: string;
+  tags: string[];
+  creator: string;
+  problem_group_id: number;
+  problem_group_title: string;
+  user_right_count: number;
+  user_count: number;
+  all_right_count: number;
+  all_count: number;
 }
 
 const route = useRoute();
 
 const username = ref(route.query.username as string || '测试用户');
-const problems = ref<Question[]>([
-  {
-    id: "Q001",
-    problem_title: "vue的核心特性",
-    creator: "Admin",
-    problem_group_title: "Vue基础",
-    tags: ["Vue.js", "前端框架"],
-    all_count: 100,
-    all_right_count: 80,
-    user_count: 2,
-    user_right_count: 1,
-    accuracy: 0.8,
-    type: 'c',
-    contents: "下列哪项不是Vue.js的核心特性?",
-    options: ["响应式数据绑定", "组件化开发", "虚拟DOM", "原生移动应用开发"],
-    correct_answer: "原生移动应用开发"
-  },
-  {
-    id: "Q002",
-    problem_title: "组合式API",
-    creator: "Vue专家",
-    problem_group_title: "Vue3新特性",
-    tags: ["Vue3", "组合式API"],
-    all_count: 50,
-    all_right_count: 40,
-    user_count: 1,
-    user_right_count: 1,
-    accuracy: 0.8,
-    type: 'c',
-    contents: "Vue.js中用于声明响应式状态的组合式API是?",
-    options: ["useState", "useEffect", "ref", "useState"],
-    correct_answer: "ref"
-  },
-  {
-    id: "Q003",
-    problem_title: "Vue实例的生命周期钩子",
-    creator: "Vue专家",
-    problem_group_title: "Vue生命周期",
-    tags: ["Vue", "生命周期"],
-    all_count: 30,
-    all_right_count: 25,
-    user_count: 1,
-    user_right_count: 1,
-    accuracy: 0.833,
-    type: 'b',
-    contents: "Vue实例被创建后，第一个被调用的生命周期钩子是 ______。",
-    correct_answer: "created"
-  },
-]);
-
-const currentIndex = ref(0);
+const problems = ref<Question[]>([]);
+const currentIndex = ref(parseInt(route.query.index as string, 10) || 0);
 const totalQuestions = computed(() => problems.value.length);
 const currentQuestion = computed(() => problems.value[currentIndex.value]);
 
-const userAnswer = ref('');
+const userAnswer = ref<string | string[]>('');
 const feedback = ref('');
 const isCorrect = ref(false);
 const showStatistics = ref(false);
 const showQuestionList = ref(false);
+
+const accuracy = computed(() => {
+  if (currentQuestion.value) {
+    return currentQuestion.value.all_right_count / currentQuestion.value.all_count;
+  }
+  return 0;
+});
 
 const selectAnswer = (option: string) => {
   userAnswer.value = option;
 };
 
 const submitAnswer = () => {
-  if (!userAnswer.value) {
-    ElMessage.warning('请先选择或输入一个答案');
-    return;
+  if (currentQuestion.value.type === 'c') {
+    if (!userAnswer.value) {
+      ElMessage.warning('请先选择一个答案');
+      return;
+    }
+    isCorrect.value = userAnswer.value === currentQuestion.value.field1;
+  } else if (currentQuestion.value.type === 'b') {
+    if (!(userAnswer.value as string[]).every(answer => answer)) {
+      ElMessage.warning('请填写所有空格');
+      return;
+    }
+    isCorrect.value = (userAnswer.value as string[]).every((answer, index) =>
+        answer === currentQuestion.value[`field${index + 1}` as keyof Question]
+    );
   }
 
-  isCorrect.value = userAnswer.value === currentQuestion.value.correct_answer;
   feedback.value = isCorrect.value ? '回答正确！' : '回答错误，请重试。';
 
   currentQuestion.value.all_count++;
@@ -176,7 +154,6 @@ const submitAnswer = () => {
     currentQuestion.value.all_right_count++;
     currentQuestion.value.user_right_count++;
   }
-  currentQuestion.value.accuracy = currentQuestion.value.all_right_count / currentQuestion.value.all_count;
 
   showStatistics.value = true;
 };
@@ -196,7 +173,7 @@ const nextQuestion = () => {
 };
 
 const resetQuestion = () => {
-  userAnswer.value = '';
+  userAnswer.value = currentQuestion.value.type === 'c' ? '' : Array(currentQuestion.value.ans_count).fill('');
   feedback.value = '';
   isCorrect.value = false;
   showStatistics.value = false;
@@ -217,6 +194,34 @@ const handleSelect = (index: string) => {
 const handleCloseDialog = () => {
   showQuestionList.value = false;
 };
+
+const getTemporaryQuestion = () => {
+  API.post('/get_problem_group_content', {
+    username: route.query.username,
+    problem_group_id: route.query.problem_group_id,
+    is_temporary: 'y'
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          problems.value = response.data.data;
+          console.log(problems.value)
+          resetQuestion();
+        } else {
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      }
+  )
+};
+
+onMounted(() => {
+  getTemporaryQuestion();
+});
 </script>
 
 <style scoped>
@@ -289,6 +294,19 @@ h2, h3 {
 .option-label {
   font-weight: bold;
   margin-right: 10px;
+}
+
+.fill-in-blank {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.fill-in-blank-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .navigation {

@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import {ref, reactive, computed, onMounted} from 'vue'
-import {ElMessage} from 'element-plus'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
-import {useRoute} from 'vue-router'
+import { useRoute } from 'vue-router'
 import API from "@/plugins/axios";
 
 const route = useRoute()
@@ -16,7 +16,7 @@ const searchForm = reactive({
 })
 
 interface data {
-  id: string,
+  id: number,
   problem_title: string,
   creator: string,
   problem_group_title: string,
@@ -25,43 +25,47 @@ interface data {
   all_right_count: number,
   user_count: number,
   user_right_count: number,
-  accuracy: number
+  accuracy: number,
+  type: string,
+  content: string
 }
 
-const allProblems = ref<data[]>([])
+const allProblems = ref<data[]>([
+  // ... 其他问题数据
+])
 
 const currentPage = ref(1)
 const pageSize = ref(20)
-
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
-  {name: '数学', tags: ['多项式', '矩阵', '行列式', '线性代数']},
+  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
   {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
   {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
   {name: '题目类型', tags: ['选择题', '填空题']},
 ])
 
-const filterProblems = computed(() => {
-  return allProblems.value.filter(problem => {
-    const matchKeyword = searchForm.keyword === '' ||
-        problem.problem_title.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-        problem.id.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-        problem.creator.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-        problem.problem_group_title.toLowerCase().includes(searchForm.keyword.toLowerCase())
-    const matchTags = searchForm.selectedTags.length === 0 || searchForm.selectedTags.every(tag => problem.tags.includes(tag))
-    return matchKeyword && matchTags
-  })
-})
+const filteredProblems = ref<data[]>([])
 
 const problems = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
-  return filterProblems.value.slice(start, end)
+  return filteredProblems.value.slice(start, end)
 })
 
-const total = computed(() => filterProblems.value.length)
+const total = computed(() => filteredProblems.value.length)
 
 const onSearch = () => {
+  filteredProblems.value = allProblems.value.filter(problem => {
+    const matchKeyword = searchForm.keyword === '' ||
+        problem.problem_title.includes(searchForm.keyword) ||
+        problem.id === parseInt(searchForm.keyword) ||
+        problem.creator.includes(searchForm.keyword) ||
+        problem.problem_group_title.includes(searchForm.keyword) ||
+        problem.content.includes(searchForm.keyword)
+    const matchTags = searchForm.selectedTags.length === 0 ||
+        searchForm.selectedTags.every(tag => problem.tags.includes(tag))
+    return matchKeyword && matchTags
+  })
   currentPage.value = 1
   ElMessage.success(`找到 ${total.value} 个匹配的题目`)
 }
@@ -77,6 +81,17 @@ const handleCurrentChange = (val: number) => {
 
 const handleSolve = (problem: data) => {
   ElMessage.success(`准备解决题目: ${problem.problem_title}`)
+  const currentProblems = problems.value;
+  const currentIndex = currentProblems.findIndex(p => p.id === problem.id);
+  console.log(currentIndex);
+  console.log(currentProblems);
+  router.push({
+    name: 'solve',
+    query: {
+      username: route.query.username as string,
+      startIndex: currentIndex as number,
+    },
+  });
 }
 
 const clearFilters = () => {
@@ -109,23 +124,27 @@ const getAccuracyColor = (accuracy: number) => {
 }
 
 function getProblems(page: number) {
-  API.post('/get_problems',
-      {
-        username: route.query.username,
-        page: page,
-        number_per_page: 10
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(
+  API.post('/get_problems', {
+    username: route.query.username,
+    page: page,
+    number_per_page: 10
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
       function (response) {
         if (response.data.code === 200) {
           for (let i = 0; i < response.data.data.length; i++) {
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
             allProblems.value[i].accuracy = response.data.data[i].all_right_count / response.data.data[i].all_count
+            if (response.data.data[i].type == 'b') {
+              allProblems.value[i].tags.push("填空");
+            } else {
+              allProblems.value[i].tags.push("选择");
+            }
+            console.log(allProblems)
           }
+          onSearch()  // Perform initial search after fetching problems
         } else {
           ElMessage.error(response.data.message);
         }
@@ -133,20 +152,18 @@ function getProblems(page: number) {
   ).catch(
       function () {
         console.log('error submit!')
-      })
+      }
+  )
 }
 
 function getProblemsNumber() {
   let number = 0;
   console.log(route.query.username)
-  API.post('/get_problems_num',
-      {
-        username: route.query.username,
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(
+  API.post('/get_problems_num', {
+    username: route.query.username,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
       function (response) {
         if (response.data.code === 200) {
           number = response.data;
@@ -158,26 +175,41 @@ function getProblemsNumber() {
   ).catch(
       function () {
         console.log('error submit!')
-      })
+      }
+  )
   return number;
 }
 
 const fetchProblems = async () => {
   let number = 0;
-  for (let i = 1; i <= Math.floor(number / 10) + 1; i++) {
+  for (let i = 1; i <= Math.floor(number/10)+1; i++) {
     getProblems(i);
   }
 }
 
-onMounted(() => {
-  fetchProblems()
-})
+const userGroups: string[] = reactive([])
 
-const userGroups = ref([
-  "第一个组",
-  "第二个组",
-  "第三个组",
-])
+const fetchGroups = async() => {
+  API.post('/group_get_groups', {
+    username: route.query.username,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          for (let i = 0; i < response.data.groups.length; i++) {
+            userGroups.push(response.data.groups[i].name);
+          }
+        } else {
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      }
+  )
+}
 
 const selectedGroup = ref('')
 
@@ -191,6 +223,8 @@ const handleCommand = (command: any) => {
         groupLabel: command,
       }
     })
+  } else {
+    // 无需处理
   }
 }
 
@@ -203,13 +237,17 @@ const handleAddProblem = () => {
     }
   })
 }
+
+onMounted(() => {
+  fetchProblems();
+  fetchGroups();
+})
 </script>
 
 <template>
   <div class="common-layout">
     <el-container>
       <el-header>
-
       </el-header>
 
       <el-container>
@@ -224,7 +262,11 @@ const handleAddProblem = () => {
                 <el-form :inline="true" :model="searchForm" class="demo-form-inline">
                   <el-form-item>
                     <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                              style="width: 310px"></el-input>
+                              style="width: 310px"
+                              @keyup.enter="onSearch"></el-input>
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button @click="onSearch">搜索</el-button>
                   </el-form-item>
                   <el-form-item>
                     <el-button @click="openTagDialog">选择标签</el-button>
@@ -232,6 +274,7 @@ const handleAddProblem = () => {
                   <el-form-item>
                     <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
                   </el-form-item>
+
                   <el-form-item>
                     <el-dropdown @command="handleCommand">
                       <span class="el-dropdown-link">
@@ -252,6 +295,7 @@ const handleAddProblem = () => {
                     <el-button type="primary" @click="handleAddProblem">新增题目</el-button>
                   </el-form-item>
                 </el-form>
+                <!-- 显示选中标签的区域 -->
                 <div v-if="searchForm.selectedTags.length > 0" style="margin-top: 10px;">
                   <el-tag
                       v-for="tag in searchForm.selectedTags"
@@ -307,6 +351,7 @@ const handleAddProblem = () => {
       </el-container>
     </el-container>
 
+    <!-- 标签选择对话框 -->
     <el-dialog v-model="tagDialogVisible" title="选择标签" width="50%">
       <el-tabs type="border-card">
         <el-tab-pane v-for="category in tagCategories" :key="category.name" :label="category.name">
@@ -419,18 +464,8 @@ const handleAddProblem = () => {
   color: #409EFF;
 }
 
-.el-form-item {
-  margin-bottom: 0;
-}
-
-.el-form {
-  display: flex;
-  align-items: center;
-
-  flex-wrap: wrap;
-}
-
-.el-dropdown {
-  margin-right: 10px;
+:deep(.el-dropdown-menu__item.is-disabled) {
+  color: #c0c4cc;
+  cursor: not-allowed;
 }
 </style>

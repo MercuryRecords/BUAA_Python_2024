@@ -78,6 +78,7 @@ const percentageFormat = (percentage: number) => {
 
 const handleSizeChange = (val: number) => {
   pageSize.value = val;
+  currentPage.value = 1
   fetchProblems();
 };
 
@@ -106,6 +107,7 @@ const createNewProblemGroup = async () => {
       await fetchProblems();
       console.log("问题组id为" + response.data.data);
       console.log(problems)
+      window.location.reload();
     } else {
       console.log(response.data.code)
       ElMessage.error('题单创建失败');
@@ -178,8 +180,11 @@ const deleteProblemGroup = async (problem: any) => {
     const response = await API.post('/problem_group_delete', {
       username: data.username,
       problem_group_id: problem.id
+    }, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
     if (response.data.code === 200) {
+      // TODO 怎么消失的慢一点
       ElMessage.success('题单删除成功');
       fetchProblems();
     } else {
@@ -191,6 +196,7 @@ const deleteProblemGroup = async (problem: any) => {
       ElMessage.error('题单删除失败，请重试');
     }
   }
+  window.location.reload();
 };
 </script>
 
@@ -258,6 +264,7 @@ const deleteProblemGroup = async (problem: any) => {
       </el-table>
 
       <el-pagination
+          class="pages"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
           :current-page="currentPage"
@@ -265,6 +272,7 @@ const deleteProblemGroup = async (problem: any) => {
           :page-size="pageSize"
           layout="total, sizes, prev, pager, next, jumper"
           :total="totalProblems">
+
       </el-pagination>
     </div>
 
@@ -396,4 +404,8 @@ const deleteProblemGroup = async (problem: any) => {
 .button-container .el-button:last-child {
   margin-right: 0;
 }
+.pages {
+  margin-top: 10px;
+}
+
 </style>
