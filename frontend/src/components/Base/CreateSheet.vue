@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {ref, onMounted, reactive} from 'vue';
+import {ref, onMounted, reactive, computed} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import API from "@/plugins/axios";
 import {CirclePlusFilled, Delete, Edit, Share} from "@element-plus/icons-vue";
@@ -11,7 +11,11 @@ const pageSize = ref(20);
 const totalProblems = ref(0);
 const data = defineProps(['username']);
 const problems: Sheet[] = reactive([]);
-
+const showProblems = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return problems.slice(start, end)
+})
 // 对话框相关的响应式变量
 const createDialogVisible = ref(false);
 const updateDialogVisible = ref(false);
@@ -53,8 +57,8 @@ const fetchProblems = async () => {
       username: data.username,
       mode: 2,
       filter_group: '',
-      page: currentPage.value,
-      number_per_page: pageSize.value
+      // page: currentPage.value, 不能定死值了，留下空间
+      // number_per_page: pageSize.value
     }, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -229,7 +233,7 @@ const deleteProblemGroup = async (problem: any) => {
         </div>
       </el-card>
 
-      <el-table :data="problems" style="width: 100%" :default-sort="{ prop: 'id', order: 'ascending' }">
+      <el-table :data="showProblems" style="width: 100%" :default-sort="{ prop: 'id', order: 'ascending' }">
         <el-table-column prop="id" label="编号" width="80" sortable></el-table-column>
         <el-table-column label="名称" width="300">
           <template #default="scope">
