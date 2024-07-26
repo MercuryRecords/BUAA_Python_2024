@@ -189,7 +189,6 @@ const checkAnswer = () => {
           if (currentQuestion.value.type === 'c') {
             correctAnswer.value = response.data.data.answer;
           } else if (currentQuestion.value.type === 'b') {
-
           }
 
           feedback.value = isCorrect.value ? '回答正确！' : '回答错误，请查看正确答案。';
