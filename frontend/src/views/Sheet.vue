@@ -109,9 +109,12 @@ const getAccuracyColor = (accuracy: number) => {
 }
 
 function getProblems(page: number) {
+  console.log(route.query.sheetId)
+  console.log(route.query.filter_group)
   API.post('/get_problems',
       {
         username: route.query.username,
+        filter_group: route.query.filter_group,
         page: page,
         number_per_page: 10
       }, {
@@ -127,6 +130,7 @@ function getProblems(page: number) {
             allProblems.value[i].accuracy = response.data.data[i].all_right_count / response.data.data[i].all_count
           }
         } else {
+          console.log(response.data.code);
           ElMessage.error(response.data.message);
         }
       }

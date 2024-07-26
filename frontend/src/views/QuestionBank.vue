@@ -171,7 +171,7 @@ function getProblemsNumber() {
 
 const fetchProblems = async () => {
   // let number = getProblemsNumber();
-  let number = 20;
+  let number = 0;
   for (let i = 1; i <= Math.floor(number/10)+1; i++) {
     getProblems(i);
   }

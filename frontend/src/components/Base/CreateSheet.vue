@@ -3,6 +3,7 @@ import {ref, onMounted, reactive} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import API from "@/plugins/axios";
 import {CirclePlusFilled, Delete, Edit, Share} from "@element-plus/icons-vue";
+import router from "@/router";
 
 const activeTab = ref('practice');
 const currentPage = ref(1);
@@ -61,10 +62,12 @@ const fetchProblems = async () => {
     });
     console.log(response.data)
     if (response.data.code === 200) {
+      problems.length = 0
       for (let i = 0; i < response.data.data.length; i++) {
         problems.push(response.data.data[i]);
       }
       totalProblems.value = response.data.data.length;
+      totalProblems.value = response.data.total || response.data.data.length; // Update total count
     }
   } catch (error) {
     console.error('获取题单列表失败:', error);
@@ -103,9 +106,12 @@ const createNewProblemGroup = async () => {
     if (response.data.code === 200) {
       ElMessage.success('新题单创建成功');
       createDialogVisible.value = false;
-      await fetchProblems();
-      console.log("问题组id为" + response.data.data);
-      console.log(problems)
+      totalProblems.value++; // Increment total problems count
+      if (problems.length >= pageSize.value) {
+        // If the current page is full, move to the next page
+        currentPage.value = Math.ceil(totalProblems.value / pageSize.value);
+      }
+      await fetchProblems(); // Refetch to update the list and pagination
     } else {
       console.log(response.data.code)
       ElMessage.error('题单创建失败');
@@ -128,7 +134,12 @@ const openUpdateDialog = (problem: any) => {
 
 const updateProblemGroupFunc = async () => {
   try {
-    const response = await API.post('/problem_group_update', updateProblemGroup.value);
+    const response = await API.post('/problem_group_update', updateProblemGroup.value,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
     if (response.data.code === 200) {
       ElMessage.success('题单更新成功');
       updateDialogVisible.value = false;
@@ -178,10 +189,15 @@ const deleteProblemGroup = async (problem: any) => {
     const response = await API.post('/problem_group_delete', {
       username: data.username,
       problem_group_id: problem.id
+    }, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
     if (response.data.code === 200) {
       ElMessage.success('题单删除成功');
-      fetchProblems();
+      totalProblems.value--; // Decrement total problems count
+      await fetchProblems();
     } else {
       ElMessage.error('题单删除失败');
     }
@@ -218,8 +234,9 @@ const deleteProblemGroup = async (problem: any) => {
         <el-table-column prop="id" label="编号" width="80" sortable></el-table-column>
         <el-table-column label="名称" width="300">
           <template #default="scope">
-            <router-link :to="{ name: 'sheet', query: { username:data.username,sheetId: scope.row.id } }"
-                         class="problem-link">
+            <router-link
+                :to="{ name: 'sheet', query: { username:data.username,sheetId: scope.row.id,filter_group:'_created_by_self' } }"
+                class="problem-link">
               {{ scope.row.title }}
             </router-link>
           </template>
