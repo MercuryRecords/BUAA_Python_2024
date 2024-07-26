@@ -61,7 +61,7 @@ def _get_problem(request, permission):
 
 
 def _get_and_create_tags(request):
-    tag_names = request.POST.getlist('tags')
+    tag_names = request.POST.getlist('tags[]')
 
     tags_to_add = []
     for tag_name in tag_names:
@@ -97,7 +97,7 @@ def problem_group_create(request):
 
     problem_group = ProblemGroup.objects.create(user=check[0], title=title, description=description)
     
-    if 'tags' in request.POST:
+    if 'tags[]' in request.POST:
         tags = _get_and_create_tags(request)
         problem_group.tags.set(tags)
 
@@ -127,7 +127,7 @@ def problem_group_update(request):
     problem_group.description = description
     problem_group.save()
 
-    if 'tags' in request.POST:
+    if 'tags[]' in request.POST:
         tags = _get_and_create_tags(request)
         problem_group.tags.set(tags)
 
@@ -217,7 +217,7 @@ def problem_create(request):
                            field1=field[0], field2=field[1], field3=field[2], field4=field[3], field5=field[4],
                            field6=field[5], field7=field[6],
                            creator=user)
-    if 'tags' in request.POST:
+    if 'tags[]' in request.POST:
         tags = _get_and_create_tags(request)
         problem.tags.set(tags)
 
@@ -270,7 +270,7 @@ def problem_update(request):
     problem.field1, problem.field2, problem.field3, problem.field4, problem.field5, problem.field6, problem.field7 = field
     problem.save()
 
-    if 'tags' in request.POST:
+    if 'tags[]' in request.POST:
         tags = _get_and_create_tags(request)
         problem.tags.set(tags)
 
