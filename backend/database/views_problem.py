@@ -342,28 +342,18 @@ def _problem_groups_to_list(problem_groups):
     result = []
     for problem_group in problem_groups:
         result.append({
-            'creator': problem_group.user,
+            'id': problem_group.id,
             'title': problem_group.title,
+            'creator': problem_group.user.username,
             'description': problem_group.description,
             'tags': [tag.name for tag in problem_group.tags.all()],
             'problem_num': problem_group.problem_num,
         })
     return result
 
-
-@require_http_methods(["POST"])
-def get_problem_groups_num(request):
-    username = request.POST.get('username')
-    user = User.objects.get(username=username)
-    if not user:
-        return E_USER_NOT_FIND
-
-    problem_groups = user.created_problem_groups.all()
-    return success_data("问题组数量查询成功", problem_groups.count())
-
 def _get_problem_groups_with_permissions(user, group_name, permission):
     if group_name == '_shared_to_all':
-        permissions = ProblemPermission.objects.filter(group__isnull=True, permisson__gte=permission)
+        permissions = ProblemPermission.objects.filter(group__isnull=True, permission__gte=permission)
     elif group_name:
         group = Group.objects.filter(name=group_name)
         if not group:
@@ -373,17 +363,35 @@ def _get_problem_groups_with_permissions(user, group_name, permission):
         if not user in group.members.all():
             return E_USER_NOT_IN_GROUP
         
-        permissions = ProblemPermission.objects.filter(group=group, permisson__gte=permission)
+        permissions = ProblemPermission.objects.filter(group=group, permission__gte=permission)
     else:
         groups = user.groups.all()
         query = Q(group__isnull=True) | Q(group__in=groups)
         permissions = ProblemPermission.objects.filter(query, permission__gte=permission)
     
-    problem_group_ids = permissions.values_list('problem_group', flat=True).distinct()
+    problem_group_ids = permissions.values_list('problem_group', flat=True)
     problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)  
 
     return problem_groups
 
+
+@require_http_methods(["POST"])
+def get_problem_groups_num(request):
+    username = request.POST.get('username')
+    user = User.objects.get(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+
+    mode = int(request.POST.get('mode'))
+    if mode >= 2:
+        problem_groups = user.created_problem_groups.all()
+    else:
+        filter_group = request.POST.get('filter_group')
+        problem_groups = _get_problem_groups_with_permissions(user, filter_group, mode)
+        if isinstance(problem_groups, JsonResponse):
+            return problem_groups
+
+    return success_data("问题组数量查询成功", problem_groups.count())
 
 @require_http_methods(["POST"])
 def get_problem_groups(request):
@@ -398,12 +406,16 @@ def get_problem_groups(request):
     else:
         filter_group = request.POST.get('filter_group')
         problem_groups = _get_problem_groups_with_permissions(user, filter_group, mode)
-
-
+        if isinstance(problem_groups, JsonResponse):
+            return problem_groups
+    
     if not problem_groups:
         return E_NO_PROBLEM_GROUP
 
-    problem_groups = _cut_to_page(request, problem_groups, "title")
+    problem_groups = _cut_to_page(request, problem_groups)
+    if isinstance(problem_groups, JsonResponse):
+        return problem_groups
+    
     return success_data("问题组查询成功", _problem_groups_to_list(problem_groups))
 
 

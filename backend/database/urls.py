@@ -39,6 +39,8 @@ urlpatterns = [
     path('problem_delete', views_problem.problem_delete),
     path('problem_adjust_order', views_problem.problem_adjust_order),
     
+    path('get_problem_groups', views_problem.get_problem_groups),
+    path('get_problem_groups_num', views_problem.get_problem_groups_num),
     path('get_problems', views_problem.get_problems_with_permissions),
     path('get_problems_num', views_problem.get_problem_num_with_permissions),
 ]
