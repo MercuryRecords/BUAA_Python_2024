@@ -48,4 +48,11 @@ import GroupCreated from "./views/GroupCreated.vue";
   height: 100%;
   right: 20px;
 }
+
+.navigation-aside {
+  position: relative;
+  z-index: 10;
+  height: 100%;
+  overflow-y: auto;
+}
 </style>
