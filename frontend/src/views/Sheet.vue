@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import {ref, reactive, computed, onMounted} from 'vue'
-import {ElMessage} from 'element-plus'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
-import {useRoute} from 'vue-router'
+import { useRoute } from 'vue-router'
 import API from "@/plugins/axios";
 
 const route = useRoute()
@@ -38,7 +38,7 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
-  {name: '数学', tags: ['多项式', '矩阵', '行列式', '线性代数']},
+  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
   {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
   {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
   {name: '题目类型', tags: ['选择题', '填空题']},
@@ -79,19 +79,45 @@ const handleCurrentChange = (val: number) => {
   currentPage.value = val
 }
 
-const handleSolve = (problem: data) => {
+const handleSolve = (problem: data, tmp_id: number) => {
   ElMessage.success(`准备解决题目: ${problem.problem_title}`)
   const currentProblems = problems.value;
   const currentIndex = currentProblems.findIndex(p => p.id === problem.id);
-  console.log(currentIndex);
+  console.log(tmp_id);
   console.log(currentProblems);
   router.push({
     name: 'solve',
     query: {
       username: route.query.username as string,
-      startIndex: currentIndex as number,
+      index: currentIndex as number,
+      problem_group_id: tmp_id,
     },
   });
+}
+
+const jumpToQuestion = (problem: data) => {
+  const problemIds = problems.value.map(problem => problem.id);
+  console.log(problemIds);
+  API.post('/temporary_problem_group_create', {
+    username: route.query.username,
+    problem_ids: problemIds,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          // 创建成功
+          console.log("Ready to solve")
+          handleSolve(problem, response.data.data);
+        } else {
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      }
+  )
 }
 
 const clearFilters = () => {
@@ -123,15 +149,11 @@ const getAccuracyColor = (accuracy: number) => {
   return 'warning'
 }
 
-function getProblems(page: number) {
-  API.post('/get_problem_group_content', {
+function getProblems() {
+  API.post('/get_problems', {
     username: route.query.username,
-    problem_group_id: route.query.sheetId,
-    is_temporary:'n',
-    page: page,
-    number_per_page: 10
   }, {
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -140,9 +162,9 @@ function getProblems(page: number) {
             allProblems.value[i] = response.data.data[i];
             allProblems.value[i].accuracy = response.data.data[i].all_right_count / response.data.data[i].all_count
             if (response.data.data[i].type == 'b') {
-              allProblems.value[i].tags.push("填空");
+              allProblems.value[i].tags.push("填空题");
             } else {
-              allProblems.value[i].tags.push("选择");
+              allProblems.value[i].tags.push("选择题");
             }
             console.log(allProblems)
           }
@@ -164,7 +186,7 @@ function getProblemsNumber() {
   API.post('/get_problems_num', {
     username: route.query.username,
   }, {
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -183,19 +205,20 @@ function getProblemsNumber() {
 }
 
 const fetchProblems = async () => {
-  let number = 0;
-  for (let i = 1; i <= Math.floor(number / 10) + 1; i++) {
-    getProblems(i);
-  }
+  // let number = 0;
+  // for (let i = 1; i <= Math.floor(number/10)+1; i++) {
+  //   getProblems(i);
+  // }
+  getProblems();
 }
 
 const userGroups: string[] = reactive([])
 
-const fetchGroups = async () => {
+const fetchGroups = async() => {
   API.post('/group_get_groups', {
     username: route.query.username,
   }, {
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -277,6 +300,7 @@ onMounted(() => {
                     <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
                   </el-form-item>
 
+
                   <el-form-item>
                     <el-dropdown @command="handleCommand">
                       <span class="el-dropdown-link">
@@ -332,7 +356,7 @@ onMounted(() => {
                 </el-table-column>
                 <el-table-column label="操作" width="100">
                   <template #default="scope">
-                    <el-button type="text" size="small" @click="handleSolve(scope.row)">解题</el-button>
+                    <el-button type="text" size="small" @click="jumpToQuestion(scope.row)">解题</el-button>
                   </template>
                 </el-table-column>
               </el-table>
