@@ -81,12 +81,11 @@ const percentageFormat = (percentage: number) => {
 
 const handleSizeChange = (val: number) => {
   pageSize.value = val;
-  fetchProblems();
+  currentPage.value = 1
 };
 
 const handleCurrentChange = (val: number) => {
   currentPage.value = val;
-  fetchProblems();
 };
 
 const openCreateDialog = () => {
@@ -235,7 +234,7 @@ const deleteProblemGroup = async (problem: any) => {
         <el-table-column label="名称" width="300">
           <template #default="scope">
             <router-link
-                :to="{ name: 'sheet', query: { username:data.username,sheetId: scope.row.id,filter_group:'_created_by_self' } }"
+                :to="{ name: 'sheet', query: { username:data.username,sheetId: scope.row.id } }"
                 class="problem-link">
               {{ scope.row.title }}
             </router-link>

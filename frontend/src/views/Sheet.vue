@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import {ref, reactive, computed, onMounted} from 'vue'
+import {ElMessage} from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
-import { useRoute } from 'vue-router'
+import {useRoute} from 'vue-router'
 import API from "@/plugins/axios";
 
 const route = useRoute()
@@ -38,7 +38,7 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
-  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
+  {name: '数学', tags: ['多项式', '矩阵', '行列式', '线性代数']},
   {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
   {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
   {name: '题目类型', tags: ['选择题', '填空题']},
@@ -124,12 +124,14 @@ const getAccuracyColor = (accuracy: number) => {
 }
 
 function getProblems(page: number) {
-  API.post('/get_problems', {
+  API.post('/get_problem_group_content', {
     username: route.query.username,
+    problem_group_id: route.query.sheetId,
+    is_temporary:'n',
     page: page,
     number_per_page: 10
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -162,7 +164,7 @@ function getProblemsNumber() {
   API.post('/get_problems_num', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -182,18 +184,18 @@ function getProblemsNumber() {
 
 const fetchProblems = async () => {
   let number = 0;
-  for (let i = 1; i <= Math.floor(number/10)+1; i++) {
+  for (let i = 1; i <= Math.floor(number / 10) + 1; i++) {
     getProblems(i);
   }
 }
 
 const userGroups: string[] = reactive([])
 
-const fetchGroups = async() => {
+const fetchGroups = async () => {
   API.post('/group_get_groups', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
