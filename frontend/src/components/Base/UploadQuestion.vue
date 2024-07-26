@@ -100,7 +100,7 @@
 import {ref, reactive, nextTick} from 'vue'
 import {ElMessage} from 'element-plus'
 import API from '@/plugins/axios'
-
+import router from "@/router";
 interface TreeNode {
   id: number
   label: string
@@ -262,6 +262,9 @@ const submitProblem = () => {
         console.error('提交失败:', error)
         ElMessage.error('题目提交失败，请重试')
       })
+  setTimeout(() => {
+    router.back()
+  }, 1000); // 延迟1000毫秒（1秒）
 }
 </script>
 
