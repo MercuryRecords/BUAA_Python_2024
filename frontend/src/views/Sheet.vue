@@ -150,8 +150,11 @@ const getAccuracyColor = (accuracy: number) => {
 }
 
 function getProblems() {
-  API.post('/get_problems', {
+  API.post('/get_problem_group_content', {
     username: route.query.username,
+    problem_group_id: route.query.sheetId,
+    is_temporary:'n',
+    number_per_page: 10
   }, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   }).then(
