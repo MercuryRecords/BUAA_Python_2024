@@ -63,8 +63,13 @@ const router = createRouter({ //创建路由器
         {
             path: '/upload',
             name: 'upload',
-            component: () => import('@/views/QuestionUploaded.vue')
-        }
+            component: () => import('@/views/QuestionUploaded.vue'),
+        },
+        {
+            path:'/sheet',
+            name:'sheet',
+            component: () => import('@/views/Sheet.vue'),
+        },
     ]
 })
 
