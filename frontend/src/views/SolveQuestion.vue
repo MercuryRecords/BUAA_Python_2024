@@ -20,7 +20,6 @@
         <!-- 填空题 -->
         <div v-else-if="currentQuestion.type === 'b'" class="fill-in-blank">
           <div v-for="index in currentQuestion.ans_count" :key="index" class="fill-in-blank-item">
-<!--            <label>空 {{ index }}:</label>-->
             <el-input v-model="userAnswer[index - 1]" :placeholder="`请输入第${index}空的答案`"></el-input>
           </div>
         </div>
@@ -49,28 +48,33 @@
       </div>
 
       <div class="question-selector">
-        <el-button class="selector-button" @click="showQuestionList = true">
+        <el-button class="selector-button" @click="showQuestionDrawer = true">
           选择题目
         </el-button>
       </div>
     </div>
 
-    <!-- 题目列表弹出框 -->
-    <el-dialog
+    <!-- 题目列表抽屉 -->
+    <el-drawer
         title="题目列表"
-        v-model="showQuestionList"
-        width="30%"
-        :before-close="handleCloseDialog"
+        v-model="showQuestionDrawer"
+        direction="rtl"
+        size="300px"
     >
-      <el-menu
-          :default-active="currentIndex.toString()"
-          @select="handleSelect"
-      >
-        <el-menu-item v-for="(question, index) in problems" :key="index" :index="index.toString()">
-          {{ index + 1 }}  {{ question.problem_title }}
-        </el-menu-item>
-      </el-menu>
-    </el-dialog>
+      <el-scrollbar height="calc(100vh - 60px)">
+        <el-menu
+            :default-active="currentIndex.toString()"
+            @select="handleSelect"
+        >
+          <el-menu-item v-for="(question, index) in problems" :key="index" :index="index.toString()">
+            <span class="question-item">
+<!--              <span class="question-number">{{ index + 1 }}</span>-->
+              <span class="question-title">{{ question.problem_title }}</span>
+            </span>
+          </el-menu-item>
+        </el-menu>
+      </el-scrollbar>
+    </el-drawer>
   </div>
 </template>
 
@@ -116,7 +120,7 @@ const userAnswer = ref<string | string[]>('');
 const feedback = ref('');
 const isCorrect = ref(false);
 const showStatistics = ref(false);
-const showQuestionList = ref(false);
+const showQuestionDrawer = ref(false);
 
 const accuracy = computed(() => {
   if (currentQuestion.value) {
@@ -188,11 +192,7 @@ const getAccuracyColor = (accuracy: number) => {
 const handleSelect = (index: string) => {
   currentIndex.value = parseInt(index);
   resetQuestion();
-  showQuestionList.value = false;
-};
-
-const handleCloseDialog = () => {
-  showQuestionList.value = false;
+  showQuestionDrawer.value = false;
 };
 
 const getTemporaryQuestion = () => {
@@ -229,6 +229,7 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  margin-left: 220px;
 }
 
 .content-wrapper {
@@ -358,17 +359,22 @@ h2, h3 {
   width: 120px;
 }
 
-/* 弹出框样式 */
-:deep(.el-dialog__body) {
-  padding: 0;
+.question-item {
+  display: flex;
+  align-items: center;
 }
 
-:deep(.el-menu) {
-  border-right: none;
+.question-number {
+  width: 30px;
+  text-align: right;
+  margin-right: 10px;
+  font-weight: bold;
 }
 
-:deep(.el-menu-item) {
-  height: 50px;
-  line-height: 50px;
+.question-title {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
