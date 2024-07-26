@@ -32,4 +32,4 @@ coverage
 # 其它
 *.pyc
 /backend/model_path/paraphrase-multilingual-MiniLM-L12-v2/0_Transformer/pytorch_model.bin
-/backend/database/migrations/*_initial.py
+/backend/database/migrations/0*.py

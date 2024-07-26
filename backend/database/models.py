@@ -120,3 +120,6 @@ class Record(models.Model):
     result = models.BooleanField(default=False)  # 是否正确
     created_at = models.DateTimeField(auto_now_add=True)
 
+class TemporaryProblemGroup(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    problems = models.ManyToManyField(Problem)

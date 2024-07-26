@@ -4,6 +4,7 @@ from . import views, views_problem, views_ocr, views_admin
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
     path('user_login', views.user_login, name='user_login'),
+    path('user_logout', views.user_logout, name='user_logout'),
     path('group_create', views.group_create, name='group_create'),
     path('group_apply_to_join', views.group_apply_to_join, name='group_apply_to_join'),
     path('group_handle_join_request', views.group_handle_join_request, name='group_handle_join_request'),
@@ -43,4 +44,6 @@ urlpatterns = [
     path('get_problem_groups_num', views_problem.get_problem_groups_num),
     path('get_problems', views_problem.get_problems_with_permissions),
     path('get_problems_num', views_problem.get_problem_num_with_permissions),
+    path('temporary_problem_group_create', views_problem.temporary_problem_group_create),
+    path('get_problem_group_content', views_problem.get_problem_group_content),
 ]

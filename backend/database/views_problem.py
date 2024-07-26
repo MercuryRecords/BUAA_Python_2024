@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.db.models import F, Q, QuerySet
+from django.db.models import F, Q
 
-from .models import User, Group, ProblemGroup, Problem, ProblemPermission, Tag, Record
+from .models import User, Group, ProblemGroup, Problem, ProblemPermission, Tag, Record, TemporaryProblemGroup
 
 from .error import *
 
@@ -15,7 +15,7 @@ def _get_problem_group(request, permission):
         return E_PROBLEM_GROUP_NOT_FIND
     problem_group = check[0]
 
-    if permission >= 0 and username != problem_group.user.username:
+    if username != problem_group.user.username:
         check = User.objects.filter(username=username)
         if not check:
             return E_USER_NOT_FIND
@@ -30,34 +30,40 @@ def _get_problem_group(request, permission):
     return problem_group
 
 
-def _get_problem(request, permission):
-    # 对 permission 参数，0 题目上传者和问题组管理者 1 题目上传者
+def __get_problem(user, problem_id, permission):
+    # 对 permission 参数，1 题目上传者和问题组管理者 2 题目上传者
     # 题目上传者和问题组管理者可以删除该题目
     # 仅题目上传者可修改该题目
-    username = request.POST.get('username')
-    problem_id = request.POST.get('problem_id')
+
     check = Problem.objects.filter(id=problem_id)
     if not check:
         return E_PROBLEM_NOT_FIND
     problem = check[0]
     problem_group = problem.problem_group
 
-    if permission >= 1 and username != problem.creator.username:
+    if permission >= 2 and user != problem.creator:
         return E_PERMISSION_DENIED
 
-    if permission == 0 and username != problem.creator.username and username != problem_group.user.username:
-        check = User.objects.filter(username=username)
-        if not check:
-            return E_USER_NOT_FIND
-        user = check[0]
+    if permission <= 1 and user != problem.creator and user != problem_group.user:
 
         groups = user.groups.all()
         if not ProblemPermission.objects.filter(group__isnull=True, problem_group=problem_group,
-                permission__gte=1).exists() and not ProblemPermission.objects.filter(group__in=groups,
-                problem_group=problem_group, permission__gte=1).exists():
+                permission__gte=permission).exists() and not ProblemPermission.objects.filter(group__in=groups,
+                problem_group=problem_group, permission__gte=permission).exists():
             return E_PERMISSION_DENIED
         
     return problem_group, problem
+
+def _get_problem(request, permission):
+    username = request.POST.get('username')
+    problem_id = request.POST.get('problem_id')
+
+    check = User.objects.filter(username=username)
+    if not check:
+        return E_USER_NOT_FIND
+    user = check[0]
+
+    return __get_problem(user, problem_id, permission)
 
 
 def _get_and_create_tags(request):
@@ -229,7 +235,7 @@ def problem_create(request):
 
 @require_http_methods(["POST"])
 def problem_update(request):
-    res = _get_problem(request, 1)
+    res = _get_problem(request, 2)
     if isinstance(res, JsonResponse):
         return res
 
@@ -279,7 +285,7 @@ def problem_update(request):
 
 @require_http_methods(["POST"])
 def problem_delete(request):
-    res = _get_problem(request, 0)
+    res = _get_problem(request, 1)
     if isinstance(res, JsonResponse):
         return res
 
@@ -295,7 +301,7 @@ def problem_delete(request):
 
 @require_http_methods(["POST"])
 def problem_adjust_order(request):
-    res = _get_problem(request, 0)
+    res = _get_problem(request, 1)
     if isinstance(res, JsonResponse):
         return res
 
@@ -523,6 +529,66 @@ def get_problems_with_permissions(request):
         return problems
 
     return success_data("问题查询成功", _problems_to_list(user, problems))
+
+@require_http_methods(["POST"])
+def temporary_problem_group_create(request):
+    username = request.POST.get('username')
+    user = User.objects.filter(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    user = user[0]
+
+    problem_ids = request.POST.getlist('problem_ids[]')
+    problem_list = []
+    for id in problem_ids:
+        problem = __get_problem(user, int(id), 0)
+        if isinstance(problem, JsonResponse):
+            return problem
+        
+        problem_list.append(problem[1])
+    
+    temp_group = TemporaryProblemGroup.objects.create(user=user)
+    temp_group.problems.set(problem_list)
+    return success_data("临时问题组创建成功", temp_group.id)
+
+def temporary_problem_group_clear(user):
+    TemporaryProblemGroup.objects.filter(user=user).delete()
+
+def get_problem_group_content(request):
+    username = request.POST.get('username')
+    user = User.objects.filter(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    user = user[0]
+
+    is_temporary = request.POST.get('is_temporary')
+    if is_temporary == 'y':
+        group_id = request.POST.get('problem_group_id')
+        temp_group = TemporaryProblemGroup.objects.filter(id=group_id)
+        if not temp_group:
+            return E_PROBLEM_GROUP_NOT_FIND
+        temp_group = temp_group[0]
+
+        if user != temp_group.user:
+            return E_PERMISSION_DENIED
+
+        problems = temp_group.problems.all()
+    else:
+        problem_group = _get_problem_group(request, 0)
+        if isinstance(problem_group, JsonResponse):
+            return problem_group
+        
+        problems = Problem.objects.filter(problem_group=problem_group)
+        problems = problems.order_by('index')
+    
+    if not problems:
+        return E_NO_PROBLEM
+
+    problems = _cut_to_page(request, problems)
+    if isinstance(problems, JsonResponse):
+        return problems
+    
+    return success_data("问题组内容获取成功", _problems_to_list(user, problems))
 
 
 # @require_http_methods(["POST"])
