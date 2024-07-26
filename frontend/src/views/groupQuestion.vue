@@ -79,6 +79,7 @@ const handleCurrentChange = (val: number) => {
 
 const handleSolve = (problem: data) => {
   ElMessage.success(`准备解决题目: ${problem.problem_title}`)
+
 }
 
 const clearFilters = () => {
@@ -212,7 +213,6 @@ const handleCommand = (command: any) => {
       name: 'question', // 替换为你要跳转的组件名称
       query: {
         username: route.query.username,
-        groupLabel: command,
       }
     })
   }
@@ -223,7 +223,7 @@ const handleCommand = (command: any) => {
   <div class="common-layout">
     <el-container>
       <el-header>
-        <h1>题目列表</h1>
+
       </el-header>
 
       <el-container>

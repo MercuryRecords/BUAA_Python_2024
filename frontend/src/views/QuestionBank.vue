@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import {ref, reactive, computed, onMounted} from 'vue'
-import {ElMessage} from 'element-plus'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
-import {useRoute} from 'vue-router'
+import { useRoute } from 'vue-router'
 import API from "@/plugins/axios";
 
 const route = useRoute()
@@ -16,7 +16,7 @@ const searchForm = reactive({
 })
 
 interface data {
-  id: string,
+  id: number,
   problem_title: string,
   creator: string,
   problem_group_title: string,
@@ -25,7 +25,9 @@ interface data {
   all_right_count: number,
   user_count: number,
   user_right_count: number,
-  accuracy: number
+  accuracy: number,
+  type: string,
+  content: string
 }
 
 const allProblems = ref<data[]>([
@@ -34,7 +36,6 @@ const allProblems = ref<data[]>([
 
 const currentPage = ref(1)
 const pageSize = ref(20)
-
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
   {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
@@ -43,27 +44,28 @@ const tagCategories = ref([
   {name: '题目类型', tags: ['选择题', '填空题']},
 ])
 
-const filterProblems = computed(() => {
-  return allProblems.value.filter(problem => {
-    const matchKeyword = searchForm.keyword === '' ||
-        problem.problem_title.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-        problem.id.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-        problem.creator.toLowerCase().includes(searchForm.keyword.toLowerCase()) ||
-        problem.problem_group_title.toLowerCase().includes(searchForm.keyword.toLowerCase())
-    const matchTags = searchForm.selectedTags.length === 0 || searchForm.selectedTags.every(tag => problem.tags.includes(tag))
-    return matchKeyword && matchTags
-  })
-})
+const filteredProblems = ref<data[]>([])
 
 const problems = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
-  return filterProblems.value.slice(start, end)
+  return filteredProblems.value.slice(start, end)
 })
 
-const total = computed(() => filterProblems.value.length)
+const total = computed(() => filteredProblems.value.length)
 
 const onSearch = () => {
+  filteredProblems.value = allProblems.value.filter(problem => {
+    const matchKeyword = searchForm.keyword === '' ||
+        problem.problem_title.includes(searchForm.keyword) ||
+        problem.id === parseInt(searchForm.keyword) ||
+        problem.creator.includes(searchForm.keyword) ||
+        problem.problem_group_title.includes(searchForm.keyword) ||
+        problem.content.includes(searchForm.keyword)
+    const matchTags = searchForm.selectedTags.length === 0 ||
+        searchForm.selectedTags.every(tag => problem.tags.includes(tag))
+    return matchKeyword && matchTags
+  })
   currentPage.value = 1
   ElMessage.success(`找到 ${total.value} 个匹配的题目`)
 }
@@ -77,8 +79,45 @@ const handleCurrentChange = (val: number) => {
   currentPage.value = val
 }
 
-const handleSolve = (problem: data) => {
+const handleSolve = (problem: data, tmp_id: number) => {
   ElMessage.success(`准备解决题目: ${problem.problem_title}`)
+  const currentProblems = problems.value;
+  const currentIndex = currentProblems.findIndex(p => p.id === problem.id);
+  console.log(tmp_id);
+  console.log(currentProblems);
+  router.push({
+    name: 'solve',
+    query: {
+      username: route.query.username as string,
+      index: currentIndex as number,
+      problem_group_id: tmp_id,
+    },
+  });
+}
+
+const jumpToQuestion = (problem: data) => {
+  const problemIds = problems.value.map(problem => problem.id);
+  console.log(problemIds);
+  API.post('/temporary_problem_group_create', {
+    username: route.query.username,
+    problem_ids: problemIds,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          // 创建成功
+          console.log("Ready to solve")
+          handleSolve(problem, response.data.data);
+        } else {
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      }
+  )
 }
 
 const clearFilters = () => {
@@ -110,95 +149,100 @@ const getAccuracyColor = (accuracy: number) => {
   return 'warning'
 }
 
-function getProblems(page: number) {
-  API.post('/get_problems',
-      {
-        username: route.query.username,
-        page: page,
-        number_per_page: 10
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(
+function getProblems() {
+  API.post('/get_problems', {
+    username: route.query.username,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
       function (response) {
-        if (response.data.code === 200) { // 成功接收
-          // for (let i = 0; i < response.data.groups.length; i++) {
-          //   if (response.data.groups[i].creator == data.username) {
-          //     tableData.push(response.data.groups[i]) //将群组加入tableData，准备在挂载的时候显示出来
-          //   }
-          // }
+        if (response.data.code === 200) {
           for (let i = 0; i < response.data.data.length; i++) {
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
             allProblems.value[i].accuracy = response.data.data[i].all_right_count / response.data.data[i].all_count
+            if (response.data.data[i].type == 'b') {
+              allProblems.value[i].tags.push("填空题");
+            } else {
+              allProblems.value[i].tags.push("选择题");
+            }
+            console.log(allProblems)
           }
-        } else { // 接收失败
+          onSearch()  // Perform initial search after fetching problems
+        } else {
           ElMessage.error(response.data.message);
         }
       }
   ).catch(
       function () {
         console.log('error submit!')
-      })
+      }
+  )
 }
 
 function getProblemsNumber() {
   let number = 0;
   console.log(route.query.username)
-  API.post('/get_problems_num',
-      {
-        username: route.query.username,
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(
+  API.post('/get_problems_num', {
+    username: route.query.username,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
       function (response) {
-        if (response.data.code === 200) { // 成功接收
+        if (response.data.code === 200) {
           number = response.data;
           console.log(number);
-        } else { // 接收失败
+        } else {
           ElMessage.error(response.data.message);
         }
       }
   ).catch(
       function () {
         console.log('error submit!')
-      })
+      }
+  )
   return number;
 }
 
 const fetchProblems = async () => {
-  // let number = getProblemsNumber();
-  let number = 0;
-  for (let i = 1; i <= Math.floor(number/10)+1; i++) {
-    getProblems(i);
-  }
+  // let number = 0;
+  // for (let i = 1; i <= Math.floor(number/10)+1; i++) {
+  //   getProblems(i);
+  // }
+  getProblems();
 }
 
-onMounted(() => {
-  fetchProblems()
-})
+const userGroups: string[] = reactive([])
 
-// ----------------------测试----------------
-// TODO 实现下拉选择用户组
-// 定义用户组数据
-const userGroups = ref([
-  "第一个组",
-  "第二个组",
-  "第三个组",
-  // 可以根据需要添加更多组
-])
+const fetchGroups = async() => {
+  API.post('/group_get_groups', {
+    username: route.query.username,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          for (let i = 0; i < response.data.groups.length; i++) {
+            userGroups.push(response.data.groups[i].name);
+          }
+        } else {
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      }
+  )
+}
 
 const selectedGroup = ref('')
 
 const handleCommand = (command: any) => {
   selectedGroup.value = command
   if (command !== '') {
-    // 路由跳转到指定组件，并传递选中的标签
     router.push({
-      name: 'QuestionBank4SpecificGroup', // 替换为你要跳转的组件名称
+      name: 'QuestionBank4SpecificGroup',
       query: {
         username: route.query.username,
         groupLabel: command,
@@ -208,13 +252,17 @@ const handleCommand = (command: any) => {
     // 无需处理
   }
 }
+
+onMounted(() => {
+  fetchProblems();
+  fetchGroups();
+})
 </script>
 
 <template>
   <div class="common-layout">
     <el-container>
       <el-header>
-        <h1>题目列表</h1>
       </el-header>
 
       <el-container>
@@ -229,7 +277,11 @@ const handleCommand = (command: any) => {
                 <el-form :inline="true" :model="searchForm" class="demo-form-inline">
                   <el-form-item>
                     <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                              style="width: 310px"></el-input>
+                              style="width: 310px"
+                              @keyup.enter="onSearch"></el-input>
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button @click="onSearch">搜索</el-button>
                   </el-form-item>
                   <el-form-item>
                     <el-button @click="openTagDialog">选择标签</el-button>
@@ -237,11 +289,12 @@ const handleCommand = (command: any) => {
                   <el-form-item>
                     <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
                   </el-form-item>
+
                   <el-dropdown @command="handleCommand">
-                      <span class="el-dropdown-link">
-                        {{ selectedGroup || '选择用户组' }}
-                        <el-icon class="el-icon--right"></el-icon>
-                      </span>
+                    <span class="el-dropdown-link">
+                      {{ selectedGroup || '选择用户组' }}
+                      <el-icon class="el-icon--right"></el-icon>
+                    </span>
                     <template #dropdown>
                       <el-dropdown-menu>
                         <el-dropdown-item command="">全部用户组</el-dropdown-item>
@@ -251,6 +304,7 @@ const handleCommand = (command: any) => {
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
+
                 </el-form>
                 <!-- 显示选中标签的区域 -->
                 <div v-if="searchForm.selectedTags.length > 0" style="margin-top: 10px;">
@@ -287,7 +341,7 @@ const handleCommand = (command: any) => {
                 </el-table-column>
                 <el-table-column label="操作" width="100">
                   <template #default="scope">
-                    <el-button type="text" size="small" @click="handleSolve(scope.row)">解题</el-button>
+                    <el-button type="text" size="small" @click="jumpToQuestion(scope.row)">解题</el-button>
                   </template>
                 </el-table-column>
               </el-table>

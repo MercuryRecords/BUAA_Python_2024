@@ -70,6 +70,16 @@ const router = createRouter({ //创建路由器
             name:'sheet',
             component: () => import('@/views/Sheet.vue'),
         },
+        {
+            path: '/solveQuestion',
+            name: 'solve',
+            component: () => import('@/views/SolveQuestion.vue')
+        },
+        {
+            path: '/users',
+            name: 'users',
+            component: () => import('@/views/UserManagement.vue')
+        }
     ]
 })
 
