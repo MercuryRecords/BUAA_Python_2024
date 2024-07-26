@@ -1,23 +1,26 @@
 <script lang="ts" setup>
-import {ref, onMounted} from 'vue';
+import {ref, onMounted, reactive} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import API from "@/plugins/axios";
+import {CirclePlusFilled, Delete, Edit, Share} from "@element-plus/icons-vue";
 
 const activeTab = ref('practice');
 const currentPage = ref(1);
 const pageSize = ref(20);
 const totalProblems = ref(0);
 const data = defineProps(['username']);
-const problems = ref([
-  {id: 100, name: '【入门】新手入门', completionRate: 80, submissionCount: 23854, acceptedCount: 19083},
-  {id: 101, name: '【入门】分支结构', completionRate: 60, submissionCount: 9148, acceptedCount: 5488},
-  {id: 102, name: '【入门】循环结构', completionRate: 40, submissionCount: 7972, acceptedCount: 3188},
-]);
+const problems: Sheet[] = reactive([]);
 
 // 对话框相关的响应式变量
 const createDialogVisible = ref(false);
 const updateDialogVisible = ref(false);
 const shareDialogVisible = ref(false);
+
+interface Sheet {
+  id: string
+  title: string
+}
+
 const newProblemGroup = ref({
   username: '',
   title: '',
@@ -29,6 +32,14 @@ const updateProblemGroup = ref({
   problem_group_id: 0,
   title: '',
   description: ''
+});
+
+// 新增：分享对话框的数据
+const shareProblemGroup = ref({
+  username: '',
+  problem_group_id: 0,
+  group_name: '',
+  permission: 0
 });
 
 onMounted(() => {
@@ -43,14 +54,21 @@ const fetchProblems = async () => {
       filter_group: '',
       page: currentPage.value,
       number_per_page: pageSize.value
+    }, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
+    console.log(response.data)
     if (response.data.code === 200) {
-      problems.value = response.data.data.problems;
-      totalProblems.value = response.data.data.total;
+      for (let i = 0; i < response.data.data.length; i++) {
+        problems.push(response.data.data[i]);
+      }
+      totalProblems.value = response.data.data.length;
     }
   } catch (error) {
-    console.error('获取题目列表失败:', error);
-    ElMessage.error('获取题目列表失败，请重试');
+    console.error('获取题单列表失败:', error);
+    ElMessage.error('获取题单列表失败，请重试');
   }
 };
 
@@ -86,15 +104,15 @@ const createNewProblemGroup = async () => {
       ElMessage.success('新题单创建成功');
       createDialogVisible.value = false;
       await fetchProblems();
-      console.log("问题组id为"+response.data.data);
-      console.log(problems.value)
+      console.log("问题组id为" + response.data.data);
+      console.log(problems)
     } else {
       console.log(response.data.code)
-      ElMessage.error('题目创建失败');
+      ElMessage.error('题单创建失败');
     }
   } catch (error) {
-    console.error('题目创建失败:', error);
-    ElMessage.error('题目创建失败，请重试');
+    console.error('题单创建失败:', error);
+    ElMessage.error('题单创建失败，请重试');
   }
 };
 
@@ -112,26 +130,47 @@ const updateProblemGroupFunc = async () => {
   try {
     const response = await API.post('/problem_group_update', updateProblemGroup.value);
     if (response.data.code === 200) {
-      ElMessage.success('题目更新成功');
+      ElMessage.success('题单更新成功');
       updateDialogVisible.value = false;
       fetchProblems();
     } else {
-      ElMessage.error('题目更新失败');
+      ElMessage.error('题单更新失败');
     }
   } catch (error) {
-    console.error('题目更新失败:', error);
-    ElMessage.error('题目更新失败，请重试');
+    console.error('题单更新失败:', error);
+    ElMessage.error('题单更新失败，请重试');
   }
 };
 
 const openShareDialog = (problem: any) => {
   shareDialogVisible.value = true;
-  // 这里可以添加share相关的逻辑
+  shareProblemGroup.value = {
+    username: data.username,
+    problem_group_id: problem.id,
+    group_name: '',
+    permission: 0
+  };
+};
+
+// 新增：分享题单的函数
+const shareProblemGroupFunc = async () => {
+  try {
+    const response = await API.post('/api/problem_share', shareProblemGroup.value);
+    if (response.data.code === 200) {
+      ElMessage.success('题单分享成功');
+      shareDialogVisible.value = false;
+    } else {
+      ElMessage.error('题单分享失败');
+    }
+  } catch (error) {
+    console.error('题单分享失败:', error);
+    ElMessage.error('题单分享失败，请重试');
+  }
 };
 
 const deleteProblemGroup = async (problem: any) => {
   try {
-    await ElMessageBox.confirm('确定要删除这个题目组吗？', '警告', {
+    await ElMessageBox.confirm('确定要删除这个题单组吗？', '警告', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'
@@ -141,15 +180,15 @@ const deleteProblemGroup = async (problem: any) => {
       problem_group_id: problem.id
     });
     if (response.data.code === 200) {
-      ElMessage.success('题目删除成功');
+      ElMessage.success('题单删除成功');
       fetchProblems();
     } else {
-      ElMessage.error('题目删除失败');
+      ElMessage.error('题单删除失败');
     }
   } catch (error) {
     if (error !== 'cancel') {
-      console.error('题目删除失败:', error);
-      ElMessage.error('题目删除失败，请重试');
+      console.error('题单删除失败:', error);
+      ElMessage.error('题单删除失败，请重试');
     }
   }
 };
@@ -163,10 +202,15 @@ const deleteProblemGroup = async (problem: any) => {
           <el-tabs v-model="activeTab">
             <el-tab-pane label="练习题单" name="practice"></el-tab-pane>
           </el-tabs>
-          <el-button type="primary" @click="openCreateDialog">新建题单</el-button>
+          <el-button type="primary" @click="openCreateDialog">
+            <el-icon>
+              <CirclePlusFilled/>
+            </el-icon>
+            <span>新建题单</span>
+          </el-button>
         </div>
         <div class="filter-info">
-          <span>共计 {{ problems.length }} 个题单</span>
+          <span>共计 {{ totalProblems }} 个题单</span>
         </div>
       </el-card>
 
@@ -174,9 +218,9 @@ const deleteProblemGroup = async (problem: any) => {
         <el-table-column prop="id" label="编号" width="80" sortable></el-table-column>
         <el-table-column label="名称" width="300">
           <template #default="scope">
-            <router-link :to="{ name: 'upload', query: { username:data.username,sheetId: scope.row.id } }"
+            <router-link :to="{ name: 'sheet', query: { username:data.username,sheetId: scope.row.id } }"
                          class="problem-link">
-              {{ scope.row.name }}
+              {{ scope.row.title }}
             </router-link>
           </template>
         </el-table-column>
@@ -190,10 +234,23 @@ const deleteProblemGroup = async (problem: any) => {
         <el-table-column label="操作" width="300">
           <template #default="scope">
             <div class="button-container">
-              <el-button size="small" @click="openUpdateDialog(scope.row)">Update</el-button>
-              <el-button size="small" @click="openShareDialog(scope.row)">Share</el-button>
-              <el-button size="small" type="danger" icon="el-icon-delete" @click="deleteProblemGroup(scope.row)">
-                Delete
+              <el-button size="small" @click="openUpdateDialog(scope.row)">
+                <el-icon>
+                  <Edit/>
+                </el-icon>
+                Update
+              </el-button>
+              <el-button size="small" @click="openShareDialog(scope.row)">
+                <el-icon>
+                  <Share/>
+                </el-icon>
+                <span>Share</span>
+              </el-button>
+              <el-button size="small" type="danger" @click="deleteProblemGroup(scope.row)">
+                <el-icon>
+                  <Delete/>
+                </el-icon>
+                <span>Delete</span>
               </el-button>
             </div>
           </template>
@@ -257,11 +314,28 @@ const deleteProblemGroup = async (problem: any) => {
     </el-dialog>
 
     <!-- Share对话框 -->
-    <el-dialog v-model="shareDialogVisible" title="分享题单" width="30%">
-      <!-- 这里可以添加分享相关的表单或内容 -->
+    <el-dialog v-model="shareDialogVisible" title="分享题单" width="40%">
+      <el-form :model="shareProblemGroup" label-width="100px">
+        <el-form-item label="用户名">
+          <el-input v-model="shareProblemGroup.username" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="问题组ID">
+          <el-input v-model="shareProblemGroup.problem_group_id" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="分享目标群组">
+          <el-input v-model="shareProblemGroup.group_name"></el-input>
+        </el-form-item>
+        <el-form-item label="权限">
+          <el-select v-model="shareProblemGroup.permission">
+            <el-option :value="0" label="仅查看"></el-option>
+            <el-option :value="1" label="可查看并修改"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button @click="shareDialogVisible = false">关闭</el-button>
+          <el-button type="primary" @click="shareProblemGroupFunc">分享</el-button>
+          <el-button @click="shareDialogVisible = false">取消</el-button>
         </span>
       </template>
     </el-dialog>
