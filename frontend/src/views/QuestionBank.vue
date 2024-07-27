@@ -256,15 +256,6 @@ const handleCommand = (command: any) => {
       getProblems(command as string);
       // window.location.reload();
     }
-    // router.push({
-    //   name: 'QuestionBank4SpecificGroup',
-    //   query: {
-    //     username: route.query.username,
-    //     groupLabel: command,
-    //   }
-    // })
-  } else {
-    // 无需处理
   }
 }
 
