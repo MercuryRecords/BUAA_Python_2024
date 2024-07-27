@@ -1,8 +1,9 @@
 from django.views.decorators.http import require_http_methods
+from django.db.models import F
 
 from .error import *
 from .models import User, Group, ProblemGroup, Problem, Record
-from .views_problem import _get_problem_groups_with_permissions, _cut_to_page, _problem_groups_to_list, \
+from .views_problem import _get_problem_groups_with_permissions__gte, _cut_to_page, _problem_groups_to_list, \
     _get_and_create_tags, _get_problems_with_permissions
 
 
@@ -177,20 +178,25 @@ def admin_get_problem_groups(request):
         if not creator:
             return E_USER_NOT_FIND
 
-        # 获取请求中的mode
         mode = int(request.POST.get('mode'))
-        # 如果mode大于等于2，获取用户创建的问题组
-        if mode >= 2:
-            problem_groups = creator.created_problem_groups.all()
-            # 如果mode小于2，获取用户有权限的问题组
-        else:
-            # 获取请求中的filter_group
-            filter_group = request.POST.get('filter_group')
-            # 调用_get_problem_groups_with_permissions函数，获取用户有权限的问题组
-            problem_groups = _get_problem_groups_with_permissions(creator, filter_group, mode)
-            # 如果返回的是JsonResponse，直接返回
+        filter_group = request.POST.get('filter_group')
+        
+        if mode:
+            problem_groups = _get_problem_groups_with_permissions__gte(creator, filter_group, 1)
             if isinstance(problem_groups, JsonResponse):
                 return problem_groups
+        else:
+            problem_groups = _get_problem_groups_with_permissions__gte(creator, '', 1)
+            if isinstance(problem_groups, JsonResponse):
+                return problem_groups
+            
+            exclude_ids = problem_groups.values_list('id', flat=True)
+            problem_groups = _get_problem_groups_with_permissions__gte(creator, filter_group, 0)
+            if isinstance(problem_groups, JsonResponse):
+                return problem_groups
+            
+            problem_groups = problem_groups.exclude(id__in=exclude_ids)
+
 
     if to_search:
         # 在 problem_groups 范围内进一步搜索，利用 search

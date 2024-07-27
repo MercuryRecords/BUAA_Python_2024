@@ -374,46 +374,65 @@ def _problem_groups_to_list(problem_groups):
         result.append(_problem_group_to_dict(problem_group))
     return result
 
-
-def _get_problem_groups_with_permissions(user, group_name, permission):
-    if group_name == '_shared_to_all':
-        permissions = ProblemPermission.objects.filter(group__isnull=True, permission__gte=permission)
-    elif group_name:
-        group = Group.objects.filter(name=group_name)
-        if not group:
-            return E_GROUP_NOT_FIND
-        group = group[0]
-
-        if not user in group.members.all():
-            return E_USER_NOT_IN_GROUP
-
-        permissions = ProblemPermission.objects.filter(group=group, permission__gte=permission)
+def _get_problem_groups_with_permissions__gte(user, group_name, permission):
+    if group_name == '_created_by_self':
+        problem_groups = ProblemGroup.objects.filter(user=user)
     else:
-        groups = user.groups.all()
-        query = Q(group__isnull=True) | Q(group__in=groups)
-        permissions = ProblemPermission.objects.filter(query, permission__gte=permission)
+        if group_name == '_shared_to_all':
+            permissions = ProblemPermission.objects.filter(group__isnull=True, permission__gte=permission)
+        elif group_name:
+            group = Group.objects.filter(name=group_name)
+            if not group:
+                return E_GROUP_NOT_FIND
+            group = group[0]
 
-    problem_group_ids = permissions.values_list('problem_group', flat=True)
-    problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)
+            if not user in group.members.all():
+                return E_USER_NOT_IN_GROUP
+
+            permissions = ProblemPermission.objects.filter(group=group, permission__gte=permission)
+        else:
+            groups = user.groups.all()
+            query = Q(group__isnull=True) | Q(group__in=groups)
+            permissions = ProblemPermission.objects.filter(query, permission__gte=permission)
+        problem_group_ids = permissions.values_list('problem_group', flat=True)
+
+        query = Q(id__in=problem_group_ids)
+        if not group_name:
+            query |= Q(user=user)
+
+        problem_groups = ProblemGroup.objects.filter(query)
 
     return problem_groups
 
-
 @require_http_methods(["POST"])
 def get_problem_groups_num(request):
+    # 获取请求中的username
     username = request.POST.get('username')
+    # 根据username获取User对象
     user = User.objects.get(username=username)
+    # 如果User对象不存在，返回错误信息
     if not user:
         return E_USER_NOT_FIND
 
+    # 获取请求中的mode
     mode = int(request.POST.get('mode'))
-    if mode >= 2:
-        problem_groups = user.created_problem_groups.all()
-    else:
-        filter_group = request.POST.get('filter_group')
-        problem_groups = _get_problem_groups_with_permissions(user, filter_group, mode)
+    filter_group = request.POST.get('filter_group')
+
+    if mode:
+        problem_groups = _get_problem_groups_with_permissions__gte(user, filter_group, 1)
         if isinstance(problem_groups, JsonResponse):
             return problem_groups
+    else:
+        problem_groups = _get_problem_groups_with_permissions__gte(user, '', 1)
+        if isinstance(problem_groups, JsonResponse):
+            return problem_groups
+        
+        exclude_ids = problem_groups.values_list('id', flat=True)
+        problem_groups = _get_problem_groups_with_permissions__gte(user, filter_group, 0)
+        if isinstance(problem_groups, JsonResponse):
+            return problem_groups
+        
+        problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
     return success_data("问题组数量查询成功", problem_groups.count())
 
@@ -428,20 +447,25 @@ def get_problem_groups(request):
     if not user:
         return E_USER_NOT_FIND
 
-    # 获取请求中的mode
     mode = int(request.POST.get('mode'))
-    # 如果mode大于等于2，获取用户创建的问题组
-    if mode >= 2:
-        problem_groups = user.created_problem_groups.all()
-    # 如果mode小于2，获取用户有权限的问题组
-    else:
-        # 获取请求中的filter_group
-        filter_group = request.POST.get('filter_group')
-        # 调用_get_problem_groups_with_permissions函数，获取用户有权限的问题组
-        problem_groups = _get_problem_groups_with_permissions(user, filter_group, mode)
-        # 如果返回的是JsonResponse，直接返回
+    filter_group = request.POST.get('filter_group')
+ 
+    if mode:
+        problem_groups = _get_problem_groups_with_permissions__gte(user, filter_group, 1)
         if isinstance(problem_groups, JsonResponse):
             return problem_groups
+    else:
+        problem_groups = _get_problem_groups_with_permissions__gte(user, '', 1)
+        if isinstance(problem_groups, JsonResponse):
+            return problem_groups
+        
+        exclude_ids = problem_groups.values_list('id', flat=True)
+        problem_groups = _get_problem_groups_with_permissions__gte(user, filter_group, 0)
+        if isinstance(problem_groups, JsonResponse):
+            return problem_groups
+        
+        problem_groups = problem_groups.exclude(id__in=exclude_ids)
+
 
     # 如果问题组不存在，返回错误信息
     if not problem_groups:
@@ -458,32 +482,9 @@ def get_problem_groups(request):
 
 
 def _get_problems_with_permissions(user, group_name):
-    if group_name == '_created_by_self':
-        problem_groups = ProblemGroup.objects.filter(user=user)
-    else:
-        if group_name == '_shared_to_all':
-            permissions = ProblemPermission.objects.filter(group__isnull=True)
-        elif group_name:
-            group = Group.objects.filter(name=group_name)
-            if not group:
-                return E_GROUP_NOT_FIND
-            group = group[0]
-
-            if not user in group.members.all():
-                return E_USER_NOT_IN_GROUP
-
-            permissions = ProblemPermission.objects.filter(group=group)
-        else:
-            groups = user.groups.all()
-            query = Q(group__isnull=True) | Q(group__in=groups)
-            permissions = ProblemPermission.objects.filter(query)
-        problem_group_ids = permissions.values_list('problem_group', flat=True)
-
-        query = Q(id__in=problem_group_ids)
-        if not group_name:
-            query |= Q(user=user)
-
-        problem_groups = ProblemGroup.objects.filter(query)
+    problem_groups = _get_problem_groups_with_permissions__gte(user, group_name, 0)
+    if isinstance(problem_groups, JsonResponse):
+        return problem_groups
 
     problems = Problem.objects.filter(problem_group__in=problem_groups)
     return problems
