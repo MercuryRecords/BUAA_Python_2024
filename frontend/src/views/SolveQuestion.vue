@@ -11,8 +11,9 @@
           <div v-for="index in currentQuestion.ans_count" :key="index"
                class="option"
                :class="{
-                 'selected': userAnswer === ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1],
-                 'correct': !isCorrect && correctAnswer === ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1]
+                 'selected': !submitted && userAnswer === ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1],
+                 'correct': submitted && correctAnswer === ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1],
+                 'incorrect': submitted && userAnswer === ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1] && userAnswer !== correctAnswer
                }"
                @click="selectAnswer(index - 1)">
             <span class="option-label">{{ ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1] }}.</span>
@@ -23,42 +24,43 @@
         <!-- 填空题 -->
         <div v-else-if="currentQuestion.type === 'b'" class="fill-in-blank">
           <div v-for="index in currentQuestion.ans_count" :key="index" class="fill-in-blank-item">
-            <el-input v-model="userAnswer[index - 1]" :placeholder="`请输入第${index}空的答案`"></el-input>
+            <el-input
+                v-model="userAnswer[index - 1]"
+                :placeholder="`请输入第${index}空的答案`"
+                :class="{
+                'correct-input': submitted && isCorrect4Blank[index - 1],
+                'incorrect-input': submitted && !isCorrect4Blank[index - 1]
+              }"
+            ></el-input>
           </div>
         </div>
 
         <div class="navigation">
           <el-button @click="previousQuestion" :disabled="currentIndex === 0">上一题</el-button>
-          <el-button @click="submitAnswer" type="primary">提交答案</el-button>
+          <el-button @click="submitAnswer" type="primary" :disabled="submitted">提交答案</el-button>
           <el-button @click="nextQuestion" :disabled="currentIndex === totalQuestions - 1">下一题</el-button>
+        </div>
+
+        <div v-if="submitted" class="result-container">
+          <el-button @click="toggleAnswers" class="show-answer-button">
+            {{ showAnswers ? '隐藏答案' : '显示答案' }}
+          </el-button>
+          <div v-if="showAnswers" class="correct-answers">
+            <h3>正确答案：</h3>
+            <p v-if="currentQuestion.type === 'c'">{{ correctAnswer }}</p>
+            <div v-else-if="currentQuestion.type === 'b'">
+              <p v-for="(answer, index) in correctAnswers.slice(0, currentQuestion.ans_count)" :key="index">
+                第{{ index + 1 }}空：{{ answer }}
+              </p>
+            </div>
+          </div>
+          <p class="score">您做过: {{ currentQuestion.user_count }} 次， 答错了: {{ currentQuestion.user_count - currentQuestion.user_right_count }} 次</p>
+          <p class="score">您的正确率: {{ (accuracy * 100).toFixed(2) }}%</p>
+          <p class="score">总体正确率: {{ (total_accuracy * 100).toFixed(2) }}%</p>
         </div>
 
         <div v-if="feedback" class="feedback" :class="{ 'is-correct': isCorrect, 'is-incorrect': !isCorrect }">
           {{ feedback }}
-        </div>
-
-        <!-- 填空题错误答案展示 -->
-        <div v-if="!isCorrect && currentQuestion.type === 'b'" class="correct-answers">
-          <h3>正确答案：</h3>
-          <div v-for="(answer, index) in correctAnswers" :key="index" class="correct-answer-item">
-            <span>第{{ index + 1 }}空：{{ answer }}</span>
-          </div>
-        </div>
-
-        <div v-if="showStatistics" class="statistics">
-          <p>您的尝试次数: {{ currentQuestion.user_count }}</p>
-          <p>您的正确次数: {{ currentQuestion.user_right_count }}</p>
-          <p>您的正确率:
-            <el-tag :type="getAccuracyColor(accuracy)">
-              {{ (accuracy * 100).toFixed(2) }}%
-            </el-tag>
-          </p>
-          <p>
-            总正确率：
-            <el-tag :type="getAccuracyColor(accuracy)">
-              {{ (total_accuracy * 100).toFixed(2) }}%
-            </el-tag>
-          </p>
         </div>
       </div>
 
@@ -99,6 +101,8 @@ import { ElMessage } from 'element-plus';
 import Navigator from "@/components/Base/Navigator.vue";
 import API from "@/plugins/axios";
 
+// ... (保持原有的接口定义和其他导入不变)
+
 interface Question {
   id: number;
   type: 'c' | 'b';
@@ -131,12 +135,14 @@ const totalQuestions = computed(() => problems.value.length);
 const currentQuestion = computed(() => problems.value[currentIndex.value]);
 const correctAnswer = ref('');
 const correctAnswers = ref<string[]>([]);
+const isCorrect4Blank = ref<boolean[]>([]);
 
 const userAnswer = ref<string | string[]>('');
 const feedback = ref('');
 const isCorrect = ref(false);
-const showStatistics = ref(false);
 const showQuestionDrawer = ref(false);
+const showAnswers = ref(false);
+const submitted = ref(false);
 
 const accuracy = computed(() => {
   if (currentQuestion.value) {
@@ -159,7 +165,9 @@ const total_accuracy = computed(() => {
 });
 
 const selectAnswer = (index: number) => {
-  userAnswer.value = ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index];
+  if (!submitted.value) {
+    userAnswer.value = ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index];
+  }
 };
 
 const checkAnswer = () => {
@@ -189,10 +197,14 @@ const checkAnswer = () => {
           if (currentQuestion.value.type === 'c') {
             correctAnswer.value = response.data.data.answer;
           } else if (currentQuestion.value.type === 'b') {
+            correctAnswers.value = [response.data.data.field1, response.data.data.field2, response.data.data.field3,
+              response.data.data.field4, response.data.data.field5, response.data.data.field6, response.data.data.field7];
+            isCorrect4Blank.value = [response.data.data.correct1 == 'T', response.data.data.correct2 == 'T', response.data.data.correct3 == 'T',
+              response.data.data.correct4 == 'T', response.data.data.correct5 == 'T', response.data.data.correct6 == 'T',
+              response.data.data.correct7 == 'T'];
           }
-
           feedback.value = isCorrect.value ? '回答正确！' : '回答错误，请查看正确答案。';
-          showStatistics.value = true;
+          submitted.value = true;
         } else {
           ElMessage.error(response.data.message);
         }
@@ -237,15 +249,11 @@ const resetQuestion = () => {
   userAnswer.value = currentQuestion.value.type === 'c' ? '' : Array(currentQuestion.value.ans_count).fill('');
   feedback.value = '';
   isCorrect.value = false;
-  showStatistics.value = false;
   correctAnswer.value = '';
   correctAnswers.value = [];
-};
-
-const getAccuracyColor = (accuracy: number) => {
-  if (accuracy >= 0.7) return 'success';
-  if (accuracy < 0.3) return 'danger';
-  return 'warning';
+  showAnswers.value = false;
+  submitted.value = false;
+  isCorrect4Blank.value = [];
 };
 
 const handleSelect = (index: string) => {
@@ -276,6 +284,10 @@ const getTemporaryQuestion = () => {
         console.log('error submit!')
       }
   )
+};
+
+const toggleAnswers = () => {
+  showAnswers.value = !showAnswers.value;
 };
 
 onMounted(() => {
@@ -356,6 +368,11 @@ h2, h3 {
   border-color: #4caf50;
 }
 
+.option.incorrect {
+  background-color: #ffebee;
+  border-color: #f44336;
+}
+
 .option-label {
   font-weight: bold;
   margin-right: 10px;
@@ -380,65 +397,64 @@ h2, h3 {
   margin-top: 30px;
 }
 
-.navigation .el-button {
-  min-width: 100px;
+.result-container {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
 }
 
-.el-button--primary {
-  background-color: #1976d2;
-  border-color: #1976d2;
+.correct-answers {
+  margin-top: 20px;
 }
 
-.el-button--primary:hover,
-.el-button--primary:focus {
-  background-color: #1565c0;
-  border-color: #1565c0;
+.score {
+  font-size: 16px;
+  margin-top: 10px;
 }
 
 .feedback {
   margin-top: 20px;
   padding: 10px;
   border-radius: 4px;
-  text-align: center;
+  font-weight: bold;
 }
 
-.feedback.is-correct {
+.is-correct {
   background-color: #e8f5e9;
   color: #4caf50;
 }
 
-.feedback.is-incorrect {
-  background-color: #fbe9e7;
+.is-incorrect {
+  background-color: #ffebee;
   color: #f44336;
-}
-
-.statistics {
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #f4f4f5;
-  border-radius: 4px;
-}
-
-.selector-button {
-  width: 120px;
 }
 
 .question-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
-.question-number {
-  width: 30px;
-  text-align: right;
-  margin-right: 10px;
-  font-weight: bold;
+.selector-button {
+  margin-top: 20px;
 }
 
-.question-title {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.correct-input :deep(.el-input__wrapper) {
+  background-color: #e8f5e9;
+  box-shadow: 0 0 0 1px #4caf50 inset;
+}
+
+.incorrect-input :deep(.el-input__wrapper) {
+  background-color: #ffebee;
+  box-shadow: 0 0 0 1px #f44336 inset;
+}
+
+/* 确保输入框内的文字颜色保持可读 */
+.correct-input :deep(.el-input__inner),
+.incorrect-input :deep(.el-input__inner) {
+  background-color: transparent;
+  color: #333;
 }
 </style>
