@@ -169,7 +169,12 @@ const openShareDialog = (problem: any) => {
 // 新增：分享题单的函数
 const shareProblemGroupFunc = async () => {
   try {
-    const response = await API.post('/api/problem_share', shareProblemGroup.value);
+    const response = await API.post('/problem_share', shareProblemGroup.value,
+        {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
     if (response.data.code === 200) {
       ElMessage.success('题单分享成功');
       shareDialogVisible.value = false;
@@ -184,7 +189,7 @@ const shareProblemGroupFunc = async () => {
 
 const deleteProblemGroup = async (problem: any) => {
   try {
-    await ElMessageBox.confirm('确定要删除这个题单组吗？', '警告', {
+    await ElMessageBox.confirm('确定要删除这个题单吗？', '警告', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning'

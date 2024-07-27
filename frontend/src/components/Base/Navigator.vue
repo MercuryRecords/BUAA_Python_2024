@@ -128,7 +128,7 @@
               > <!--这里把username传给groupCreated模块了-->
               </v-list-item>
 
-              <v-list-item prepend-icon="mdi-account-multiple" title="我加入的" value="join"
+              <v-list-item prepend-icon="mdi-account-multiple" title="我加入的题单" value="join"
                            :to="{name:'groupJoin', query: {username: props.username}}">
               </v-list-item>
 
