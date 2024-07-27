@@ -35,7 +35,7 @@ def get_records(request):
     problems = set(record.problem for record in records)
 
     if not problems:
-        return E_PROBLEM_NOT_FIND
+        return E_NO_PROBLEM_GROUP
 
     rate = dict()
     for problem in problems:
