@@ -2,8 +2,7 @@
 import {ref, onMounted, reactive, computed} from 'vue';
 import {ElMessage, ElMessageBox} from 'element-plus';
 import API from "@/plugins/axios";
-import {CirclePlusFilled, Delete, Edit, Share} from "@element-plus/icons-vue";
-import router from "@/router";
+import {CirclePlusFilled, Delete, Edit, Share, Search} from "@element-plus/icons-vue";
 
 const activeTab = ref('practice');
 const currentPage = ref(1);
@@ -11,6 +10,7 @@ const pageSize = ref(20);
 const totalProblems = ref(0);
 const data = defineProps(['username']);
 const problems: Sheet[] = reactive([]);
+const originalProblems: Sheet[] = reactive([]); // 新增: 存储原始题目列表
 const showProblems = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
@@ -21,9 +21,13 @@ const createDialogVisible = ref(false);
 const updateDialogVisible = ref(false);
 const shareDialogVisible = ref(false);
 
+// 新增：搜索关键词
+const searchKeyword = ref('');
+
 interface Sheet {
   id: string
   title: string
+  creator:string
 }
 
 const newProblemGroup = ref({
@@ -57,8 +61,6 @@ const fetchProblems = async () => {
       username: data.username,
       mode: 2,
       filter_group: '',
-      // page: currentPage.value, 不能定死值了，留下空间
-      // number_per_page: pageSize.value
     }, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -67,8 +69,10 @@ const fetchProblems = async () => {
     console.log(response.data)
     if (response.data.code === 200) {
       problems.length = 0
+      originalProblems.length = 0 // 清空原始列表
       for (let i = 0; i < response.data.data.length; i++) {
         problems.push(response.data.data[i]);
+        originalProblems.push(response.data.data[i]); // 同时添加到原始列表
       }
       totalProblems.value = response.data.data.length;
       totalProblems.value = response.data.total || response.data.data.length; // Update total count
@@ -216,6 +220,20 @@ const deleteProblemGroup = async (problem: any) => {
     }
   }
 };
+
+// 修改：搜索函数
+const searchProblems = () => {
+  const keyword = searchKeyword.value.toLowerCase();
+  const filteredProblems = originalProblems.filter(problem =>
+      problem.id.toString().includes(keyword) ||
+      problem.title.toLowerCase().includes(keyword) ||
+      (problem.creator && problem.creator.toLowerCase().includes(keyword))
+  );
+  problems.length = 0;
+  problems.push(...filteredProblems);
+  totalProblems.value = filteredProblems.length;
+  currentPage.value = 1;
+};
 </script>
 
 <template>
@@ -235,6 +253,21 @@ const deleteProblemGroup = async (problem: any) => {
         </div>
         <div class="filter-info">
           <span>共计 {{ totalProblems }} 个题单</span>
+          <!-- 新增：搜索框和搜索按钮 -->
+          <div class="search-container">
+            <el-input
+                v-model="searchKeyword"
+                placeholder="搜索编号、名称或创建者"
+                class="search-input"
+                style="width: 200px;"
+            />
+            <el-button type="primary" @click="searchProblems">
+              <el-icon>
+                <Search/>
+              </el-icon>
+              搜索
+            </el-button>
+          </div>
         </div>
       </el-card>
 
@@ -250,21 +283,17 @@ const deleteProblemGroup = async (problem: any) => {
           </template>
         </el-table-column>
         <el-table-column prop="creator" label="创建者" width="200">
-<!--          <template #default="scope">-->
-<!--            <el-progress :percentage="scope.row.completionRate" :format="percentageFormat"></el-progress>-->
-<!--          </template>-->
         </el-table-column>
-        <el-table-column prop="problem_num" label="题目数量" width="320" sortable></el-table-column>
-<!--        <el-table-column prop="acceptedCount" label="通过数" width="100" sortable></el-table-column>-->
+        <el-table-column prop="problem_num" label="题目数量" width="420" sortable></el-table-column>
         <el-table-column label="操作" width="300">
           <template #default="scope">
             <div class="button-container">
-              <el-button size="small" @click="openUpdateDialog(scope.row)">
-                <el-icon>
-                  <Edit/>
-                </el-icon>
-                Update
-              </el-button>
+<!--              <el-button size="small" @click="openUpdateDialog(scope.row)">-->
+<!--                <el-icon>-->
+<!--                  <Edit/>-->
+<!--                </el-icon>-->
+<!--                Update-->
+<!--              </el-button>-->
               <el-button size="small" @click="openShareDialog(scope.row)">
                 <el-icon>
                   <Share/>
@@ -411,7 +440,6 @@ const deleteProblemGroup = async (problem: any) => {
 
 .button-container {
   display: flex;
-  justify-content: space-between;
   align-items: center;
 }
 

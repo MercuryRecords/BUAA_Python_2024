@@ -66,8 +66,8 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/QuestionUploaded.vue'),
         },
         {
-            path:'/sheet',
-            name:'sheet',
+            path: '/sheet',
+            name: 'sheet',
             component: () => import('@/views/Sheet.vue'),
         },
         {
@@ -79,7 +79,12 @@ const router = createRouter({ //创建路由器
             path: '/users',
             name: 'users',
             component: () => import('@/views/UserManagement.vue')
-        }
+        },
+        {
+            path: '/sheetViewed',
+            name: 'sheetViewed',
+            component: () => import('@/views/SheetViewed.vue')
+        },
     ]
 })
 
