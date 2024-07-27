@@ -121,20 +121,12 @@ def admin_edit_group_info(request):
 
 
 @require_http_methods(["POST"])
-# 管理员获得第 i 页的用户名单
 def admin_get_user_list(request):
-    page = int(request.POST.get('page')) - 1
     users = User.objects.all()
-    # 每10个用户一页，按照用户名排序；先检查是否越界
-    # 越界检查
-    if page * 10 >= users.count():
-        res = {"code": 401, "message": "用户列表获取失败，页码越界"}
-        return JsonResponse(res)
+    users = _cut_to_page(request, users)
 
-    if (page + 1) * 10 > users.count():
-        users = users.order_by('username')[10 * page:]
-    else:
-        users = users.order_by('username')[10 * page:10 * (page + 1)]
+    if isinstance(users, JsonResponse):
+        return users
 
     # 返回用户相关信息
     res = {"code": 200, "message": "用户列表获取成功", "data": [
@@ -144,26 +136,33 @@ def admin_get_user_list(request):
 
 
 @require_http_methods(["POST"])
+def admin_get_user_list_num(request):
+    users = User.objects.all()
+    res = {"code": 200, "message": "用户列表获取成功", "data": users.count()}
+    return JsonResponse(res)
+
+
+@require_http_methods(["POST"])
 # 管理员获得第 i 页的用户组名单
 def admin_get_group_list(request):
-    page = int(request.POST.get('page')) - 1
     groups = Group.objects.all()
-    # 每10个用户组一页，按照用户组名排序；先检查是否越界
-    # 越界检查
-    if page * 10 >= groups.count():
-        res = {"code": 401, "message": "用户组列表获取失败，页码越界"}
-        return JsonResponse(res)
+    groups = _cut_to_page(request, groups)
 
-    if (page + 1) * 10 > groups.count():
-        groups = groups.order_by('name')[10 * page:]
-    else:
-        groups = groups.order_by('name')[10 * page:10 * (page + 1)]
+    if isinstance(groups, JsonResponse):
+        return groups
 
     # 返回用户组相关信息
     res = {"code": 200, "message": "用户组列表获取成功", "data": [
         {"name": group.name, "description": group.description, "creator": group.created_by.name,
          "create_time": group.created_at, "members": [user.username for user in group.members.all()]} for group in
         groups]}
+    return JsonResponse(res)
+
+
+@require_http_methods(["POST"])
+def admin_get_group_list_num(request):
+    groups = Group.objects.all()
+    res = {"code": 200, "message": "用户组列表获取成功", "data": groups.count()}
     return JsonResponse(res)
 
 

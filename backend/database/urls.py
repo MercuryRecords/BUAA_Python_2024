@@ -22,7 +22,9 @@ urlpatterns = [
 
     path('admin_register_user', views_admin.admin_register_user, name='admin_register_user'),
     path('admin_delete_user', views_admin.admin_delete_user, name='admin_delete_user'),
+    path('admin_get_user_list_num', views_admin.admin_get_user_list_num, name='admin_get_user_list_num'),
     path('admin_get_user_list', views_admin.admin_get_user_list, name='admin_get_user_list'),
+    path('admin_get_group_list_num', views_admin.admin_get_group_list_num, name='admin_get_group_list_num'),
     path('admin_get_group_list', views_admin.admin_get_group_list, name='admin_get_group_list'),
     path('admin_delete_group', views_admin.admin_delete_group, name='admin_delete_group'),
     path('admin_add_user_to_group', views_admin.admin_add_user_to_group, name='admin_add_user_to_group'),
