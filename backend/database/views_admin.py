@@ -154,7 +154,7 @@ def admin_get_group_list(request):
 
     # 返回用户组相关信息
     res = {"code": 200, "message": "用户组列表获取成功", "data": [
-        {"name": group.name, "description": group.description, "creator": group.created_by.name,
+        {"name": group.name, "description": group.description, "creator": group.created_by.username,
          "create_time": group.created_at, "members": [user.username for user in group.members.all()]} for group in
         groups]}
     return JsonResponse(res)
