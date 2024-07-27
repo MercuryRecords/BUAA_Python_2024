@@ -55,7 +55,7 @@ const fetchProblems = async () => {
   try {
     const response = await API.post('/get_problem_groups', {
       username: data.username,
-      mode: 2,
+      mode: 1,
       filter_group: '',
       // page: currentPage.value, 不能定死值了，留下空间
       // number_per_page: pageSize.value
@@ -349,7 +349,7 @@ const deleteProblemGroup = async (problem: any) => {
           <el-input v-model="shareProblemGroup.problem_group_id" disabled></el-input>
         </el-form-item>
         <el-form-item label="分享目标群组">
-          <el-input v-model="shareProblemGroup.group_name"></el-input>
+          <el-input v-model="shareProblemGroup.group_name" placeholder="如果想分享给所有人，请不要输入任何字符"></el-input>
         </el-form-item>
         <el-form-item label="权限">
           <el-select v-model="shareProblemGroup.permission">

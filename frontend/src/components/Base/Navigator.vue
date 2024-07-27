@@ -152,6 +152,8 @@
             </v-list>
           </v-list-item>
           <v-list-item prepend-icon="mdi-star" title="Starred" value="starred"></v-list-item>
+          <v-list-item prepend-icon="mdi-account-cog" title="个人中心" value="account-cog"
+          :to="{name:'userCenters' ,query: {username: props.username}}"></v-list-item>
         </v-list>
       </v-navigation-drawer>
 

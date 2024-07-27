@@ -59,7 +59,7 @@ const fetchProblems = async () => {
   try {
     const response = await API.post('/get_problem_groups', {
       username: data.username,
-      mode: 2,
+      mode: 0,
       filter_group: '',
     }, {
       headers: {
