@@ -1,16 +1,20 @@
 <template>
   <div class="user-management">
     <div class="table-container">
-      <el-table :data="users" style="width: 90%">
+      <div class="table-header">
+        <h2>用户列表</h2>
+        <el-button type="primary" @click="showAddUserDialog">新增用户</el-button>
+      </div>
+      <el-table :data="displayedUsers" style="width: 80%">
         <el-table-column label="序号" width="80">
           <template #default="scope">
-            {{ (currentPage - 1) * 10 + scope.$index + 1 }}
+            {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
           </template>
         </el-table-column>
-        <el-table-column prop="username" label="用户名" width="180" />
+        <el-table-column prop="username" label="用户名" width="400" />
         <el-table-column label="详细信息" width="140">
           <template #default="scope">
-            <el-button type="primary" @click="showUserDetails(scope.row)">
+            <el-button type="" @click="showUserDetails(scope.row)">
               详细信息
             </el-button>
           </template>
@@ -27,7 +31,7 @@
 
     <el-pagination
         v-model:current-page="currentPage"
-        :page-size="10"
+        :page-size="pageSize"
         :total="totalUsers"
         @current-change="handlePageChange"
         layout="prev, pager, next"
@@ -39,12 +43,29 @@
       <p><strong>密码：</strong>{{ selectedUser.password }}</p>
       <p><strong>所属群组：</strong>{{ selectedUser.groups?.join(', ') }}</p>
     </el-dialog>
+
+    <el-dialog v-model="addUserDialogVisible" title="新增用户">
+      <el-form :model="newUser" :rules="rules" ref="addUserForm" label-width="80px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="newUser.username"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="newUser.password" type="password"></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="cancelAddUser">取消</el-button>
+          <el-button type="primary" @click="addUser">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted, computed } from 'vue'
+import {ElMessage, type FormInstance} from 'element-plus'
 import API from "@/plugins/axios"
 
 interface User {
@@ -55,15 +76,33 @@ interface User {
 
 const users = ref<User[]>([])
 const currentPage = ref(1)
+const pageSize = 10
 const totalUsers = ref(0)
 const userDetailsVisible = ref(false)
 const selectedUser = ref<User>({} as User)
+const addUserDialogVisible = ref(false)
+const newUser = ref({ username: '', password: '' })
+const addUserForm = ref<FormInstance>()
+
+const rules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+  ],
+}
+
+const displayedUsers = computed(() => {
+  const start = (currentPage.value - 1) * pageSize
+  const end = start + pageSize
+  return users.value.slice(start, end)
+})
 
 const fetchUsers = async () => {
   try {
     const response = await API.post('/admin_get_user_list', {
       username: 'Admin', // 这里应该使用实际的管理员用户名
-      page: currentPage.value
     }, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -71,8 +110,8 @@ const fetchUsers = async () => {
     })
 
     if (response.data.code === 200) {
-      users.value = response.data.data
-      totalUsers.value = response.data.data.length // 假设后端返回了总用户数
+      users.value = response.data.data;
+      totalUsers.value = response.data.data.length;
     } else {
       console.error('Failed to fetch users:', response.data.message)
       ElMessage.error(response.data.message)
@@ -89,23 +128,83 @@ const showUserDetails = (user: User) => {
 }
 
 const deleteUser = async (username: string) => {
-  try {
-    // 这里应该发送删除用户的请求到后端
-    // 现在我们只是从本地数组中删除
-    users.value = users.value.filter(user => user.username !== username)
-    ElMessage.success('用户删除成功')
-  } catch (error) {
-    console.error('Error deleting user:', error)
-    ElMessage.error('删除用户失败')
-  }
+  API.post('/admin_delete_user', {
+    username: 'Admin',
+    name: username
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          fetchUsers();
+        } else {
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      }
+  )
 }
 
 const handlePageChange = (page: number) => {
-  currentPage.value = page
-  fetchUsers()
+  currentPage.value = page;
 }
 
-onMounted(fetchUsers)
+const showAddUserDialog = () => {
+  addUserDialogVisible.value = true
+}
+
+const addUser = async () => {
+  if (!addUserForm.value) return
+  addUserForm.value.validate((valid) => {
+    if (valid) {
+      API.post('/admin_register_user', {
+        username: 'Admin', // 这里应该使用实际的管理员用户名
+        name: newUser.value.username,
+        password: newUser.value.password
+      }, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      }).then(
+          function (response) {
+            if (response.data.code === 200) {
+              fetchUsers();
+              addUserDialogVisible.value = false;
+              resetNewUserForm();
+              ElMessage.success('用户添加成功');
+            } else {
+              ElMessage.error(response.data.message);
+            }
+          }
+      ).catch(
+          function () {
+            console.log('error submit!')
+            ElMessage.error('添加用户失败');
+          }
+      )
+    } else {
+      console.log('error submit!')
+      return false
+    }
+  })
+}
+
+const cancelAddUser = () => {
+  addUserDialogVisible.value = false
+  resetNewUserForm()
+}
+
+const resetNewUserForm = () => {
+  newUser.value = { username: '', password: '' }
+  if (addUserForm.value) {
+    addUserForm.value.resetFields()
+  }
+}
+
+onMounted(() => {
+  fetchUsers();
+})
 </script>
 
 <style scoped>
@@ -118,14 +217,21 @@ onMounted(fetchUsers)
 }
 
 .table-container {
-  width: 100%;
+  width: 90%;
+  max-width: 1000px;
+  margin-bottom: 20px;
+}
+
+.table-header {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
 .pagination {
   margin-top: 20px;
+  margin-right: 300px;
 }
 
 :deep(.el-table) {

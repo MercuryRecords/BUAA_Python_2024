@@ -63,7 +63,7 @@ const filterTableData = computed(() =>
 const ruleFormRef = ref<FormInstance>();
 const validateName = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('Please input the name'));
+    callback(new Error('请输入群组名称'));
   } else {
     callback();
   }

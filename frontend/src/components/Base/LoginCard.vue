@@ -16,7 +16,7 @@ const data = reactive(
 
 const validatePass = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('Please input the password'))
+    callback(new Error('请输入密码'))
   } else {
     if (ruleForm.pass !== '') {
       if (!ruleFormRef.value) return
@@ -28,7 +28,7 @@ const validatePass = (rule: any, value: any, callback: any) => {
 const validateName = (rule: any, value: any, callback: any) => {
   console.log("value:", value)
   if (value === '') {
-    callback(new Error('Please input the name'))
+    callback(new Error('请输入用户名'))
   } else {
     callback()
   }
