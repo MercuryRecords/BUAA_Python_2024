@@ -29,6 +29,14 @@ urlpatterns = [
     path('admin_remove_user_from_group', views_admin.admin_remove_user_from_group, name='admin_delete_user_from_group'),
     path("admin_edit_group_info", views_admin.admin_edit_group_info, name="admin_edit_group_info"),
 
+    path('admin_get_problem_groups', views_admin.admin_get_problem_groups, name='admin_get_problem_groups'),
+    path('admin_problem_group_update', views_admin.admin_problem_group_update, name='admin_problem_group_update'),
+    path('admin_problem_group_delete', views_admin.admin_problem_group_delete, name='admin_problem_group_delete'),
+
+    path('admin_get_problems', views_admin.admin_get_problems, name='admin_get_problems'),
+    path('admin_problem_update', views_admin.admin_problem_update, name='admin_problem_update'),
+    path('admin_problem_delete', views_admin.admin_problem_delete, name='admin_problem_delete'),
+
     path('ocr', views_ocr.ocr_view),
 
     path('problem_group_create', views_problem.problem_group_create),

@@ -1,4 +1,3 @@
-from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db.models import F, Q
 
@@ -6,25 +5,32 @@ from .models import User, Group, ProblemGroup, Problem, ProblemPermission, Tag, 
 
 from .error import *
 
+
+# 定义一个函数，用于获取问题组
 def _get_problem_group(request, permission):
+    # 获取请求中的用户名和问题组id
     username = request.POST.get('username')
     problem_group_id = request.POST.get('problem_group_id')
 
+    # 检查问题组是否存在
     check = ProblemGroup.objects.filter(id=problem_group_id)
     if not check:
         return E_PROBLEM_GROUP_NOT_FIND
     problem_group = check[0]
 
+    # 如果用户名不是问题组的用户，则检查用户是否存在
     if username != problem_group.user.username:
         check = User.objects.filter(username=username)
         if not check:
             return E_USER_NOT_FIND
         user = check[0]
 
+        # 检查用户是否有权限
         groups = user.groups.all()
         if not ProblemPermission.objects.filter(group__isnull=True, problem_group=problem_group,
-                permission__gte=permission).exists() and not ProblemPermission.objects.filter(group__in=groups,
-                problem_group=problem_group, permission__gte=permission).exists():
+                                                permission__gte=permission).exists() and not ProblemPermission.objects.filter(
+            group__in=groups,
+            problem_group=problem_group, permission__gte=permission).exists():
             return E_PERMISSION_DENIED
 
     return problem_group
@@ -48,21 +54,27 @@ def __get_problem(user, problem_id, permission):
 
         groups = user.groups.all()
         if not ProblemPermission.objects.filter(group__isnull=True, problem_group=problem_group,
-                permission__gte=permission).exists() and not ProblemPermission.objects.filter(group__in=groups,
-                problem_group=problem_group, permission__gte=permission).exists():
+                                                permission__gte=permission).exists() and not ProblemPermission.objects.filter(
+            group__in=groups,
+            problem_group=problem_group, permission__gte=permission).exists():
             return E_PERMISSION_DENIED
-        
+
     return problem_group, problem
 
+
 def _get_problem(request, permission):
+    # 获取请求中的用户名和问题id
     username = request.POST.get('username')
     problem_id = request.POST.get('problem_id')
 
+    # 查询数据库中是否存在该用户
     check = User.objects.filter(username=username)
     if not check:
+        # 如果不存在，返回用户未找到错误
         return E_USER_NOT_FIND
     user = check[0]
 
+    # 调用__get_problem函数，返回问题
     return __get_problem(user, problem_id, permission)
 
 
@@ -102,7 +114,7 @@ def problem_group_create(request):
         return E_PROBLEM_GROUP_REPEAT
 
     problem_group = ProblemGroup.objects.create(user=check[0], title=title, description=description)
-    
+
     if 'tags[]' in request.POST:
         tags = _get_and_create_tags(request)
         problem_group.tags.set(tags)
@@ -125,7 +137,7 @@ def problem_group_update(request):
         description = request.POST.get('description')
     else:
         description = problem_group.description
-    
+
     if len(description) > 200:
         return E_DESCRIPTION_FORMAT
 
@@ -155,7 +167,7 @@ def problem_share(request):
     problem_group = _get_problem_group(request, 1)
     if isinstance(problem_group, JsonResponse):
         return problem_group
-    
+
     user = User.objects.get(username=request.POST.get('username'))
     group_name = request.POST.get('group_name')
     if group_name:
@@ -164,7 +176,7 @@ def problem_share(request):
             return E_GROUP_NOT_FIND
         group = group[0]
 
-        if not user in group.members.all():
+        if user not in group.members.all():
             return E_USER_NOT_IN_GROUP
     else:
         group = None
@@ -175,21 +187,21 @@ def problem_share(request):
         permission = check[0]
     else:
         permission = ProblemPermission.objects.create(group=group, problem_group=problem_group, permission=-1)
-    
-    
+
     if permission.permission >= newpermission:
         return E_PERMISSION_REPEAT
-    
+
     permission.permission = newpermission
     permission.save()
     return success("问题组分享成功")
-    
+
+
 @require_http_methods(["POST"])
 def problem_create(request):
     problem_group = _get_problem_group(request, 1)
     if isinstance(problem_group, JsonResponse):
         return problem_group
-    
+
     user = User.objects.get(username=request.POST.get('username'))
     title = request.POST.get('title')
     type = request.POST.get('type')
@@ -217,12 +229,13 @@ def problem_create(request):
             return E_PROBLEM_OPTIONS_OR_BLANK_FORMAT
 
     index = problem_group.problem_num + 1
-    
+
     problem = Problem.objects.create(problem_group=problem_group, index=index, type=type, title=title, content=content,
-                           ans_count=ans_count, answer=answer, 
-                           field1=field[0], field2=field[1], field3=field[2], field4=field[3], field5=field[4],
-                           field6=field[5], field7=field[6],
-                           creator=user)
+                                     ans_count=ans_count, answer=answer,
+                                     field1=field[0], field2=field[1], field3=field[2], field4=field[3],
+                                     field5=field[4],
+                                     field6=field[5], field7=field[6],
+                                     creator=user)
     if 'tags[]' in request.POST:
         tags = _get_and_create_tags(request)
         problem.tags.set(tags)
@@ -329,7 +342,7 @@ def _cut_to_page(request, query_set):
     number_per_page = request.POST.get('number_per_page')
     if not page or not number_per_page:
         return query_set
-    
+
     page = int(page) - 1
     number_per_page = int(number_per_page)
 
@@ -343,6 +356,7 @@ def _cut_to_page(request, query_set):
 
     return query_set
 
+
 def _problem_group_to_dict(problem_group):
     return {
         'id': problem_group.id,
@@ -353,11 +367,13 @@ def _problem_group_to_dict(problem_group):
         'problem_num': problem_group.problem_num,
     }
 
+
 def _problem_groups_to_list(problem_groups):
     result = []
     for problem_group in problem_groups:
         result.append(_problem_group_to_dict(problem_group))
     return result
+
 
 def _get_problem_groups_with_permissions(user, group_name, permission):
     if group_name == '_shared_to_all':
@@ -370,15 +386,15 @@ def _get_problem_groups_with_permissions(user, group_name, permission):
 
         if not user in group.members.all():
             return E_USER_NOT_IN_GROUP
-        
+
         permissions = ProblemPermission.objects.filter(group=group, permission__gte=permission)
     else:
         groups = user.groups.all()
         query = Q(group__isnull=True) | Q(group__in=groups)
         permissions = ProblemPermission.objects.filter(query, permission__gte=permission)
-    
+
     problem_group_ids = permissions.values_list('problem_group', flat=True)
-    problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)  
+    problem_groups = ProblemGroup.objects.filter(id__in=problem_group_ids)
 
     return problem_groups
 
@@ -401,29 +417,43 @@ def get_problem_groups_num(request):
 
     return success_data("问题组数量查询成功", problem_groups.count())
 
+
 @require_http_methods(["POST"])
 def get_problem_groups(request):
+    # 获取请求中的username
     username = request.POST.get('username')
+    # 根据username获取User对象
     user = User.objects.get(username=username)
+    # 如果User对象不存在，返回错误信息
     if not user:
         return E_USER_NOT_FIND
 
+    # 获取请求中的mode
     mode = int(request.POST.get('mode'))
+    # 如果mode大于等于2，获取用户创建的问题组
     if mode >= 2:
         problem_groups = user.created_problem_groups.all()
+    # 如果mode小于2，获取用户有权限的问题组
     else:
+        # 获取请求中的filter_group
         filter_group = request.POST.get('filter_group')
+        # 调用_get_problem_groups_with_permissions函数，获取用户有权限的问题组
         problem_groups = _get_problem_groups_with_permissions(user, filter_group, mode)
+        # 如果返回的是JsonResponse，直接返回
         if isinstance(problem_groups, JsonResponse):
             return problem_groups
-    
+
+    # 如果问题组不存在，返回错误信息
     if not problem_groups:
         return E_NO_PROBLEM_GROUP
 
+    # 调用_cut_to_page函数，分页问题组
     problem_groups = _cut_to_page(request, problem_groups)
+    # 如果返回的是JsonResponse，直接返回
     if isinstance(problem_groups, JsonResponse):
         return problem_groups
-    
+
+    # 返回成功信息，以及问题组列表
     return success_data("问题组查询成功", _problem_groups_to_list(problem_groups))
 
 
@@ -441,7 +471,7 @@ def _get_problems_with_permissions(user, group_name):
 
             if not user in group.members.all():
                 return E_USER_NOT_IN_GROUP
-            
+
             permissions = ProblemPermission.objects.filter(group=group)
         else:
             groups = user.groups.all()
@@ -452,11 +482,12 @@ def _get_problems_with_permissions(user, group_name):
         query = Q(id__in=problem_group_ids)
         if not group_name:
             query |= Q(user=user)
-        
-        problem_groups = ProblemGroup.objects.filter(query)  
+
+        problem_groups = ProblemGroup.objects.filter(query)
 
     problems = Problem.objects.filter(problem_group__in=problem_groups)
     return problems
+
 
 def _problem_to_dict(user, problem):
     all_record = Record.objects.filter(problem=problem)
@@ -479,16 +510,17 @@ def _problem_to_dict(user, problem):
         'field7': problem.field7,
         'tags': [tag.name for tag in problem.tags.all()],
         'creator': problem.creator.username,
-        
+
         'problem_group_id': problem.problem_group.id,
         'problem_group_title': problem.problem_group.title,
-        
+
         # 用于展示用户是否做过此题（user_count）并计算个人正确率、总正确率
         'user_right_count': user_right_record.count(),
         'user_count': user_record.count(),
         'all_right_count': all_right_record.count(),
         'all_count': all_record.count(),
     }
+
 
 def _problems_to_list(user, problems):
     result = []
@@ -509,7 +541,7 @@ def get_problem_num_with_permissions(request):
     problems = _get_problems_with_permissions(user, filter_group)
     if isinstance(problems, JsonResponse):
         return problems
-    
+
     return success_data("问题数量查询成功", problems.count())
 
 
@@ -525,7 +557,7 @@ def get_problems_with_permissions(request):
     problems = _get_problems_with_permissions(user, filter_group)
     if isinstance(problems, JsonResponse):
         return problems
-    
+
     if not problems:
         return E_NO_PROBLEM
 
@@ -534,6 +566,7 @@ def get_problems_with_permissions(request):
         return problems
 
     return success_data("问题查询成功", _problems_to_list(user, problems))
+
 
 @require_http_methods(["POST"])
 def temporary_problem_group_create(request):
@@ -549,15 +582,17 @@ def temporary_problem_group_create(request):
         problem = __get_problem(user, int(id), 0)
         if isinstance(problem, JsonResponse):
             return problem
-        
+
         problem_list.append(problem[1])
-    
+
     temp_group = TemporaryProblemGroup.objects.create(user=user)
     temp_group.problems.set(problem_list)
     return success_data("临时问题组创建成功", temp_group.id)
 
+
 def temporary_problem_group_clear(user):
     TemporaryProblemGroup.objects.filter(user=user).delete()
+
 
 @require_http_methods(["POST"])
 def get_problem_group_content(request):
@@ -583,18 +618,19 @@ def get_problem_group_content(request):
         problem_group = _get_problem_group(request, 0)
         if isinstance(problem_group, JsonResponse):
             return problem_group
-        
+
         problems = Problem.objects.filter(problem_group=problem_group)
         problems = problems.order_by('index')
-    
+
     if not problems:
         return E_NO_PROBLEM
 
     problems = _cut_to_page(request, problems)
     if isinstance(problems, JsonResponse):
         return problems
-    
+
     return success_data("问题组内容获取成功", _problems_to_list(user, problems))
+
 
 @require_http_methods(["POST"])
 def get_single_problem_group_detail(request):
@@ -621,10 +657,11 @@ def get_single_problem_group_detail(request):
         problem_group = _get_problem_group(request, 0)
         if isinstance(problem_group, JsonResponse):
             return problem_group
-        
+
         data = _problem_group_to_dict(problem_group)
-    
+
     return success_data("问题组详情查询成功", data)
+
 
 @require_http_methods(["POST"])
 def get_single_problem_detail(request):
@@ -637,7 +674,7 @@ def get_single_problem_detail(request):
     res = _get_problem(request, 0)
     if isinstance(res, JsonResponse):
         return res
-    
+
     data = _problem_to_dict(user, res[1])
 
     return success_data("问题详情查询成功", data)
@@ -654,14 +691,14 @@ def problem_check(request):
     res = _get_problem(request, 0)
     if isinstance(res, JsonResponse):
         return res
-    
+
     problem = res[1]
     ans_count = problem.ans_count
     if problem.type == 'c':
         user_answer = request.POST.get('user_answer')
         if not user_answer or len(user_answer) > 1 or ord(user_answer) - ord('A') not in range(ans_count):
             return E_ILLIGAL_ANSWER
-        
+
         correct = 'T' if user_answer == problem.answer else 'F'
         data = {
             'correct': correct,
@@ -669,7 +706,8 @@ def problem_check(request):
         }
     else:
         correct = 'T'
-        field = [problem.field1, problem.field2, problem.field3, problem.field4, problem.field5, problem.field6, problem.field7]
+        field = [problem.field1, problem.field2, problem.field3, problem.field4, problem.field5, problem.field6,
+                 problem.field7]
         correct_detail = ['' for _ in range(7)]
         for i in range(ans_count):
             if request.POST.get('user_field' + str(i + 1)).strip() == field[i].strip():
@@ -677,7 +715,7 @@ def problem_check(request):
             else:
                 correct_detail[i] == 'F'
                 correct = 'F'
-        
+
         data = {
             'correct': correct,
         }
@@ -686,8 +724,8 @@ def problem_check(request):
                 'field' + str(i + 1): field[i],
                 'correct' + str(i + 1): correct_detail[i],
             })
-    
-    Record.objects.create(user=user, problem=problem, result=(correct=='T'))
+
+    Record.objects.create(user=user, problem=problem, result=(correct == 'T'))
 
     all_record = Record.objects.filter(problem=problem)
     all_right_record = all_record.filter(result=True)
@@ -721,7 +759,6 @@ def problem_check(request):
 #     else:
 #         result = problems.all().objects.search_regex(pattern)
 #     return success(result)
-
 
 
 # data = [
