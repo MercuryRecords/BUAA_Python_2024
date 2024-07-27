@@ -16,7 +16,7 @@ const data = reactive(
 
 const checkName = (rule: any, value: any, callback: any) => {
   if (!value) {
-    return callback(new Error('Please input the name'))
+    return callback(new Error('请输入用户名'))
   } else {
     callback()
   }
@@ -24,7 +24,7 @@ const checkName = (rule: any, value: any, callback: any) => {
 
 const validatePass = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('Please input the password'))
+    callback(new Error('请输入密码'))
   } else {
     if (ruleForm.checkPass !== '') {
       if (!ruleFormRef.value) return
@@ -35,9 +35,9 @@ const validatePass = (rule: any, value: any, callback: any) => {
 }
 const validatePass2 = (rule: any, value: any, callback: any) => {
   if (value === '') {
-    callback(new Error('Please input the password again'))
+    callback(new Error('请再次输入密码'))
   } else if (value !== ruleForm.pass) {
-    callback(new Error("Two inputs don't match!"))
+    callback(new Error("密码不一致！"))
   } else {
     callback()
   }
