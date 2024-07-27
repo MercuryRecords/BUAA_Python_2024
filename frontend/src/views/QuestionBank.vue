@@ -149,18 +149,21 @@ const getAccuracyColor = (accuracy: number) => {
   return 'warning'
 }
 
-function getProblems() {
+function getProblems(group_label: string) {
+  console.log(allProblems.value);
   API.post('/get_problems', {
     username: route.query.username,
+    filter_group: group_label
   }, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   }).then(
       function (response) {
         if (response.data.code === 200) {
+          allProblems.value = []
           for (let i = 0; i < response.data.data.length; i++) {
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
-            allProblems.value[i].accuracy = response.data.data[i].all_right_count / response.data.data[i].all_count
+            allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 :response.data.data[i].all_right_count / response.data.data[i].all_count
             if (response.data.data[i].type == 'b') {
               allProblems.value[i].tags.push("填空题");
             } else {
@@ -170,7 +173,10 @@ function getProblems() {
           }
           onSearch()  // Perform initial search after fetching problems
         } else {
+          console.log("Mission failed")
           ElMessage.error(response.data.message);
+          allProblems.value = [];
+          onSearch();
         }
       }
   ).catch(
@@ -209,7 +215,7 @@ const fetchProblems = async () => {
   // for (let i = 1; i <= Math.floor(number/10)+1; i++) {
   //   getProblems(i);
   // }
-  getProblems();
+  getProblems('');
 }
 
 const userGroups: string[] = reactive([])
@@ -241,13 +247,22 @@ const selectedGroup = ref('')
 const handleCommand = (command: any) => {
   selectedGroup.value = command
   if (command !== '') {
-    router.push({
-      name: 'QuestionBank4SpecificGroup',
-      query: {
-        username: route.query.username,
-        groupLabel: command,
-      }
-    })
+    if (command === '公开分享') {
+      getProblems('_shared_to_all');
+      // window.location.reload();
+    }
+    else {
+      console.log(command,666666666666666666666666666666)
+      getProblems(command as string);
+      // window.location.reload();
+    }
+    // router.push({
+    //   name: 'QuestionBank4SpecificGroup',
+    //   query: {
+    //     username: route.query.username,
+    //     groupLabel: command,
+    //   }
+    // })
   } else {
     // 无需处理
   }
@@ -298,7 +313,7 @@ onMounted(() => {
                     </span>
                     <template #dropdown>
                       <el-dropdown-menu>
-                        <el-dropdown-item command="">全部用户组</el-dropdown-item>
+                        <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
                         <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
                           {{ group }}
                         </el-dropdown-item>
