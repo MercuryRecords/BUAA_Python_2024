@@ -283,6 +283,7 @@ const deleteProblemGroup = async (problem: any) => {
       </el-table>
 
       <el-pagination
+          class="pages"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
           :current-page="currentPage"
@@ -420,5 +421,9 @@ const deleteProblemGroup = async (problem: any) => {
 
 .button-container .el-button:last-child {
   margin-right: 0;
+}
+
+.pages {
+  margin-top: 10px;
 }
 </style>
