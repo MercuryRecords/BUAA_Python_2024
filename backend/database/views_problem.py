@@ -714,7 +714,7 @@ def problem_check(request):
             if request.POST.get('user_field' + str(i + 1)).strip() == field[i].strip():
                 correct_detail[i] = 'T'
             else:
-                correct_detail[i] == 'F'
+                correct_detail[i] = 'F'
                 correct = 'F'
 
         data = {
