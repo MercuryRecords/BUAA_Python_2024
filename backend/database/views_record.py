@@ -1,7 +1,7 @@
 from django.views.decorators.http import require_http_methods
 from .error import *
 
-from .models import Record, User
+from .models import Record, User, TemporaryProblemGroup
 from .views_problem import _problem_to_dict, _cut_to_page
 
 
@@ -63,4 +63,11 @@ def get_records(request):
     if isinstance(problems, JsonResponse):
         return problems
 
-    return success_data("错题获取成功", [_problem_to_dict(user, problem) for problem in problems])
+    lst = []
+
+    for problem in problems:
+        dct = _problem_to_dict(user, problem)
+        dct['last_error_time'] = max(record.created_at for record in records if record.problem == problem)
+        lst.append(dct)
+
+    return success_data("错题获取成功", lst)

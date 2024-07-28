@@ -99,6 +99,11 @@ def admin_remove_user_from_group(request):
         return JsonResponse(res)
 
     check2[0].members.remove(check[0])
+    if check2[0].created_by == check[0]:
+        check2[0].delete()
+        res = {"code": 200, "message": "踢出群主，群已解散成功"}
+        return JsonResponse(res)
+
     res = {"code": 200, "message": "用户退出用户组成功"}
     return JsonResponse(res)
 
