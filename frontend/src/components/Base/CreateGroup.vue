@@ -72,6 +72,11 @@ const rules = reactive<FormRules>({
   name: [{validator: validateName, trigger: 'blur'}]
 });
 
+const resetForm = () => {
+  form.name = '';
+  form.description = '';
+};
+
 onMounted(async () => showData());
 
 async function showData() {
@@ -109,6 +114,7 @@ const handleSubmit = async (formEl: FormInstance | undefined) => {
         if (response.data.code === 200) {
           ElMessage.success(response.data.message);
           await showData();
+          resetForm();
         } else {
           ElMessage.error(response.data.message);
         }
@@ -128,6 +134,7 @@ function handleClick() {
 
 function handleClose() {
   dialogVisible.value = false;
+  resetForm();
 }
 
 function handleEdit(row: Group) {

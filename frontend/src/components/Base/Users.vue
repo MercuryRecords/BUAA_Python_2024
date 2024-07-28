@@ -3,8 +3,9 @@
     <div class="table-container">
       <div class="table-header">
         <h2>用户列表</h2>
-        <el-button type="primary" @click="showAddUserDialog">新增用户</el-button>
       </div>
+      <div class="table-wrapper">
+        <el-button type="primary" @click="showAddUserDialog" class="add-user-button">新增用户</el-button>
       <el-table :data="displayedUsers" style="width: 80%">
         <el-table-column label="序号" width="80">
           <template #default="scope">
@@ -27,6 +28,7 @@
           </template>
         </el-table-column>
       </el-table>
+        </div>
     </div>
 
     <el-pagination
@@ -255,5 +257,16 @@ onMounted(() => {
 
 :deep(.el-pagination) {
   font-size: 14px;
+}
+
+.table-wrapper {
+  position: relative;
+}
+
+.add-user-button {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  z-index: 1;
 }
 </style>
