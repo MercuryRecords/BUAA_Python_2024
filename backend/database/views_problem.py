@@ -80,6 +80,12 @@ def _get_and_create_tags(request):
     tag_names = request.POST.getlist('tags[]')
 
     tags_to_add = []
+    if 'type' in request.POST:
+        if request.POST['type'] == 'c':
+            tag_names.append('选择题')
+        elif request.POST['type'] == 'b':
+            tag_names.append('填空题')
+
     for tag_name in tag_names:
         check = Tag.objects.filter(name=tag_name)
         if check:

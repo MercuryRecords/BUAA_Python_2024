@@ -4,7 +4,7 @@ from django.db.models import F
 from .errors import *
 from .models import User, Group, ProblemGroup, Problem, Record, TemporaryProblemGroup
 from .views_problem import _get_problem_groups_with_permissions__gte, _cut_to_page, _problem_groups_to_list, \
-    _get_and_create_tags, _get_problems_with_permissions, _get_problem_group, _problems_to_list
+    _get_and_create_tags, _get_problems_with_permissions
 
 
 @require_http_methods(["POST"])
@@ -413,8 +413,10 @@ def admin_problem_update(request):
     problem.save()
 
     if 'tags[]' in request.POST:
+        print([tag.name for tag in problem.tags.all()])
         tags = _get_and_create_tags(request)
         problem.tags.set(tags)
+        print([tag.name for tag in problem.tags.all()])
 
     return success("题目修改成功")
 
