@@ -124,3 +124,6 @@ class Record(models.Model):
 class TemporaryProblemGroup(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     problems = models.ManyToManyField(Problem)
+
+class SensitiveWord(models.Model):
+    content = models.CharField(max_length=50, unique=True)

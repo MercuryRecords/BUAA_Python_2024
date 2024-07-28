@@ -20,6 +20,13 @@ E_GROUP_NOT_FIND = JsonResponse({"code": 411, "message": "用户组不存在"})
 E_USER_NOT_IN_GROUP = JsonResponse({"code": 411, "message": "用户不在此用户组中"})
 E_PERMISSION_REPEAT = JsonResponse({"code": 412, "message": "分享已存在"})
 
+E_DECODE_FAILED = JsonResponse({"code": 420, "message": "文件解码失败，请上传UTF-8编码的文本文件"})
+E_WORD_LIST_EMPTY = JsonResponse({"code": 421, "message": "未传入任何敏感词"})
+E_WORD_FORMAT = JsonResponse({"code": 421, "message": "敏感词长度不能超过50"})
+E_WORD_REPEAT = JsonResponse({"code": 422, "message": "敏感词已存在"})
+E_WORD_NOT_FIND = JsonResponse({"code": 422, "message": "敏感词不存在"})
+
+
 def success(text):
     return JsonResponse({"code": 200, "message": text})
 

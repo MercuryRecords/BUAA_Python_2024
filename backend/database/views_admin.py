@@ -1,7 +1,7 @@
 from django.views.decorators.http import require_http_methods
 from django.db.models import F
 
-from .error import *
+from .errors import *
 from .models import User, Group, ProblemGroup, Problem, Record
 from .views_problem import _get_problem_groups_with_permissions__gte, _cut_to_page, _problem_groups_to_list, \
     _get_and_create_tags, _get_problems_with_permissions
