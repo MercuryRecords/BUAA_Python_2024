@@ -69,6 +69,7 @@
 import { ref, onMounted, computed } from 'vue'
 import {ElMessage, type FormInstance} from 'element-plus'
 import API from "@/plugins/axios"
+const data = defineProps(['username']) //从Navigator拿到的username
 
 interface User {
   username: string;
@@ -104,7 +105,7 @@ const displayedUsers = computed(() => {
 const fetchUsers = async () => {
   try {
     const response = await API.post('/admin_get_user_list', {
-      username: 'Admin', // 这里应该使用实际的管理员用户名
+      username: data.username, // 这里应该使用实际的管理员用户名
     }, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -131,7 +132,7 @@ const showUserDetails = (user: User) => {
 
 const deleteUser = async (username: string) => {
   API.post('/admin_delete_user', {
-    username: 'Admin',
+    username: data.username,
     name: username
   }, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -163,7 +164,7 @@ const addUser = async () => {
   addUserForm.value.validate((valid) => {
     if (valid) {
       API.post('/admin_register_user', {
-        username: 'Admin', // 这里应该使用实际的管理员用户名
+        username: data.username, // 这里应该使用实际的管理员用户名
         name: newUser.value.username,
         password: newUser.value.password
       }, {

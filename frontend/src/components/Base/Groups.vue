@@ -115,7 +115,7 @@ interface Group {
   create_time: string;
   members: string[];
 }
-
+const data = defineProps(['username']) //从Navigator拿到的username
 const groups = ref<Group[]>([])
 const currentPage = ref(1)
 const pageSize = 10
@@ -151,7 +151,7 @@ const displayedGroups = computed(() => {
 const fetchGroups = async () => {
   try {
     const response = await API.post('/admin_get_group_list', {
-      username: 'Admin', // 这里应该使用实际的管理员用户名
+      username: data.username, // 这里应该使用实际的管理员用户名
     }, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -183,7 +183,7 @@ const showMemberManagement = (group: Group) => {
 
 const deleteGroup = async (groupName: string) => {
   API.post('/admin_delete_group', {
-    username: 'Admin',
+    username: data.username,
     group_name: groupName
   }, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -224,7 +224,7 @@ const addMember = () => {
     addMemberForm.value.validate((valid) => {
       if (valid) {
         API.post('/admin_add_user_to_group', {
-          username: 'Admin', // TODO: 修改为实际的管理员用户名
+          username: data.username, // TODO: 修改为实际的管理员用户名
           name: newMember.value.username,
           group_name: selectedGroup.value.name
         }, {
@@ -250,7 +250,7 @@ const addMember = () => {
 
 const kickMember = (member: string) => {
   API.post('/admin_remove_user_from_group', {
-    username: 'Admin', // TODO: 修改为实际的管理员用户名
+    username: data.username, // TODO: 修改为实际的管理员用户名
     name: member,
     group_name: selectedGroup.value.name
   }, {
@@ -297,7 +297,7 @@ const cancelEditingDescription = () => {
 const saveDescription = async () => {
   try {
     const response = await API.post('/admin_edit_group_info', {
-      username: 'Admin', // TODO: 修改为实际的管理员用户名
+      username: data.username, // TODO: 修改为实际的管理员用户名
       group_name: selectedGroup.value.name,
       new_description: editedDescription.value
     }, {

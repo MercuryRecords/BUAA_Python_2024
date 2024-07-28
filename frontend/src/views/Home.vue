@@ -2,18 +2,18 @@
   <div class="common-layout">
     <el-container>
       <el-header>
-        <!--          <h1>Shared Platform</h1>-->
+        <!-- 头部内容可以在这里添加 -->
       </el-header>
 
       <el-container>
         <el-aside width="200px">
-          <!--            导航栏-->
-          <Navigator :username="$route.query.username"></Navigator> <!--将username向下传给Navigator组件-->
+          <!-- 根据mode选择不同的导航栏 -->
+          <NavigatorM v-if="$route.query.mode === '0'" :username="$route.query.username" />
+          <Navigator v-else-if="$route.query.mode === '1'" :username="$route.query.username" />
         </el-aside>
 
         <el-container>
           <el-main>
-            <!--              主体内容-->
             <RouterView></RouterView>
           </el-main>
         </el-container>
@@ -24,9 +24,8 @@
 </template>
 
 <script lang="ts" setup>
-
 import Navigator from "@/components/Base/Navigator.vue";
-
+import NavigatorM from "@/components/Base/NavigatorM.vue";
 </script>
 
 <style>
