@@ -39,6 +39,8 @@ urlpatterns = [
     path('admin_problem_update', views_admin.admin_problem_update, name='admin_problem_update'),
     path('admin_problem_delete', views_admin.admin_problem_delete, name='admin_problem_delete'),
 
+    path('admin_get_problem_group_content', views_admin.admin_get_problem_group_content, name='admin_get_problem_group_content'),
+
     path('ocr', views_ocr.ocr_view),
 
     path('problem_group_create', views_problem.problem_group_create),

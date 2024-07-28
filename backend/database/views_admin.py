@@ -2,9 +2,9 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import F
 
 from .error import *
-from .models import User, Group, ProblemGroup, Problem, Record
+from .models import User, Group, ProblemGroup, Problem, Record, TemporaryProblemGroup
 from .views_problem import _get_problem_groups_with_permissions__gte, _cut_to_page, _problem_groups_to_list, \
-    _get_and_create_tags, _get_problems_with_permissions
+    _get_and_create_tags, _get_problems_with_permissions, _get_problem_group, _problems_to_list
 
 
 @require_http_methods(["POST"])
@@ -417,3 +417,33 @@ def admin_problem_update(request):
         problem.tags.set(tags)
 
     return success("题目修改成功")
+
+
+@require_http_methods(["POST"])
+def admin_get_problem_group_content(request):
+
+    is_temporary = request.POST.get('is_temporary')
+    if is_temporary == 'y':
+        group_id = request.POST.get('problem_group_id')
+        temp_group = TemporaryProblemGroup.objects.filter(id=group_id)
+        if not temp_group:
+            return E_PROBLEM_GROUP_NOT_FIND
+        temp_group = temp_group[0]
+
+        problems = temp_group.problems.all()
+    else:
+        problem_group = _admin_get_problem_group(request)
+        if isinstance(problem_group, JsonResponse):
+            return problem_group
+
+        problems = Problem.objects.filter(problem_group=problem_group)
+        problems = problems.order_by('index')
+
+    if not problems:
+        return E_NO_PROBLEM
+
+    problems = _cut_to_page(request, problems)
+    if isinstance(problems, JsonResponse):
+        return problems
+
+    return success_data("问题组内容获取成功", _admin_problems_to_list(problems))
