@@ -149,17 +149,17 @@ const getAccuracyColor = (accuracy: number) => {
   return 'warning'
 }
 
-function getProblems() {
-  API.post('/get_problem_group_content', {
+function getProblems(group_label: string) {
+  console.log(allProblems.value);
+  API.post('/get_problems', {
     username: route.query.username,
-    problem_group_id: route.query.sheetId,
-    is_temporary:'n',
-    number_per_page: 10
+    filter_group: group_label
   }, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
   }).then(
       function (response) {
         if (response.data.code === 200) {
+          allProblems.value = []
           for (let i = 0; i < response.data.data.length; i++) {
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
@@ -173,7 +173,10 @@ function getProblems() {
           }
           onSearch()  // Perform initial search after fetching problems
         } else {
+          console.log("Mission failed")
           ElMessage.error(response.data.message);
+          allProblems.value = [];
+          onSearch();
         }
       }
   ).catch(
@@ -212,7 +215,7 @@ const fetchProblems = async () => {
   // for (let i = 1; i <= Math.floor(number/10)+1; i++) {
   //   getProblems(i);
   // }
-  getProblems();
+  getProblems('');
 }
 
 const userGroups: string[] = reactive([])
@@ -244,26 +247,16 @@ const selectedGroup = ref('')
 const handleCommand = (command: any) => {
   selectedGroup.value = command
   if (command !== '') {
-    router.push({
-      name: 'QuestionBank4SpecificGroup',
-      query: {
-        username: route.query.username,
-        groupLabel: command,
-      }
-    })
-  } else {
-    // 无需处理
-  }
-}
-
-const handleAddProblem = () => {
-  router.push({
-    name: 'upload',
-    query: {
-      username: route.query.username,
-      sheetId: route.query.sheetId,
+    if (command === '公开分享') {
+      getProblems('_shared_to_all');
+      // window.location.reload();
     }
-  })
+    else {
+      console.log(command,666666666666666666666666666666)
+      getProblems(command as string);
+      // window.location.reload();
+    }
+  }
 }
 
 onMounted(() => {
@@ -304,25 +297,21 @@ onMounted(() => {
                   </el-form-item>
 
 
-                  <el-form-item>
-                    <el-dropdown @command="handleCommand">
-                      <span class="el-dropdown-link">
-                        {{ selectedGroup || '选择用户组' }}
-                        <el-icon class="el-icon--right"></el-icon>
-                      </span>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item command="">全部用户组</el-dropdown-item>
-                          <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
-                            {{ group }}
-                          </el-dropdown-item>
-                        </el-dropdown-menu>
-                      </template>
-                    </el-dropdown>
-                  </el-form-item>
-                  <el-form-item style="float: right;">
-                    <el-button type="primary" @click="handleAddProblem">新增题目</el-button>
-                  </el-form-item>
+                  <el-dropdown @command="handleCommand">
+                    <span class="el-dropdown-link">
+                      {{ selectedGroup || '选择用户组' }}
+                      <el-icon class="el-icon--right"></el-icon>
+                    </span>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
+                        <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
+                          {{ group }}
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+
                 </el-form>
                 <!-- 显示选中标签的区域 -->
                 <div v-if="searchForm.selectedTags.length > 0" style="margin-top: 10px;">
