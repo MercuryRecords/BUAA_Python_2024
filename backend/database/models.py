@@ -6,6 +6,7 @@ from django.db.models import Q
 
 # Create your models here.
 class User(models.Model):
+    avatar = models.ImageField(upload_to='upload/avatars/', null=True, blank=True, default='default.png')
     username = models.CharField(max_length=100, unique=True)
     password = models.CharField(max_length=100)
 
