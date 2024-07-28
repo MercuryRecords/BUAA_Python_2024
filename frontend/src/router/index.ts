@@ -86,10 +86,15 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/SheetViewed.vue')
         },
         {
-            path:'/userCenters',
-            name:'userCenters',
-            component:()=>import('@/views/UserCenters.vue')
+            path: '/userCenters',
+            name: 'userCenters',
+            component: () => import('@/views/UserCenters.vue')
         },
+        {
+            path: '/wrongQuestionSet',
+            name: 'wrongQuestionSet',
+            component: () => import('@/views/WrongQuestionSet.vue')
+        }
     ]
 })
 
