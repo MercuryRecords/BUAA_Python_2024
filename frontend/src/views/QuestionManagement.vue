@@ -177,11 +177,11 @@ function getProblems(search_username:string, search_user_group_name:string, sear
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
             allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 :response.data.data[i].all_right_count / response.data.data[i].all_count
-            if (response.data.data[i].type == 'b') {
-              allProblems.value[i].tags.push("填空题");
-            } else {
-              allProblems.value[i].tags.push("选择题");
-            }
+            // if (response.data.data[i].type == 'b') {
+            //   allProblems.value[i].tags.push("填空题");
+            // } else {
+            //   allProblems.value[i].tags.push("选择题");
+            // }
             console.log(allProblems)
           }
           onSearch();
