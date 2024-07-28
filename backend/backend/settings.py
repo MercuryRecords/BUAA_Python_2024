@@ -36,9 +36,9 @@ CORS_ORIGIN_ALLOW_ALL = True
 # ALLOWED_HOSTS = []
 
 LANGUAGE_CODE = 'zh-hans'
-TIME_ZONE = 'Asia/Shanghai'
-
-USE_TZ = False
+# TIME_ZONE = 'Asia/Shanghai'
+#
+# USE_TZ = False
 
 # Application definition
 

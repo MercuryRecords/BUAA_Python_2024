@@ -2,9 +2,9 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import F
 
 from .errors import *
-from .models import User, Group, ProblemGroup, Problem, Record
+from .models import User, Group, ProblemGroup, Problem, Record, TemporaryProblemGroup
 from .views_problem import _get_problem_groups_with_permissions__gte, _cut_to_page, _problem_groups_to_list, \
-    _get_and_create_tags, _get_problems_with_permissions
+    _get_and_create_tags, _get_problems_with_permissions, _get_problem_group, _problems_to_list
 
 
 @require_http_methods(["POST"])
@@ -81,6 +81,10 @@ def admin_add_user_to_group(request):
         res = {"code": 401, "message": "用户或用户组不存在"}
         return JsonResponse(res)
 
+    if check[0] in check2[0].members.all():
+        res = {"code": 402, "message": "用户已经在该用户组中"}
+        return JsonResponse(res)
+
     check2[0].members.add(check[0])
     res = {"code": 200, "message": "用户加入用户组成功"}
     return JsonResponse(res)
@@ -96,6 +100,10 @@ def admin_remove_user_from_group(request):
     if not check or not check2:
         # 用户或用户组不存在，返回错误信息
         res = {"code": 401, "message": "用户或用户组不存在"}
+        return JsonResponse(res)
+
+    if not check[0] in check2[0].members.all():
+        res = {"code": 402, "message": "用户不在该用户组中"}
         return JsonResponse(res)
 
     check2[0].members.remove(check[0])
@@ -185,7 +193,7 @@ def admin_get_problem_groups(request):
 
         mode = int(request.POST.get('mode'))
         filter_group = request.POST.get('filter_group')
-        
+
         if mode:
             problem_groups = _get_problem_groups_with_permissions__gte(creator, filter_group, 1)
             if isinstance(problem_groups, JsonResponse):
@@ -194,14 +202,13 @@ def admin_get_problem_groups(request):
             problem_groups = _get_problem_groups_with_permissions__gte(creator, '', 1)
             if isinstance(problem_groups, JsonResponse):
                 return problem_groups
-            
+
             exclude_ids = problem_groups.values_list('id', flat=True)
             problem_groups = _get_problem_groups_with_permissions__gte(creator, filter_group, 0)
             if isinstance(problem_groups, JsonResponse):
                 return problem_groups
-            
-            problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
+            problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
     if to_search:
         # 在 problem_groups 范围内进一步搜索，利用 search
@@ -410,3 +417,33 @@ def admin_problem_update(request):
         problem.tags.set(tags)
 
     return success("题目修改成功")
+
+
+@require_http_methods(["POST"])
+def admin_get_problem_group_content(request):
+
+    is_temporary = request.POST.get('is_temporary')
+    if is_temporary == 'y':
+        group_id = request.POST.get('problem_group_id')
+        temp_group = TemporaryProblemGroup.objects.filter(id=group_id)
+        if not temp_group:
+            return E_PROBLEM_GROUP_NOT_FIND
+        temp_group = temp_group[0]
+
+        problems = temp_group.problems.all()
+    else:
+        problem_group = _admin_get_problem_group(request)
+        if isinstance(problem_group, JsonResponse):
+            return problem_group
+
+        problems = Problem.objects.filter(problem_group=problem_group)
+        problems = problems.order_by('index')
+
+    if not problems:
+        return E_NO_PROBLEM
+
+    problems = _cut_to_page(request, problems)
+    if isinstance(problems, JsonResponse):
+        return problems
+
+    return success_data("问题组内容获取成功", _admin_problems_to_list(problems))

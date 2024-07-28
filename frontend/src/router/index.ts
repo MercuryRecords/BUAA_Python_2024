@@ -76,9 +76,22 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/SolveQuestion.vue')
         },
         {
+            // 管理员的用户管理页面
             path: '/users',
             name: 'users',
             component: () => import('@/views/UserManagement.vue')
+        },
+        {
+            // 管理员的用户组管理页面
+            path: '/groups',
+            name: 'groups',
+            component: () => import('@/views/GroupManagement.vue')
+        },
+        {
+            // 管理员的用户组管理页面
+            path: '/questions',
+            name: 'questions',
+            component: () => import('@/views/QuestionManagement.vue')
         },
         {
             path: '/sheetViewed',
@@ -86,10 +99,15 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/SheetViewed.vue')
         },
         {
-            path:'/userCenters',
-            name:'userCenters',
-            component:()=>import('@/views/UserCenters.vue')
+            path: '/userCenters',
+            name: 'userCenters',
+            component: () => import('@/views/UserCenters.vue')
         },
+        {
+            path: '/wrongQuestionSet',
+            name: 'wrongQuestionSet',
+            component: () => import('@/views/WrongQuestionSet.vue')
+        }
     ]
 })
 

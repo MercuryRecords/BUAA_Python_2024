@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // @ts-ignore
-import Users from "@/components/Base/Users.vue";
 import Navigator from "@/components/Base/Navigator.vue";
+import Groups from "@/components/Base/Groups.vue";
 import NavigatorM from "@/components/Base/NavigatorM.vue";
 </script>
 
@@ -21,7 +21,7 @@ import NavigatorM from "@/components/Base/NavigatorM.vue";
         <el-container>
           <el-main class="shifted-content">
             <!--              主体内容-->
-            <Users :username="$route.query.username"></Users>
+            <Groups :username="$route.query.username"></Groups>
           </el-main>
         </el-container>
       </el-container>

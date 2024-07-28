@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import {ref, reactive, computed, onMounted} from 'vue'
+import {ElMessage} from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
-import { useRoute } from 'vue-router'
+import {useRoute} from 'vue-router'
 import API from "@/plugins/axios";
 
 const route = useRoute()
@@ -38,7 +38,7 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
-  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
+  {name: '数学', tags: ['多项式', '矩阵', '行列式', '线性代数']},
   {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
   {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
   {name: '题目类型', tags: ['选择题', '填空题']},
@@ -102,7 +102,7 @@ const jumpToQuestion = (problem: data) => {
     username: route.query.username,
     problem_ids: problemIds,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -149,21 +149,20 @@ const getAccuracyColor = (accuracy: number) => {
   return 'warning'
 }
 
-function getProblems() {
-  API.post('/get_problem_group_content', {
+function getProblems(group_label: string) {
+  console.log(allProblems.value);
+  API.post('/get_records', {
     username: route.query.username,
-    problem_group_id: route.query.sheetId,
-    is_temporary:'n',
-    number_per_page: 10
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
+          allProblems.value = []
           for (let i = 0; i < response.data.data.length; i++) {
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
-            allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 :response.data.data[i].all_right_count / response.data.data[i].all_count
+            allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 : response.data.data[i].all_right_count / response.data.data[i].all_count
             if (response.data.data[i].type == 'b') {
               allProblems.value[i].tags.push("填空题");
             } else {
@@ -173,8 +172,12 @@ function getProblems() {
           }
           onSearch()  // Perform initial search after fetching problems
         } else {
+          console.log("Mission failed")
           ElMessage.error(response.data.message);
+          allProblems.value = [];
+          onSearch();
         }
+        console.log(response.data)
       }
   ).catch(
       function () {
@@ -189,7 +192,7 @@ function getProblemsNumber() {
   API.post('/get_problems_num', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -207,21 +210,28 @@ function getProblemsNumber() {
   return number;
 }
 
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+};
+
 const fetchProblems = async () => {
-  // let number = 0;
-  // for (let i = 1; i <= Math.floor(number/10)+1; i++) {
-  //   getProblems(i);
-  // }
-  getProblems();
+  getProblems('');
 }
 
 const userGroups: string[] = reactive([])
 
-const fetchGroups = async() => {
+const fetchGroups = async () => {
   API.post('/group_get_groups', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -244,26 +254,15 @@ const selectedGroup = ref('')
 const handleCommand = (command: any) => {
   selectedGroup.value = command
   if (command !== '') {
-    router.push({
-      name: 'QuestionBank4SpecificGroup',
-      query: {
-        username: route.query.username,
-        groupLabel: command,
-      }
-    })
-  } else {
-    // 无需处理
-  }
-}
-
-const handleAddProblem = () => {
-  router.push({
-    name: 'upload',
-    query: {
-      username: route.query.username,
-      sheetId: route.query.sheetId,
+    if (command === '公开分享') {
+      getProblems('_shared_to_all');
+      // window.location.reload();
+    } else {
+      console.log(command, 666666666666666666666666666666)
+      getProblems(command as string);
+      // window.location.reload();
     }
-  })
+  }
 }
 
 onMounted(() => {
@@ -304,25 +303,21 @@ onMounted(() => {
                   </el-form-item>
 
 
-                  <el-form-item>
-                    <el-dropdown @command="handleCommand">
-                      <span class="el-dropdown-link">
-                        {{ selectedGroup || '选择用户组' }}
-                        <el-icon class="el-icon--right"></el-icon>
-                      </span>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item command="">全部用户组</el-dropdown-item>
-                          <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
-                            {{ group }}
-                          </el-dropdown-item>
-                        </el-dropdown-menu>
-                      </template>
-                    </el-dropdown>
-                  </el-form-item>
-                  <el-form-item style="float: right;">
-                    <el-button type="primary" @click="handleAddProblem">新增题目</el-button>
-                  </el-form-item>
+                  <el-dropdown @command="handleCommand">
+                    <span class="el-dropdown-link">
+                      {{ selectedGroup || '选择用户组' }}
+                      <el-icon class="el-icon--right"></el-icon>
+                    </span>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
+                        <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
+                          {{ group }}
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+
                 </el-form>
                 <!-- 显示选中标签的区域 -->
                 <div v-if="searchForm.selectedTags.length > 0" style="margin-top: 10px;">
@@ -339,8 +334,13 @@ onMounted(() => {
               </el-card>
 
               <el-table :data="problems" style="width: 100%">
+                <el-table-column label="最新一次错误时间">
+                  <template #default="scope">
+                    {{ formatDate(scope.row.last_error_time) }}
+                  </template>
+                </el-table-column>
                 <el-table-column prop="id" label="题号" width="100"></el-table-column>
-                <el-table-column prop="problem_title" label="题目名称"></el-table-column>
+                <el-table-column prop="problem_title" label="题目名称" width="100"></el-table-column>
                 <el-table-column prop="creator" label="上传者" width="100"></el-table-column>
                 <el-table-column prop="problem_group_title" label="所属题单" width="180"></el-table-column>
                 <el-table-column label="标签" width="200">

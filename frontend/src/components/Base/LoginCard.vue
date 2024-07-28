@@ -52,6 +52,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
       data.username = ruleForm.name
       data.password = ruleForm.pass
       data.usertype = ruleForm.mode
+      console.log(data)
       //TODO 告知后端 并由后端检查 获得返回值
       API.post('/user_login', data,
           {
@@ -67,7 +68,8 @@ const submitForm = (formEl: FormInstance | undefined) => {
               router.push({
                     path: '/home',
                     query: {
-                      username: data.username //logincard->/home，将username传给home,home的url带有username
+                      username: data.username, //logincard->/home，将username传给home,home的url带有username
+                      mode: data.usertype
                     },
                   }); //传入这个人的参数，它的数据库
             } else {

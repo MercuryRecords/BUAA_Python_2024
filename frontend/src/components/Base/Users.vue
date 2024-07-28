@@ -3,8 +3,9 @@
     <div class="table-container">
       <div class="table-header">
         <h2>用户列表</h2>
-        <el-button type="primary" @click="showAddUserDialog">新增用户</el-button>
       </div>
+      <div class="table-wrapper">
+        <el-button type="primary" @click="showAddUserDialog" class="add-user-button">新增用户</el-button>
       <el-table :data="displayedUsers" style="width: 80%">
         <el-table-column label="序号" width="80">
           <template #default="scope">
@@ -27,6 +28,7 @@
           </template>
         </el-table-column>
       </el-table>
+        </div>
     </div>
 
     <el-pagination
@@ -67,6 +69,7 @@
 import { ref, onMounted, computed } from 'vue'
 import {ElMessage, type FormInstance} from 'element-plus'
 import API from "@/plugins/axios"
+const data = defineProps(['username']) //从Navigator拿到的username
 
 interface User {
   username: string;
@@ -102,7 +105,7 @@ const displayedUsers = computed(() => {
 const fetchUsers = async () => {
   try {
     const response = await API.post('/admin_get_user_list', {
-      username: 'Admin', // 这里应该使用实际的管理员用户名
+      username: data.username, // 这里应该使用实际的管理员用户名
     }, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -129,7 +132,7 @@ const showUserDetails = (user: User) => {
 
 const deleteUser = async (username: string) => {
   API.post('/admin_delete_user', {
-    username: 'Admin',
+    username: data.username,
     name: username
   }, {
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
@@ -161,7 +164,7 @@ const addUser = async () => {
   addUserForm.value.validate((valid) => {
     if (valid) {
       API.post('/admin_register_user', {
-        username: 'Admin', // 这里应该使用实际的管理员用户名
+        username: data.username, // 这里应该使用实际的管理员用户名
         name: newUser.value.username,
         password: newUser.value.password
       }, {
@@ -255,5 +258,16 @@ onMounted(() => {
 
 :deep(.el-pagination) {
   font-size: 14px;
+}
+
+.table-wrapper {
+  position: relative;
+}
+
+.add-user-button {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  z-index: 1;
 }
 </style>
