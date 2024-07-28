@@ -135,6 +135,9 @@
               <v-list-item prepend-icon="mdi-star" title="题库" value="starred"
                            :to="{name:'question' ,query: {username: props.username}}">
               </v-list-item>
+              <v-list-item prepend-icon="mdi-clock-star-four-points-outline" title="错题日志" value="wrongProblemSet"
+                           :to="{name:'wrongQuestionSet' ,query: {username: props.username}}">
+              </v-list-item>
             </v-list>
           </v-list-item>
           <v-list-item prepend-icon="mdi-account-multiple" title="" value="mygroup">
@@ -153,7 +156,7 @@
           </v-list-item>
           <v-list-item prepend-icon="mdi-star" title="Starred" value="starred"></v-list-item>
           <v-list-item prepend-icon="mdi-account-cog" title="个人中心" value="account-cog"
-          :to="{name:'userCenters' ,query: {username: props.username}}"></v-list-item>
+                       :to="{name:'userCenters' ,query: {username: props.username}}"></v-list-item>
         </v-list>
       </v-navigation-drawer>
 
@@ -166,5 +169,5 @@
 import {onMounted, onUnmounted} from "vue";
 
 const props = defineProps(['username']) //Navigator拿到一直传进来的username，之后的函数操作都要有
-onMounted(()=>console.log(props.username))
+onMounted(() => console.log(props.username))
 </script>
