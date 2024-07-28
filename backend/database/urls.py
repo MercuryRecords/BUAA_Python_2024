@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_problem, views_ocr, views_admin, views_record
+from . import views, views_problem, views_ocr, views_admin, views_record, views_avatar
 
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
@@ -39,6 +39,8 @@ urlpatterns = [
     path('admin_problem_update', views_admin.admin_problem_update, name='admin_problem_update'),
     path('admin_problem_delete', views_admin.admin_problem_delete, name='admin_problem_delete'),
 
+    path('admin_get_problem_group_content', views_admin.admin_get_problem_group_content, name='admin_get_problem_group_content'),
+
     path('ocr', views_ocr.ocr_view),
 
     path('problem_group_create', views_problem.problem_group_create),
@@ -63,4 +65,7 @@ urlpatterns = [
 
     path('get_records_num', views_record.get_records_num, name='get_records_num'),
     path('get_records', views_record.get_records, name='get_records'),
+
+    path('edit_avatar', views_avatar.edit_avatar, name='edit_avatar'),
+    path('get_avatar', views_avatar.get_avatar, name='get_avatar'),
 ]
