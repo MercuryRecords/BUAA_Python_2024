@@ -81,6 +81,10 @@ def admin_add_user_to_group(request):
         res = {"code": 401, "message": "用户或用户组不存在"}
         return JsonResponse(res)
 
+    if check[0] in check2[0].members.all():
+        res = {"code": 402, "message": "用户已经在该用户组中"}
+        return JsonResponse(res)
+
     check2[0].members.add(check[0])
     res = {"code": 200, "message": "用户加入用户组成功"}
     return JsonResponse(res)
@@ -96,6 +100,10 @@ def admin_remove_user_from_group(request):
     if not check or not check2:
         # 用户或用户组不存在，返回错误信息
         res = {"code": 401, "message": "用户或用户组不存在"}
+        return JsonResponse(res)
+
+    if not check[0] in check2[0].members.all():
+        res = {"code": 402, "message": "用户不在该用户组中"}
         return JsonResponse(res)
 
     check2[0].members.remove(check[0])
@@ -185,7 +193,7 @@ def admin_get_problem_groups(request):
 
         mode = int(request.POST.get('mode'))
         filter_group = request.POST.get('filter_group')
-        
+
         if mode:
             problem_groups = _get_problem_groups_with_permissions__gte(creator, filter_group, 1)
             if isinstance(problem_groups, JsonResponse):
@@ -194,14 +202,13 @@ def admin_get_problem_groups(request):
             problem_groups = _get_problem_groups_with_permissions__gte(creator, '', 1)
             if isinstance(problem_groups, JsonResponse):
                 return problem_groups
-            
+
             exclude_ids = problem_groups.values_list('id', flat=True)
             problem_groups = _get_problem_groups_with_permissions__gte(creator, filter_group, 0)
             if isinstance(problem_groups, JsonResponse):
                 return problem_groups
-            
-            problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
+            problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
     if to_search:
         # 在 problem_groups 范围内进一步搜索，利用 search
