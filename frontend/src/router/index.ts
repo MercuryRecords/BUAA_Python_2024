@@ -76,9 +76,16 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/SolveQuestion.vue')
         },
         {
+            // 管理员的用户管理页面
             path: '/users',
             name: 'users',
             component: () => import('@/views/UserManagement.vue')
+        },
+        {
+            // 管理员的用户组管理页面
+            path: '/groups',
+            name: 'groups',
+            component: () => import('@/views/GroupManagement.vue')
         },
         {
             path: '/sheetViewed',
