@@ -89,7 +89,7 @@ const handleAvatarChange = (file: any) => {
 
   const formData = new FormData()
   formData.append('username', data.username)
-  formData.append('avatar', file)
+  formData.append('avatar', file.raw)
 
   API.post('/edit_avatar', formData, {
     headers: {
