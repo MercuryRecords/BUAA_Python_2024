@@ -49,46 +49,34 @@ import API from "@/plugins/axios";
 
 const data = defineProps(['username'])
 const userInfo = reactive({
-  name: 'July',
+  name: data.username,
   avatar: 'path_to_avatar_image',
   studentId: '22371500',
-  role: '学生',
+  role: 'User',
   email: '22371500@buaa.edu.cn',
   createdAt: '2024-02-19',
   currentCourse: '2024春-操作系统'
 })
 
 const userInfoDisplay = {
-  studentId: userInfo.studentId,
+  studentId: data.username,
   role: userInfo.role,
-  email: userInfo.email,
-  createdAt: userInfo.createdAt,
-  currentCourse: userInfo.currentCourse
 }
 
 const iconMap = {
   studentId: 'el-icon-user',
   role: 'el-icon-s-custom',
-  email: 'el-icon-message',
-  createdAt: 'el-icon-date',
-  currentCourse: 'el-icon-reading'
 }
 
 const labelMap = {
-  studentId: '学工号',
+  studentId: '用户名',
   role: '用户身份',
-  email: '个人邮箱',
-  createdAt: '创建时间',
-  currentCourse: '当前课程'
 }
 
 const handleAvatarChange = (file: any) => {
   const isJPG = file.raw.type === 'image/jpeg'
   const isPNG = file.raw.type === 'image/png'
   const isLt2M = file.raw.size / 1024 / 1024 < 2
-  const formData = new FormData()
-  formData.append('username', data.username)
-  formData.append('file', file)
 
   if (!isJPG && !isPNG) {
     ElMessage.error('头像图片只能是 JPG 或 PNG 格式!')
@@ -99,49 +87,55 @@ const handleAvatarChange = (file: any) => {
     return
   }
 
-  // 创建一个 FileReader 对象
-  const reader = new FileReader()
-  reader.readAsDataURL(file.raw)
-  reader.onload = (e) => {
-    // 更新头像
-    userInfo.avatar = e.target.result
-    ElMessage.success('头像更新成功')
-  }
-  API.post('/edit_avatar', formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }).then(
-      function (response) {
-        console.log("successfully edited!")
+  const formData = new FormData()
+  formData.append('username', data.username)
+  formData.append('avatar', file)
+
+  API.post('/edit_avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  }).then(response => {
+    if (response.data.code === 200) {
+      // 创建一个 FileReader 对象来读取文件
+      const reader = new FileReader()
+      reader.readAsDataURL(file.raw)
+      reader.onload = (e) => {
+        // 更新头像
+        userInfo.avatar = e.target.result as string
+        ElMessage.success('头像更新成功')
+        console.log(file.raw)
       }
-  ).catch(
-      function () {
-        console.log('error')
-      }
-  )
+    } else {
+      ElMessage.error('头像更新失败: ' + response.data.message)
+    }
+  }).catch(error => {
+    console.error('Error:', error)
+    ElMessage.error('头像更新失败，请稍后重试')
+  })
 }
 
 onMounted(async () => showPicture());
 
 function showPicture() {
-  API.post('/get_avatar',
-      {
-        username: data.username
-      }, {
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-      }).then(
-          function(response){
-            console.log('successfully show!')
-            console.log(response)
-            userInfo.avatar = response.data.avatar
-          }
-  ).catch(
-      function(){
-        console.log('error')
-      }
-  )
+  API.post('/get_avatar', {
+    username: data.username
+  }, {
+    headers: {'Content-Type': 'multipart/form-data'}
+  }).then(response => {
+    if (response.data.code === 200) {
+      userInfo.avatar = response.data.avatar
+      console.log(response.data.message)
+    } else {
+      console.log('Failed to fetch avatar:', response.data.message)
+      // 设置默认头像
+      userInfo.avatar = 'path_to_default_avatar_image'
+    }
+  }).catch(error => {
+    console.error('Error fetching avatar:', error)
+    // 设置默认头像
+    userInfo.avatar = 'path_to_default_avatar_image'
+  })
 }
 </script>
 
