@@ -41,22 +41,40 @@
           <el-button @click="nextQuestion" :disabled="currentIndex === totalQuestions - 1">下一题</el-button>
         </div>
 
-        <div v-if="submitted" class="result-container">
-          <el-button @click="toggleAnswers" class="show-answer-button">
-            {{ showAnswers ? '隐藏答案' : '显示答案' }}
-          </el-button>
-          <div v-if="showAnswers" class="correct-answers">
-            <h3>正确答案：</h3>
-            <p v-if="currentQuestion.type === 'c'">{{ correctAnswer }}</p>
-            <div v-else-if="currentQuestion.type === 'b'">
-              <p v-for="(answer, index) in correctAnswers.slice(0, currentQuestion.ans_count)" :key="index">
-                第{{ index + 1 }}空：{{ answer }}
-              </p>
+        <div v-if="submitted" class="result-and-comments">
+          <div class="result-container">
+            <h3>做题统计</h3>
+            <p class="stat-line">
+              本题你做过 {{ currentQuestion.user_count }} 次，错了 <span class="red">{{ currentQuestion.user_count - currentQuestion.user_right_count }}</span> 次
+            </p>
+            <div class="stat-line">
+              题库正确率：
+              <div class="progress-bar">
+                <div class="progress" :style="{ width: `${(total_accuracy * 100).toFixed(2)}%` }"></div>
+              </div>
+              <span class="percentage">{{ (total_accuracy * 100).toFixed(2) }}%</span>
+            </div>
+
+            <el-button @click="toggleAnswers" class="show-answer-button">
+              {{ showAnswers ? '隐藏答案' : '显示答案' }}
+            </el-button>
+            <div v-if="showAnswers" class="correct-answers">
+              <h3>正确答案：</h3>
+              <p v-if="currentQuestion.type === 'c'">{{ correctAnswer }}</p>
+              <div v-else-if="currentQuestion.type === 'b'">
+                <p v-for="(answer, index) in correctAnswers.slice(0, currentQuestion.ans_count)" :key="index">
+                  第{{ index + 1 }}空：{{ answer }}
+                </p>
+              </div>
             </div>
           </div>
-          <p class="score">您做过: {{ currentQuestion.user_count }} 次， 答错了: {{ currentQuestion.user_count - currentQuestion.user_right_count }} 次</p>
-          <p class="score">您的正确率: {{ (accuracy * 100).toFixed(2) }}%</p>
-          <p class="score">总体正确率: {{ (total_accuracy * 100).toFixed(2) }}%</p>
+
+          <div class="result-container">
+            <CommentSection
+                :questionId="currentQuestion.id"
+                :username="username"
+            />
+          </div>
         </div>
 
         <div v-if="feedback" class="feedback" :class="{ 'is-correct': isCorrect, 'is-incorrect': !isCorrect }">
@@ -100,6 +118,7 @@ import { useRoute } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import Navigator from "@/components/Base/Navigator.vue";
 import API from "@/plugins/axios";
+import CommentSection from "@/components/Base/CommentSection.vue";
 
 // ... (保持原有的接口定义和其他导入不变)
 
@@ -203,7 +222,7 @@ const checkAnswer = () => {
               response.data.data.correct4 == 'T', response.data.data.correct5 == 'T', response.data.data.correct6 == 'T',
               response.data.data.correct7 == 'T'];
           }
-          feedback.value = isCorrect.value ? '回答正确！' : '回答错误，请查看正确答案。';
+          // feedback.value = isCorrect.value ? '回答正确！' : '回答错误，请查看正确答案。';
           submitted.value = true;
         } else {
           ElMessage.error(response.data.message);
@@ -404,6 +423,13 @@ h2, h3 {
   border-radius: 4px;
 }
 
+.comments-container {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
 .correct-answers {
   margin-top: 20px;
 }
@@ -457,4 +483,46 @@ h2, h3 {
   background-color: transparent;
   color: #333;
 }
+
+.result-container {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+.stat-line {
+  margin-bottom: 10px;
+  font-size: 14px;
+  color: #333;
+
+}
+
+.red {
+  color: red;
+  font-weight: bold;
+}
+
+.progress-bar {
+  background-color: #f0f0f0;
+  height: 10px;
+  width: 200px;
+  border-radius: 5px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.progress {
+  background-color: #4CAF50;
+  height: 100%;
+}
+
+.percentage {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #666;
+}
+
 </style>
