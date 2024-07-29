@@ -101,6 +101,16 @@ const router = createRouter({ //创建路由器
             path: '/wrongQuestionSet',
             name: 'wrongQuestionSet',
             component: () => import('@/views/WrongQuestionSet.vue')
+        },
+        {
+            path: '/problemGroups',
+            name: 'problemGroups',
+            component: () => import('@/views/ProblemGroupsManagement.vue')
+        },
+        {
+            path: '/adminSheet',
+            name: 'adminSheet',
+            component: () => import('@/views/AdminSheet.vue')
         }
     ]
 })
