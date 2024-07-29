@@ -35,7 +35,7 @@
         <el-link type="danger" class="footer-link">* 若您的个人信息有误，请联系系统管理员</el-link>
         <div>
           <el-link type="primary" class="footer-link">修改密码</el-link>
-          <el-link type="primary" class="footer-link">退出登录</el-link>
+          <el-link type="primary" class="footer-link" @click="handleLogout">退出登录</el-link>
         </div>
       </div>
     </el-card>
@@ -46,7 +46,9 @@
 import {ref, reactive, onMounted} from 'vue'
 import {ElMessage} from 'element-plus'
 import API from "@/plugins/axios";
+import {useRouter} from 'vue-router';
 
+const router = useRouter();
 const data = defineProps(['username'])
 const userInfo = reactive({
   name: data.username,
@@ -89,7 +91,7 @@ const handleAvatarChange = (file: any) => {
 
   const formData = new FormData()
   formData.append('username', data.username)
-  formData.append('avatar', file)
+  formData.append('avatar', file.raw)
 
   API.post('/edit_avatar', formData, {
     headers: {
@@ -121,7 +123,7 @@ function showPicture() {
   API.post('/get_avatar', {
     username: data.username
   }, {
-    headers: {'Content-Type': 'multipart/form-data'}
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(response => {
     if (response.data.code === 200) {
       userInfo.avatar = response.data.avatar
@@ -136,6 +138,14 @@ function showPicture() {
     // 设置默认头像
     userInfo.avatar = 'path_to_default_avatar_image'
   })
+}
+
+const handleLogout = () => {
+  // 这里可以添加退出登录的逻辑，比如清除本地存储的用户信息、token等
+  localStorage.removeItem('token'); // 假设你使用 token 进行身份验证
+  console.log('退退退！')
+  // 使用 router 导航到登录页面
+  router.push('/login');
 }
 </script>
 

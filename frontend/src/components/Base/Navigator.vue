@@ -113,8 +113,8 @@
       >
         <v-list>
           <v-list-item
-              prepend-avatar="https://randomuser.me/api/portraits/women/85.jpg"
-              title="用户名"
+              :prepend-avatar="picture"
+              :title="props.username"
           ></v-list-item>
         </v-list>
 
@@ -166,8 +166,36 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, onUnmounted} from "vue";
+import {ref, onMounted, onUnmounted} from "vue";
+import API from "@/plugins/axios";
 
+const picture = ref('https://randomuser.me/api/portraits/women/85.jpg')
 const props = defineProps(['username']) //Navigator拿到一直传进来的username，之后的函数操作都要有
-onMounted(() => console.log(props.username))
+function getPicture() {
+  API.post('/get_avatar',
+      {
+        username: props.username,
+      },
+      {
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+      }
+  ).then(
+      function (response) {
+        if (response.data.code === 200) {
+          console.log('successfully get!')
+          console.log(response.data)
+          console.log(response.data.avatar)
+          picture.value = response.data.avatar
+        } else {
+          console.log(response.data.message)
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error')
+      }
+  )
+}
+
+onMounted(() => getPicture())
 </script>
