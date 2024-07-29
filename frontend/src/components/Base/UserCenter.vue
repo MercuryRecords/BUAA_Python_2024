@@ -34,11 +34,35 @@
       <div class="card-footer">
         <el-link type="danger" class="footer-link">* 若您的个人信息有误，请联系系统管理员</el-link>
         <div>
-          <el-link type="primary" class="footer-link">修改密码</el-link>
+          <el-link type="primary" class="footer-link" @click="showChangePasswordDialog">修改密码</el-link>
           <el-link type="primary" class="footer-link" @click="handleLogout">退出登录</el-link>
         </div>
       </div>
     </el-card>
+    <el-dialog
+        title="修改密码"
+        v-model="changePasswordDialogVisible"
+        width="30%"
+        :close-on-click-modal="false"
+    >
+      <el-form :model="passwordForm" label-width="80px">
+        <el-form-item label="旧密码">
+          <el-input v-model="passwordForm.oldPassword" type="password" show-password></el-input>
+        </el-form-item>
+        <el-form-item label="新密码">
+          <el-input v-model="passwordForm.newPassword" type="password" show-password></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码">
+          <el-input v-model="passwordForm.confirmPassword" type="password" show-password></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="handleChangePassword">确认修改</el-button>
+          <el-button @click="changePasswordDialogVisible = false">取消修改</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -162,11 +186,51 @@ const handleLogout = () => {
         console.log('error')
       }
   )
-  // localStorage.removeItem('token'); // 假设你使用 token 进行身份验证
-  // console.log('退退退！')
-  // // 使用 router 导航到登录页面
-  // router.push('/login');
 }
+
+const changePasswordDialogVisible = ref(false)
+const passwordForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: ''
+})
+
+const showChangePasswordDialog = () => {
+  changePasswordDialogVisible.value = true
+}
+
+const handleChangePassword = () => {
+  // 这里添加修改密码的逻辑
+  // 可以进行表单验证、API调用等
+  console.log('修改密码', passwordForm)
+  // 示例：
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    ElMessage.error('新密码和确认密码不一致')
+    return
+  }
+  // 调用API修改密码
+  API.post('/user_change_password', {
+    username: data.username,
+    password: passwordForm.oldPassword,
+    new_password: passwordForm.newPassword,
+    usertype: '1'
+  }, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }).then(response => {
+    if (response.data.code === 200) {
+      ElMessage.success('密码修改成功')
+      changePasswordDialogVisible.value = false
+    } else {
+      ElMessage.error('密码修改失败: ' + response.data.message)
+    }
+  }).catch(error => {
+    console.error('Error:', error)
+    ElMessage.error('密码修改失败，请稍后重试')
+  })
+}
+
 </script>
 
 <style scoped>
@@ -237,5 +301,10 @@ const handleLogout = () => {
 
 .footer-link:first-child {
   margin-left: 0;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

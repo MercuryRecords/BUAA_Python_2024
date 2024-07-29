@@ -1,12 +1,13 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import {ref, reactive, computed, onMounted} from 'vue'
+import {ElMessage} from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
-import { useRoute } from 'vue-router'
+import {useRoute} from 'vue-router'
 import API from "@/plugins/axios";
-import { ArrowDown } from '@element-plus/icons-vue'
+import {ArrowDown} from '@element-plus/icons-vue'
+
 const route = useRoute()
 
 const searchForm = reactive({
@@ -38,7 +39,7 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
-  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
+  {name: '数学', tags: ['多项式', '矩阵', '行列式', '线性代数']},
   {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
   {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
   {name: '题目类型', tags: ['选择题', '填空题']},
@@ -102,7 +103,7 @@ const jumpToQuestion = (problem: data) => {
     username: route.query.username,
     problem_ids: problemIds,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -153,17 +154,17 @@ function getProblems() {
   API.post('/get_problem_group_content', {
     username: route.query.username,
     problem_group_id: route.query.sheetId,
-    is_temporary:'n',
+    is_temporary: 'n',
     number_per_page: 10
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
           for (let i = 0; i < response.data.data.length; i++) {
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
-            allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 :response.data.data[i].all_right_count / response.data.data[i].all_count
+            allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 : response.data.data[i].all_right_count / response.data.data[i].all_count
             // if (response.data.data[i].type == 'b') {
             //   allProblems.value[i].tags.push("填空题");
             // } else {
@@ -189,7 +190,7 @@ function getProblemsNumber() {
   API.post('/get_problems_num', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -217,11 +218,11 @@ const fetchProblems = async () => {
 
 const userGroups: string[] = reactive([])
 
-const fetchGroups = async() => {
+const fetchGroups = async () => {
   API.post('/group_get_groups', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -286,6 +287,41 @@ const handleMultipleUpload = () => {
   })
 }
 
+const handleDelete = (problem: data) => {
+  API.post('/problem_delete', {
+    username: route.query.username,
+    problem_id: problem.id
+  }, {
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          ElMessage.success('删除成功');
+          // Remove the deleted problem from the list
+          allProblems.value = allProblems.value.filter(p => p.id !== problem.id);
+          onSearch(); // Refresh the filtered list
+        } else {
+          ElMessage.error(response.data.message || '删除失败');
+        }
+      }
+  ).catch(
+      function () {
+        ElMessage.error('删除请求失败');
+      }
+  )
+}
+
+const handleEdit = (problem: data) => {
+  router.push({
+    name: 'questionUpdate',
+    query: {
+      username: route.query.username,
+      problem_id: problem.id,
+      sheetId: route.query.sheetId
+    }
+  })
+}
+
 onMounted(() => {
   fetchProblems();
   fetchGroups();
@@ -342,7 +378,10 @@ onMounted(() => {
                   </el-form-item>
                   <el-dropdown>
                     <el-button type="primary">
-                      新增题目<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                      新增题目
+                      <el-icon class="el-icon--right">
+                        <arrow-down/>
+                      </el-icon>
                     </el-button>
                     <template #dropdown>
                       <el-dropdown-menu>
@@ -385,9 +424,11 @@ onMounted(() => {
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="100">
+                <el-table-column label="操作" width="280">
                   <template #default="scope">
                     <el-button type="text" size="small" @click="jumpToQuestion(scope.row)">解题</el-button>
+                    <el-button type="text" size="small" @click="handleEdit(scope.row)">更新</el-button>
+                    <el-button type="text" size="small" @click="handleDelete(scope.row)">删除</el-button>
                   </template>
                 </el-table-column>
               </el-table>

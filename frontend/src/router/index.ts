@@ -129,6 +129,11 @@ const router = createRouter({ //创建路由器
             name: 'multiple-upload',
             component: () => import('@/views/MultipleQuestionUpload.vue')
         },
+        {
+            path: '/questionUpdate',
+            name: 'questionUpdate',
+            component: () => import('@/views/QuestionUpdate.vue')
+        },
     ]
 })
 

@@ -68,14 +68,9 @@
             >
               {{ tag }}
             </el-tag>
-            <div class="tag-buttons">
-              <el-button class="button-new-tag" size="small" @click="showInput">
-                + 新标签
-              </el-button>
-              <el-button class="button-new-tag" size="small" @click="getRecommendedTags" type="danger">
-                推荐标签
-              </el-button>
-            </div>
+            <el-button class="button-new-tag" size="small" @click="showInput">
+              + 新标签
+            </el-button>
           </div>
         </el-form-item>
         <el-dialog v-model="inputVisible" title="添加新标签" width="30%">
@@ -102,10 +97,11 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, nextTick} from 'vue'
+import {ref, reactive, nextTick, onMounted} from 'vue'
 import {ElMessage} from 'element-plus'
 import API from '@/plugins/axios'
 import router from "@/router";
+
 interface TreeNode {
   id: number
   label: string
@@ -143,7 +139,49 @@ const inputVisible = ref(false)
 const inputValue = ref('')
 const inputRef = ref<HTMLInputElement | null>(null)
 
-const data = defineProps(['username', 'sheetId'])
+const data = defineProps(['username', 'sheetId', 'problem_id'])
+
+
+const fetchProblemDetails = async () => {
+  try {
+    const response = await API.post('/get_problem_detail',
+        {
+          username: data.username,
+          problem_id: data.problem_id,
+        }, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}})
+    if (response.data.code === 200) {
+      const problemData = response.data.data
+      // 更新表单数据
+      problemForm.username = problemData.creator || ''
+      problemForm.title = problemData.problem_title || ''
+      problemForm.problem_group_id = problemData.problem_group_id || 0
+      problemForm.type = problemData.type || ''
+      problemForm.content = problemData.content || ''
+      problemForm.ans_count = problemData.ans_count || 1
+      problemForm.answer = problemData.answer || ''
+      problemForm.field1 = problemData.field1 || ''
+      problemForm.field2 = problemData.field2 || ''
+      problemForm.field3 = problemData.field3 || ''
+      problemForm.field4 = problemData.field4 || ''
+      problemForm.field5 = problemData.field5 || ''
+      problemForm.field6 = problemData.field6 || ''
+      problemForm.field7 = problemData.field7 || ''
+      problemForm.tags = problemData.tags || []
+
+      // 更新答案数组
+      problemForm.answers = []
+      for (let i = 1; i <= problemForm.ans_count; i++) {
+        problemForm.answers.push(problemForm[`field${i}`] || '')
+      }
+    } else {
+      ElMessage.error('获取题目信息失败')
+    }
+  } catch
+      (error) {
+    console.error('获取题目信息出错:', error)
+    ElMessage.error('获取题目信息失败，请重试')
+  }
+}
 
 const customUpload = async (options: any) => {
   const {file} = options
@@ -223,10 +261,9 @@ const decreaseAnswerCount = () => {
 }
 
 const submitProblem = () => {
-  // 准备提交数据
-
   const submitData: Record<string, any> = {
     username: data.username,
+    problem_id:data.problem_id,
     title: problemForm.title,
     problem_group_id: data.sheetId,
     type: problemForm.type,
@@ -242,64 +279,41 @@ const submitProblem = () => {
     field7: problemForm.field7,
     tags: problemForm.tags
   }
+
   // 根据ans_count设置答案
   for (let i = 0; i < problemForm.ans_count; i++) {
     submitData[`field${i + 1}`] = problemForm.answers[i]
   }
-  console.log(submitData)
-  // 发送请求到后端
-  API.post('/problem_create', submitData,
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      })
-      .then(response => {
+  API.post('/problem_update', submitData, {
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    }
+  }).then(response => {
         if (response.data.code === 200) {
-          console.log('提交成功:', response.data)
-          ElMessage.success('题目提交成功')
+          console.log('操作成功:', response.data)
+          ElMessage.success(data.problem_id ? '题目更新成功' : '题目提交成功')
+          setTimeout(() => {
+            router.go(-1)
+          }, 1000)
         } else {
-          console.log('提交失败:', response.data)
-          ElMessage.error('题目提交失败')
+          console.log('操作失败:', response.data)
+          ElMessage.error(data.problem_id ? '题目更新失败' : '题目提交失败')
         }
       })
       .catch(error => {
-        console.error('提交失败:', error)
-        ElMessage.error('题目提交失败，请重试')
+        console.error('操作失败:', error)
+        ElMessage.error(data.problem_id ? '题目更新失败，请重试' : '题目提交失败，请重试')
       })
   setTimeout(() => {
-    router.go(-1)
-  }, 1000); // 延迟1000毫秒（1秒）
+    router.go(0)
+  }, 1000);
 }
 
-const getRecommendedTags = async () => {
-  try {
-    console.log(data.username)
-    console.log(problemForm.content)
-    const response = await API.post('/extract_keywords', {
-      username: data.username,
-      text: problemForm.content
-    }, {
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-    });
-
-    if (response.data.code === 200) {
-      const recommendedTags = response.data.keywords;
-      // 将推荐的标签添加到现有标签中，避免重复
-      recommendedTags.forEach(tag => {
-        if (!problemForm.tags.includes(tag)) {
-          problemForm.tags.push(tag);
-        }
-      });
-      ElMessage.success('已添加推荐标签');
-    } else {
-      ElMessage.warning('获取推荐标签失败');
-    }
-  } catch (error) {
-    console.error('获取推荐标签出错:', error);
-    ElMessage.error('获取推荐标签失败，请重试');
+onMounted(() => {
+  if (data.problem_id) {
+    fetchProblemDetails()
   }
-}
+})
 </script>
 
 <style scoped>
@@ -350,33 +364,5 @@ const getRecommendedTags = async () => {
   width: 90px;
   margin-bottom: 10px;
   vertical-align: bottom;
-}
-
-.button-recommend-tag {
-  margin-left: 10px;
-}
-
-.tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.tag-buttons {
-  display: flex;
-  align-items: center;
-}
-
-.button-new-tag,
-.button-recommend-tag {
-  margin-left: 10px;
-  height: 32px;
-  padding: 0 10px;
-  line-height: 30px;
-}
-
-.el-tag {
-  margin-right: 10px;
-  margin-bottom: 10px;
 }
 </style>
