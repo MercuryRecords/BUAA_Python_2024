@@ -5,7 +5,7 @@ from .models import SensitiveWord
 from .errors import *
 from .views_problem import _cut_to_page
 
-from ..backend.middleware.sensitive_detection import setflag
+from backend.middleware.sensitive_detection import setflag
 
 def _add_sensitive_words_by_list(words):
     if not words:
