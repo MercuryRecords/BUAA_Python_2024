@@ -143,12 +143,10 @@ const addSensitiveWordsFromFile = async () => {
     return
   }
   const formData = new FormData()
+  formData.append('username', route.query.username)
   formData.append('file', file.value)
 
-  API.post('/admin_add_sensitive_words_by_txt_file', {
-    username: route.query.username,
-    file: formData
-  }, {
+  API.post('/admin_add_sensitive_words_by_txt_file', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }).then(
       async function (response) {
