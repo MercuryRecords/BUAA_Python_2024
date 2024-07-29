@@ -1,8 +1,5 @@
 import os
 import hashlib
-
-from django.core.files.storage import FileSystemStorage
-from django.conf import settings
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.utils import timezone
@@ -26,17 +23,12 @@ def edit_avatar(request):
         return JsonResponse(res)
 
     avatar = request.FILES.get('avatar')
-    # file_extension = os.path.splitext(avatar.name)[1]
-    # print(f"f_ext: {file_extension}")
-    # new_filename = generate_encrypted_filename(username) + file_extension
-    # file_path = os.path.join('avatars', new_filename)
-    # avatar_file_path = user.avatar.save(file_path, avatar)
-    # print(f"avatar_file_path: {avatar_file_path}")
+    file_extension = os.path.splitext(avatar.name)[1]
+    new_filename = generate_encrypted_filename(username) + file_extension
 
-    print(user.avatar.name)
     if user.avatar and user.avatar.name != 'avatars/default.png':
         user.avatar.delete()
-    user.avatar = avatar
+    user.avatar.save(new_filename, avatar)
     user.save()
 
     res = {'code': 200, 'message': '头像修改成功'}
@@ -50,8 +42,6 @@ def get_avatar(request):  # 获取用户头像
     if not user:
         res = {'code': 401, 'message': '用户不存在'}
         return JsonResponse(res)
-
-    print(user.avatar.name)
 
     res = {'code': 200, 'message': '头像获取成功', 'avatar': request.build_absolute_uri(user.avatar.url)}
 
