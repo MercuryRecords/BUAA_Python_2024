@@ -5,6 +5,7 @@ from . import views, views_problem, views_ocr, views_admin, views_record, views_
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
     path('user_login', views.user_login, name='user_login'),
+    path('user_change_password', views.user_change_password, name='user_change_password'),
     path('user_logout', views.user_logout, name='user_logout'),
     path('group_create', views.group_create, name='group_create'),
     path('group_apply_to_join', views.group_apply_to_join, name='group_apply_to_join'),
