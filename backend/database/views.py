@@ -6,6 +6,7 @@ from .models import User, Manager, Group, JoinRequest, ProblemGroup
 
 from .views_problem import temporary_problem_group_clear
 
+
 @require_http_methods(["POST"])
 def message(request):
     mes = request.POST.get('message')
@@ -73,13 +74,42 @@ def user_login(request):
     # print(password)
     if check[0].password != password:
         return JsonResponse({"code": 402, "message": "密码错误"})
-    
+
     if usertype == '1':
         temporary_problem_group_clear(check[0])
-    
+
     request.session["username"] = username
     request.session["usertype"] = usertype
     return JsonResponse({"code": 200, "message": "登录成功"})
+
+
+@require_http_methods(["POST"])
+def user_change_password(request):
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    new_password = request.POST.get('new_password')
+    usertype = request.POST.get('usertype')
+
+    check = None
+    if usertype == '0':
+        check = Manager.objects.filter(username=username)
+    elif usertype == '1':
+        check = User.objects.filter(username=username)
+
+    if not check:
+        return JsonResponse({"code": 401, "message": "用户不存在"})
+
+    # 检查密码是否正确
+    if check[0].password != password:
+        return JsonResponse({"code": 402, "message": "原密码输入错误"})
+
+    if new_password == "" or len(new_password) > 100:
+        return JsonResponse({"code": 403, "message": "密码不能为空且长度不能超过100"})
+
+    check[0].password = new_password
+    check[0].save()
+    return JsonResponse({"code": 200, "message": "密码修改成功"})
+
 
 # 退出登录可清除cookie并删除为此用户创建的临时题单
 @require_http_methods(["POST"])
@@ -90,9 +120,10 @@ def user_logout(request):
         user = User.objects.filter(username=username)
         if user:
             temporary_problem_group_clear(user[0])
-    
+
     request.session.flush()
     return JsonResponse({"code": 200, "message": "退出登录成功"})
+
 
 @require_http_methods(["POST"])
 def group_create(request):
@@ -369,7 +400,6 @@ def group_get_members(request):
     sorted_members.remove(creator)
     sorted_members.insert(0, creator)
     return JsonResponse({"code": 200, "message": "获取成功", "members": [member.username for member in sorted_members]})
-
 
 # @require_http_methods(["POST"])
 # def admin_delete_user(request):

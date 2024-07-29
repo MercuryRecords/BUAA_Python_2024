@@ -5,6 +5,7 @@ from . import views, views_problem, views_ocr, views_admin, views_record, views_
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
     path('user_login', views.user_login, name='user_login'),
+    path('user_change_password', views.user_change_password, name='user_change_password'),
     path('user_logout', views.user_logout, name='user_logout'),
     path('group_create', views.group_create, name='group_create'),
     path('group_apply_to_join', views.group_apply_to_join, name='group_apply_to_join'),
@@ -51,6 +52,7 @@ urlpatterns = [
     path('admin_get_sensitive_word_list', views_sensitive_detection.admin_get_sensitive_word_list),
 
     path('ocr', views_ocr.ocr_view),
+    path('extract_keywords', views_ocr.extract_keywords),
 
     path('problem_group_create', views_problem.problem_group_create),
     path('problem_group_update', views_problem.problem_group_update),
@@ -78,7 +80,7 @@ urlpatterns = [
     path('edit_avatar', views_avatar.edit_avatar, name='edit_avatar'),
     path('get_avatar', views_avatar.get_avatar, name='get_avatar'),
 
-    path('comment_get_comments_from_problem', views_comment.comment_get_comments_from_problem, name='comment_get_comments_from_problem'),
+    path('comment_get_comments_from_id', views_comment.comment_get_comments_from_id, name='comment_get_comments_from_id'),
     path('comment_add', views_comment.comment_add, name='comment_add'),
 
     path('get_ability_trace', views_assessment.get_ability_trace),

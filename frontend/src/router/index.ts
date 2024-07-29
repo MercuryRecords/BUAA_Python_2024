@@ -123,7 +123,17 @@ const router = createRouter({ //创建路由器
             path: '/adminSheet',
             name: 'adminSheet',
             component: () => import('@/views/AdminSheet.vue')
-        }
+        },
+        {
+            path: '/multiple-upload',
+            name: 'multiple-upload',
+            component: () => import('@/views/MultipleQuestionUpload.vue')
+        },
+        {
+            path: '/questionUpdate',
+            name: 'questionUpdate',
+            component: () => import('@/views/QuestionUpdate.vue')
+        },
     ]
 })
 
