@@ -33,7 +33,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # AUTH_USER_MODEL = 'database.User'
 
-# ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['192.168.137.1'] # 服务器 IP 地址
 
 LANGUAGE_CODE = 'zh-hans'
 # TIME_ZONE = 'Asia/Shanghai'

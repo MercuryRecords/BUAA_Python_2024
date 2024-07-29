@@ -397,7 +397,7 @@ def admin_problem_update(request):
         answer = request.POST.get('answer')
         answer = answer if answer else problem.answer
         if len(answer) > 1 or ord(answer) - ord('A') not in range(ans_count):
-            return E_ILLIGAL_ANSWER
+            return E_ILLEGAL_ANSWER
 
     field = ['' for _ in range(7)]
     pre_field = [problem.field1, problem.field2, problem.field3,

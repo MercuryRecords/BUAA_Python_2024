@@ -7,6 +7,7 @@ from .views_problem import _cut_to_page
 
 from backend.middleware.sensitive_detection import setflag
 
+import re
 
 def _add_sensitive_words_by_list(words):
     if not words:
@@ -16,6 +17,11 @@ def _add_sensitive_words_by_list(words):
     for word in words:
         if len(word) > 50:
             error_flag = E_WORD_FORMAT
+            continue
+        try:
+            re.compile(word)
+        except re.error:
+            error_flag = E_WORD_ILLEGAL
             continue
         try:
             SensitiveWord.objects.create(content=word)

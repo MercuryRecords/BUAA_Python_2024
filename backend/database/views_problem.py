@@ -224,7 +224,7 @@ def problem_create(request):
     if type == 'c':
         answer = request.POST.get('answer')
         if not answer or len(answer) > 1 or ord(answer) - ord('A') not in range(ans_count):
-            return E_ILLIGAL_ANSWER
+            return E_ILLEGAL_ANSWER
 
     field = ['' for _ in range(7)]
     for i in range(ans_count):
@@ -278,7 +278,7 @@ def problem_update(request):
         answer = request.POST.get('answer')
         answer = answer if answer else problem.answer
         if len(answer) > 1 or ord(answer) - ord('A') not in range(ans_count):
-            return E_ILLIGAL_ANSWER
+            return E_ILLEGAL_ANSWER
 
     field = ['' for _ in range(7)]
     pre_field = [problem.field1, problem.field2, problem.field3,
@@ -700,7 +700,7 @@ def problem_check(request):
     if problem.type == 'c':
         user_answer = request.POST.get('user_answer')
         if not user_answer or len(user_answer) > 1 or ord(user_answer) - ord('A') not in range(ans_count):
-            return E_ILLIGAL_ANSWER
+            return E_ILLEGAL_ANSWER
 
         correct = 'T' if user_answer == problem.answer else 'F'
         data = {
