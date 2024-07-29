@@ -21,6 +21,9 @@
           <v-list-item prepend-icon="mdi-account-multiple" title="群组管理" value="join"
                        :to="{name:'groups', query: {username: props.username}}">
           </v-list-item>
+          <v-list-item prepend-icon="mdi-folder" title="题库管理" value="join"
+                       :to="{name:'questions', query: {username: props.username}}">
+          </v-list-item>
 
         </v-list>
       </v-navigation-drawer>

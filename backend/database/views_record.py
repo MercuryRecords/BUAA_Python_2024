@@ -1,5 +1,5 @@
 from django.views.decorators.http import require_http_methods
-from .error import *
+from .errors import *
 
 from .models import Record, User, TemporaryProblemGroup
 from .views_problem import _problem_to_dict, _cut_to_page

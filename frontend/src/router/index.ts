@@ -88,6 +88,12 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/GroupManagement.vue')
         },
         {
+            // 管理员的用户组管理页面
+            path: '/questions',
+            name: 'questions',
+            component: () => import('@/views/QuestionManagement.vue')
+        },
+        {
             path: '/sheetViewed',
             name: 'sheetViewed',
             component: () => import('@/views/SheetViewed.vue')

@@ -2,9 +2,7 @@ from django.views.decorators.http import require_http_methods
 from django.db.models import F, Q
 
 from .models import User, Group, ProblemGroup, Problem, ProblemPermission, Tag, Record, TemporaryProblemGroup
-
-from .error import *
-
+from .errors import *
 
 # 定义一个函数，用于获取问题组
 def _get_problem_group(request, permission):
@@ -82,6 +80,12 @@ def _get_and_create_tags(request):
     tag_names = request.POST.getlist('tags[]')
 
     tags_to_add = []
+    if 'type' in request.POST:
+        if request.POST['type'] == 'c':
+            tag_names.append('选择题')
+        elif request.POST['type'] == 'b':
+            tag_names.append('填空题')
+
     for tag_name in tag_names:
         check = Tag.objects.filter(name=tag_name)
         if check:
@@ -348,11 +352,9 @@ def _cut_to_page(request, query_set):
 
     if page < 0 or page * number_per_page >= query_set.count():
         return E_PAGE_OVERFLOW
-
-    if (page + 1) * number_per_page >= query_set.count():
-        query_set = query_set[number_per_page * page:]
-    else:
-        query_set = query_set[number_per_page * page:number_per_page * (page + 1)]
+    
+    # python 切片不会引发索引越界错误
+    query_set = query_set[number_per_page * page:number_per_page * (page + 1)]
 
     return query_set
 

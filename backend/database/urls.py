@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_problem, views_ocr, views_admin, views_record, views_avatar
+from . import views, views_problem, views_ocr, views_admin, views_record, views_avatar, views_sensitive_detection
 
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
@@ -40,6 +40,14 @@ urlpatterns = [
     path('admin_problem_delete', views_admin.admin_problem_delete, name='admin_problem_delete'),
 
     path('admin_get_problem_group_content', views_admin.admin_get_problem_group_content, name='admin_get_problem_group_content'),
+
+    # 敏感词相关
+    path('admin_add_sensitive_words_by_list', views_sensitive_detection.admin_add_sensitive_words_by_list),
+    path('admin_add_sensitive_words_by_txt_file', views_sensitive_detection.admin_add_sensitive_words_by_txt_file),
+    path('admin_delete_sensitive_word', views_sensitive_detection.admin_delete_sensitive_word),
+    path('admin_clear_sensitive_word', views_sensitive_detection.admin_clear_sensitive_word),
+    path('admin_get_sensitive_word_num', views_sensitive_detection.admin_get_sensitive_word_num),
+    path('admin_get_sensitive_word_list', views_sensitive_detection.admin_get_sensitive_word_list),
 
     path('ocr', views_ocr.ocr_view),
 

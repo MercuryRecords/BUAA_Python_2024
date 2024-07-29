@@ -21,8 +21,7 @@ class Authentication(MiddlewareMixin):
             return JsonResponse({"code": 400, "message": "请先登录"})
         
         is_admin = request.session.get("usertype") == '0'
-        admin_prefix = '/api/admin_'
-        is_admin_path = request.path_info[:len(admin_prefix)] == admin_prefix
+        is_admin_path = request.path_info.startswith('/api/admin_')
 
         if is_admin_path and not is_admin:
             return JsonResponse({"code": 400, "message": "普通用户无权限访问管理员接口"})
