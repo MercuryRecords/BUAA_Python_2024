@@ -46,6 +46,8 @@ urlpatterns = [
     path('admin_add_sensitive_words_by_txt_file', views_sensitive_detection.admin_add_sensitive_words_by_txt_file),
     path('admin_delete_sensitive_word', views_sensitive_detection.admin_delete_sensitive_word),
     path('admin_clear_sensitive_word', views_sensitive_detection.admin_clear_sensitive_word),
+    path('admin_get_sensitive_word_num', views_sensitive_detection.admin_get_sensitive_word_num),
+    path('admin_get_sensitive_word_list', views_sensitive_detection.admin_get_sensitive_word_list),
 
     path('ocr', views_ocr.ocr_view),
 

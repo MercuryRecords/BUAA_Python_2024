@@ -3,8 +3,9 @@ from django.db import IntegrityError
 
 from .models import SensitiveWord
 from .errors import *
+from .views_problem import _cut_to_page
 
-from backend.middleware.sensitive_detection import setflag
+from ..backend.middleware.sensitive_detection import setflag
 
 def _add_sensitive_words_by_list(words):
     if not words:
@@ -68,3 +69,22 @@ def admin_clear_sensitive_word(request):
     SensitiveWord.objects.all().delete()
     setflag()
     return success("已清除所有敏感词")
+
+
+@require_http_methods(["POST"])
+def admin_get_sensitive_word_num(request):
+    return success_data("敏感词数量", SensitiveWord.objects.count())
+
+
+@require_http_methods(["POST"])
+def admin_get_sensitive_word_list(request):
+    words = SensitiveWord.objects.all()
+    to_search = request.POST.get('to_search')
+    if to_search:
+        words = words.filter(content__icontains=to_search)
+
+    words = _cut_to_page(request, words)
+    if isinstance(words, JsonResponse):
+        return words
+
+    return success_data("敏感词列表", words)
