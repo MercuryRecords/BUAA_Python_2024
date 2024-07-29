@@ -3,7 +3,7 @@ from django.db.models import F, Q
 
 from .models import User, Group, ProblemGroup, Problem, ProblemPermission, Tag, Record, TemporaryProblemGroup
 from .errors import *
-
+from .views_assessment import calc_single_problem_master_rate
 
 # 定义一个函数，用于获取问题组
 def _get_problem_group(request, permission):
@@ -524,6 +524,7 @@ def _problem_to_dict(user, problem):
         'user_count': user_record.count(),
         'all_right_count': all_right_record.count(),
         'all_count': all_record.count(),
+        'master_rate': calc_single_problem_master_rate(user_record),
     }
 
 

@@ -19,6 +19,7 @@ E_PAGE_OVERFLOW = JsonResponse({"code": 410, "message": "页码越界"})
 E_GROUP_NOT_FIND = JsonResponse({"code": 411, "message": "用户组不存在"})
 E_USER_NOT_IN_GROUP = JsonResponse({"code": 411, "message": "用户不在此用户组中"})
 E_PERMISSION_REPEAT = JsonResponse({"code": 412, "message": "分享已存在"})
+E_TAG_NOT_FIND = JsonResponse({"code": 413, "message": "标签不存在"})
 
 E_DECODE_FAILED = JsonResponse({"code": 420, "message": "文件解码失败，请上传UTF-8编码的文本文件"})
 E_WORD_LIST_EMPTY = JsonResponse({"code": 421, "message": "未传入任何敏感词"})

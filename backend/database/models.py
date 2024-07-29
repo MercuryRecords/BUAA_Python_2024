@@ -1,4 +1,5 @@
 import uuid
+import time
 
 from django.db import models
 from django.db.models import Q
@@ -120,6 +121,9 @@ class Record(models.Model):
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
     result = models.BooleanField(default=False)  # 是否正确
     created_at = models.DateTimeField(auto_now_add=True)
+
+    def get_unix_timestamp(self):
+        return int(time.mktime(self.created_at.timetuple())) + 28800
 
 
 class TemporaryProblemGroup(models.Model):

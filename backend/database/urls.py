@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views, views_problem, views_ocr, views_admin, views_record, views_avatar, views_sensitive_detection, \
-    views_comment
+    views_comment, views_assessment
 
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
@@ -80,4 +80,8 @@ urlpatterns = [
 
     path('comment_get_comments_from_problem', views_comment.comment_get_comments_from_problem, name='comment_get_comments_from_problem'),
     path('comment_add', views_comment.comment_add, name='comment_add'),
+
+    path('get_ability_trace', views_assessment.get_ability_trace),
+    path('get_advantaged_tags', views_assessment.get_advantaged_tags),
+    path('get_disadvantaged_tags', views_assessment.get_disadvantaged_tags),
 ]
