@@ -221,6 +221,29 @@ const formatDate = (dateString: string): string => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
+const formatRelativeDate = (dateString) => {
+  const now = new Date(); // 当前时间
+  const pastDate = new Date(dateString); // 后端获得的时间
+  const diffInSeconds = Math.floor((now - pastDate) / 1000); // 计算时间差，单位为秒
+
+  const units = [
+    {name: 'year', seconds: 60 * 60 * 24 * 365},
+    {name: 'month', seconds: 60 * 60 * 24 * 30}, // 简化的月份，实际月份天数不同
+    {name: 'day', seconds: 60 * 60 * 24},
+    {name: 'hour', seconds: 60 * 60},
+    {name: 'minute', seconds: 60},
+    {name: 'second', seconds: 1}
+  ];
+
+  for (const unit of units) {
+    const count = diffInSeconds / unit.seconds;
+    if (count >= 1) {
+      return `${Math.floor(count)} ${unit.name}${Math.floor(count) > 1 ? 's' : ''} ago`; // 返回相对时间
+    }
+  }
+
+  return 'just now'; // 如果时间差小于1秒，则显示 "just now"
+};
 const fetchProblems = async () => {
   getProblems('');
 }
@@ -334,15 +357,15 @@ onMounted(() => {
               </el-card>
 
               <el-table :data="problems" style="width: 100%">
-                <el-table-column label="最新一次错误时间">
+                <el-table-column label="最近错误时间" width="200">
                   <template #default="scope">
-                    {{ formatDate(scope.row.last_error_time) }}
+                    {{ formatRelativeDate(scope.row.last_error_time) }}
                   </template>
                 </el-table-column>
                 <el-table-column prop="id" label="题号" width="100"></el-table-column>
-                <el-table-column prop="problem_title" label="题目名称" width="100"></el-table-column>
+                <el-table-column prop="problem_title" label="题目名称" width="200"></el-table-column>
                 <el-table-column prop="creator" label="上传者" width="100"></el-table-column>
-                <el-table-column prop="problem_group_title" label="所属题单" width="180"></el-table-column>
+                <el-table-column prop="problem_group_title" label="所属题单" width="200"></el-table-column>
                 <el-table-column label="标签" width="200">
                   <template #default="scope">
                     <el-tag v-for="tag in scope.row.tags" :key="tag" size="small" style="margin-right: 5px;">
@@ -350,7 +373,7 @@ onMounted(() => {
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="accuracy" label="正确率" width="100">
+                <el-table-column prop="accuracy" label="正确率" width="200">
                   <template #default="scope">
                     <el-tag :type="getAccuracyColor(scope.row.accuracy)" size="small">
                       {{ (scope.row.accuracy * 100).toFixed(2) }}%

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // @ts-ignore
-import Navigator from "@/components/Base/Navigator.vue";
+import NavigatorM from "@/components/Base/NavigatorM.vue";
 import ProblemGroups from "@/components/Base/ProblemGroups.vue";
 </script>
 
@@ -14,7 +14,7 @@ import ProblemGroups from "@/components/Base/ProblemGroups.vue";
       <el-container>
         <el-aside width="200px">
           <!--            导航栏-->
-          <Navigator :username="$route.query.username"></Navigator> <!--挂上导航栏，点击即可跳转,现在的位置是home/username=?-->
+          <NavigatorM :username="$route.query.username"></NavigatorM> <!--挂上导航栏，点击即可跳转,现在的位置是home/username=?-->
         </el-aside>
 
         <el-container>

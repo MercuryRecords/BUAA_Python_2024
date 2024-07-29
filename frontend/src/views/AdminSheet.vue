@@ -1,33 +1,44 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import {ref, reactive, computed, onMounted} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
-import { useRoute } from 'vue-router'
+import {useRoute} from 'vue-router'
 import API from "@/plugins/axios";
+import NavigatorM from "@/components/Base/NavigatorM.vue";
 
 const route = useRoute()
 
 const searchForm = reactive({
   keyword: '',
   tags: [] as string[],
-  selectedTags: [] as string[]
+  selectedTags: [] as string[],
+  searchType: 'key',
 })
 
 interface data {
-  id: number,
-  problem_title: string,
-  creator: string,
-  problem_group_title: string,
-  tags: string[],
-  all_count: number,
-  all_right_count: number,
-  user_count: number,
-  user_right_count: number,
-  accuracy: number,
-  type: string,
-  content: string
+  id: number;
+  type: 'c' | 'b';
+  problem_title: string;
+  content: string;
+  ans_count: number;
+  field1: string;
+  field2: string;
+  field3: string;
+  field4: string;
+  field5: string;
+  field6: string;
+  field7: string;
+  tags: string[];
+  creator: string;
+  problem_group_id: number;
+  problem_group_title: string;
+  user_right_count: number;
+  user_count: number;
+  all_right_count: number;
+  all_count: number;
+  accuracy: number;
 }
 
 const allProblems = ref<data[]>([
@@ -38,11 +49,12 @@ const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
 const tagCategories = ref([
-  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
+  {name: '数学', tags: ['多项式', '矩阵', '行列式', '线性代数']},
   {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
   {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
   {name: '题目类型', tags: ['选择题', '填空题']},
 ])
+
 
 const filteredProblems = ref<data[]>([])
 
@@ -67,7 +79,23 @@ const onSearch = () => {
     return matchKeyword && matchTags
   })
   currentPage.value = 1
-  ElMessage.success(`找到 ${total.value} 个匹配的题目`)
+  ElMessage.success(`找到 ${filteredProblems.value.length} 个匹配的题目`)
+}
+
+function _onSearch() {
+  let search_username = ''
+  let search_user_group_name = ''
+  let search_keyword = ''
+
+  if (searchForm.searchType == 'key') {
+    search_username = searchForm.keyword;
+  } else if (searchForm.searchType == 'group') {
+    search_user_group_name = searchForm.keyword;
+  } else if (searchForm.searchType == 'user') {
+    search_keyword = searchForm.keyword;
+  }
+  getProblems(search_username, search_user_group_name, search_keyword);
+  onSearch();
 }
 
 const handleSizeChange = (val: number) => {
@@ -102,7 +130,7 @@ const jumpToQuestion = (problem: data) => {
     username: route.query.username,
     problem_ids: problemIds,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -120,23 +148,6 @@ const jumpToQuestion = (problem: data) => {
   )
 }
 
-const clearFilters = () => {
-  searchForm.keyword = ''
-  searchForm.tags = []
-  searchForm.selectedTags = []
-  onSearch()
-}
-
-const openTagDialog = () => {
-  tagDialogVisible.value = true
-}
-
-const confirmTagSelection = () => {
-  tagDialogVisible.value = false
-  searchForm.selectedTags = [...searchForm.tags]
-  onSearch()
-}
-
 const removeTag = (tag: string) => {
   searchForm.selectedTags = searchForm.selectedTags.filter(t => t !== tag)
   searchForm.tags = searchForm.tags.filter(t => t !== tag)
@@ -149,31 +160,32 @@ const getAccuracyColor = (accuracy: number) => {
   return 'warning'
 }
 
-function getProblems() {
+function getProblems(search_username: string, search_user_group_name: string, search_keyword: string) {
   API.post('/admin_get_problem_group_content', {
     username: route.query.username,
     problem_group_id: route.query.sheetId,
-    is_temporary:'n',
-    number_per_page: 10
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
+          allProblems.value = []
           for (let i = 0; i < response.data.data.length; i++) {
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
-            allProblems.value[i].accuracy = response.data.data[i].all_right_count / response.data.data[i].all_count
-            if (response.data.data[i].type == 'b') {
-              allProblems.value[i].tags.push("填空题");
-            } else {
-              allProblems.value[i].tags.push("选择题");
-            }
+            allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 : response.data.data[i].all_right_count / response.data.data[i].all_count
+            // if (response.data.data[i].type == 'b') {
+            //   allProblems.value[i].tags.push("填空题");
+            // } else {
+            //   allProblems.value[i].tags.push("选择题");
+            // }
             console.log(allProblems)
           }
-          onSearch()  // Perform initial search after fetching problems
+          onSearch();
         } else {
+          console.log("Mission failed")
           ElMessage.error(response.data.message);
+          allProblems.value = [];
         }
       }
   ).catch(
@@ -184,63 +196,113 @@ function getProblems() {
 }
 
 const fetchProblems = async () => {
-  getProblems();
+  getProblems('', '', '');
 }
 
-const userGroups: string[] = reactive([])
 
-const fetchGroups = async() => {
-  API.post('/group_get_groups', {
-    username: route.query.username,
-  }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-  }).then(
-      function (response) {
-        if (response.data.code === 200) {
-          for (let i = 0; i < response.data.groups.length; i++) {
-            userGroups.push(response.data.groups[i].name);
-          }
-        } else {
-          ElMessage.error(response.data.message);
-        }
-      }
-  ).catch(
-      function () {
-        console.log('error submit!')
-      }
-  )
-}
-
-const selectedGroup = ref('')
-
-const handleCommand = (command: any) => {
-  selectedGroup.value = command
-  if (command !== '') {
-    router.push({
-      name: 'QuestionBank4SpecificGroup',
-      query: {
-        username: route.query.username,
-        groupLabel: command,
-      }
-    })
-  } else {
-    // 无需处理
+function getPlaceholder() {
+  switch (searchForm.searchType) {
+    case 'key':
+      return '输入题目关键字';
+    case 'group':
+      return '输入用户组名称';
+    case 'user':
+      return '输入用户名称';
+    default:
+      return '请选择搜索方式';
   }
 }
 
-const handleAddProblem = () => {
-  router.push({
-    name: 'upload',
-    query: {
-      username: route.query.username,
-      sheetId: route.query.sheetId,
+const updateDialogVisible = ref(false)
+const currentProblem = ref<data | null>(null)
+const updateForm = reactive({
+  problem_title: '',
+  type: '',
+  content: '',
+  ans_count: 0,
+  answer: '',
+  field1: '',
+  field2: '',
+  field3: '',
+  field4: '',
+  field5: '',
+  field6: '',
+  field7: '',
+  tags: [] as string[]
+})
+
+// 打开更新对话框
+const openUpdateDialog = (problem: data) => {
+  currentProblem.value = problem
+  updateForm.problem_title = problem.problem_title
+  updateForm.type = problem.type
+  updateForm.content = problem.content
+  updateForm.ans_count = problem.ans_count
+  updateForm.field1 = problem.field1
+  updateForm.field2 = problem.field2
+  updateForm.field3 = problem.field3
+  updateForm.field4 = problem.field4
+  updateForm.field5 = problem.field5
+  updateForm.field6 = problem.field6
+  updateForm.field7 = problem.field7
+  updateForm.tags = [...problem.tags]
+  updateDialogVisible.value = true
+}
+
+// 提交更新
+const submitUpdate = () => {
+  if (!currentProblem.value) return
+  console.log(updateForm.tags)
+  API.post('/admin_problem_update', {
+    username: route.query.username,
+    problem_id: currentProblem.value.id,
+    ...updateForm
+  }, {
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+  }).then(response => {
+    if (response.data.code === 200) {
+      ElMessage.success('题目更新成功')
+      updateDialogVisible.value = false
+      fetchProblems() // 重新获取题目列表
+    } else {
+      ElMessage.error(response.data.message)
     }
+  }).catch(error => {
+    console.error('更新题目失败:', error)
+    ElMessage.error('更新题目失败，请稍后重试')
+  })
+}
+
+// 删除题目
+const deleteProblem = (problem: data) => {
+  ElMessageBox.confirm(`确定要删除题目 "${problem.problem_title}" 吗？`, '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    API.post('/api/admin_problem_delete', {
+      username: route.query.username,
+      problem_id: problem.id
+    }, {
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    }).then(response => {
+      if (response.data.code === 200) {
+        ElMessage.success('题目删除成功')
+        fetchProblems() // 重新获取题目列表
+      } else {
+        ElMessage.error(response.data.message)
+      }
+    }).catch(error => {
+      console.error('删除题目失败:', error)
+      ElMessage.error('删除题目失败，请稍后重试')
+    })
+  }).catch(() => {
+    // 取消删除操作
   })
 }
 
 onMounted(() => {
   fetchProblems();
-  fetchGroups();
 })
 </script>
 
@@ -252,7 +314,7 @@ onMounted(() => {
 
       <el-container>
         <el-aside width="200px">
-          <Navigator :username="$route.query.username"></Navigator>
+          <NavigatorM :username="$route.query.username"></NavigatorM>
         </el-aside>
 
         <el-container>
@@ -261,53 +323,24 @@ onMounted(() => {
               <el-card>
                 <el-form :inline="true" :model="searchForm" class="demo-form-inline">
                   <el-form-item>
-                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                              style="width: 310px"
-                              @keyup.enter="onSearch"></el-input>
+                    <el-select v-model="searchForm.searchType" placeholder="搜索方式" style="width: 180px">
+                      <el-option label="按题目关键字搜索" value="key"></el-option>
+                      <el-option label="按用户组搜索" value="group"></el-option>
+                      <el-option label="按用户搜索" value="user"></el-option>
+                    </el-select>
+                  </el-form-item>
+                  <el-form-item>
+                    <el-input
+                        v-model="searchForm.keyword"
+                        style="width: 250px"
+                        :placeholder="getPlaceholder()"
+                        @keyup.enter="onSearch"
+                    ></el-input>
                   </el-form-item>
                   <el-form-item>
                     <el-button @click="onSearch">搜索</el-button>
                   </el-form-item>
-                  <el-form-item>
-                    <el-button @click="openTagDialog">选择标签</el-button>
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
-                  </el-form-item>
-
-
-                  <el-form-item>
-                    <el-dropdown @command="handleCommand">
-                      <span class="el-dropdown-link">
-                        {{ selectedGroup || '选择用户组' }}
-                        <el-icon class="el-icon--right"></el-icon>
-                      </span>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item command="">全部用户组</el-dropdown-item>
-                          <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
-                            {{ group }}
-                          </el-dropdown-item>
-                        </el-dropdown-menu>
-                      </template>
-                    </el-dropdown>
-                  </el-form-item>
-                  <el-form-item style="float: right;">
-                    <el-button type="primary" @click="handleAddProblem">新增题目</el-button>
-                  </el-form-item>
                 </el-form>
-                <!-- 显示选中标签的区域 -->
-                <div v-if="searchForm.selectedTags.length > 0" style="margin-top: 10px;">
-                  <el-tag
-                      v-for="tag in searchForm.selectedTags"
-                      :key="tag"
-                      closable
-                      @close="removeTag(tag)"
-                      style="margin-right: 5px;"
-                  >
-                    {{ tag }}
-                  </el-tag>
-                </div>
               </el-card>
 
               <el-table :data="problems" style="width: 100%">
@@ -329,9 +362,10 @@ onMounted(() => {
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column label="操作" width="100">
+                <el-table-column label="操作" width="120">
                   <template #default="scope">
-                    <el-button type="text" size="small" @click="jumpToQuestion(scope.row)">解题</el-button>
+                    <el-button type="text" size="default" @click="openUpdateDialog(scope.row)">编辑</el-button>
+                    <el-button type="text" size="default" @click="deleteProblem(scope.row)">删除</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -352,20 +386,58 @@ onMounted(() => {
       </el-container>
     </el-container>
 
-    <!-- 标签选择对话框 -->
-    <el-dialog v-model="tagDialogVisible" title="选择标签" width="50%">
-      <el-tabs type="border-card">
-        <el-tab-pane v-for="category in tagCategories" :key="category.name" :label="category.name">
-          <el-checkbox-group v-model="searchForm.tags">
-            <el-checkbox v-for="tag in category.tags" :key="tag" :label="tag">{{ tag }}</el-checkbox>
-          </el-checkbox-group>
-        </el-tab-pane>
-      </el-tabs>
+    <el-dialog v-model="updateDialogVisible" title="更新题目" width="50%">
+      <el-form :model="updateForm" label-width="100px">
+        <el-form-item label="题目标题">
+          <el-input v-model="updateForm.problem_title"></el-input>
+        </el-form-item>
+        <el-form-item label="题目类型">
+          <el-tag :type="updateForm.type === 'c' ? 'success' : 'warning'">
+            {{ updateForm.type === 'c' ? '选择题' : '填空题' }}
+          </el-tag>
+        </el-form-item>
+        <el-form-item label="题目内容">
+          <el-input v-model="updateForm.content" type="textarea" :rows="4"></el-input>
+        </el-form-item>
+        <el-form-item label="答案数量">
+          <el-input-number v-model="updateForm.ans_count" :min="0"></el-input-number>
+        </el-form-item>
+
+        <!-- 选择题选项 -->
+        <template v-if="updateForm.type === 'c'">
+          <el-form-item label="选项A">
+            <el-input v-model="updateForm.field1"></el-input>
+          </el-form-item>
+          <el-form-item label="选项B">
+            <el-input v-model="updateForm.field2"></el-input>
+          </el-form-item>
+          <el-form-item label="选项C">
+            <el-input v-model="updateForm.field3"></el-input>
+          </el-form-item>
+          <el-form-item label="选项D">
+            <el-input v-model="updateForm.field4"></el-input>
+          </el-form-item>
+        </template>
+
+        <!-- 填空题答案 -->
+        <template v-else>
+          <el-form-item v-for="i in updateForm.ans_count" :key="i" :label="`答案${i}`">
+            <el-input v-model="updateForm[`field${i}` as keyof typeof updateForm]"></el-input>
+          </el-form-item>
+        </template>
+
+        <el-form-item label="标签">
+          <el-select v-model="updateForm.tags" multiple filterable allow-create>
+            <el-option v-for="tag in tagCategories.flatMap(c => c.tags)" :key="tag" :label="tag"
+                       :value="tag"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
       <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="tagDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="confirmTagSelection">确认</el-button>
-        </span>
+      <span class="dialog-footer">
+        <el-button @click="updateDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitUpdate">确认</el-button>
+      </span>
       </template>
     </el-dialog>
   </div>
@@ -468,5 +540,20 @@ onMounted(() => {
 :deep(.el-dropdown-menu__item.is-disabled) {
   color: #c0c4cc;
   cursor: not-allowed;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+:deep(.el-button--text) {
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+:deep(.el-button--text:first-child) {
+  margin-right: 8px;
 }
 </style>

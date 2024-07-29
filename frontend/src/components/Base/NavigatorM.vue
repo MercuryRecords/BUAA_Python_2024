@@ -21,6 +21,9 @@
           <v-list-item prepend-icon="mdi-account-multiple" title="群组管理" value="join"
                        :to="{name:'groups', query: {username: props.username}}">
           </v-list-item>
+          <v-list-item prepend-icon="mdi-bookmark-check" title="题单管理" value="bookmark"
+                       :to="{name:'problemGroups', query: {username: props.username}}">
+          </v-list-item>
           <v-list-item prepend-icon="mdi-folder" title="题库管理" value="join"
                        :to="{name:'questions', query: {username: props.username}}">
           </v-list-item>
@@ -37,5 +40,5 @@
 import {onMounted, onUnmounted} from "vue";
 
 const props = defineProps(['username']) //Navigator拿到一直传进来的username，之后的函数操作都要有
-onMounted(()=>console.log(props.username))
+onMounted(() => console.log(props.username))
 </script>
