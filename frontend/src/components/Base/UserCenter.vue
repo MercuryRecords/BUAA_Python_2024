@@ -142,10 +142,30 @@ function showPicture() {
 
 const handleLogout = () => {
   // 这里可以添加退出登录的逻辑，比如清除本地存储的用户信息、token等
-  localStorage.removeItem('token'); // 假设你使用 token 进行身份验证
-  console.log('退退退！')
-  // 使用 router 导航到登录页面
-  router.push('/login');
+  API.post('/user_logout',
+      {
+        username: data.username,
+      }, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}).then(
+      function (response) {
+        if (response.data.code === 200) {
+          console.log('退！')
+          ElMessage.success('退出成功！')
+          setTimeout(() => {
+            router.push('/login')
+          }, 1000); // 延迟1000毫秒（1秒）
+        } else {
+          console.log('Failed to logout:', response.data.message)
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error')
+      }
+  )
+  // localStorage.removeItem('token'); // 假设你使用 token 进行身份验证
+  // console.log('退退退！')
+  // // 使用 router 导航到登录页面
+  // router.push('/login');
 }
 </script>
 
