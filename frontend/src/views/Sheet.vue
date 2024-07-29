@@ -6,7 +6,7 @@ import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
 import { useRoute } from 'vue-router'
 import API from "@/plugins/axios";
-
+import { ArrowDown } from '@element-plus/icons-vue'
 const route = useRoute()
 
 const searchForm = reactive({
@@ -266,6 +266,26 @@ const handleAddProblem = () => {
   })
 }
 
+const handleSingleUpload = () => {
+  router.push({
+    name: 'upload',
+    query: {
+      username: route.query.username,
+      sheetId: route.query.sheetId,
+    }
+  })
+}
+
+const handleMultipleUpload = () => {
+  router.push({
+    name: 'multiple-upload',
+    query: {
+      username: route.query.username,
+      sheetId: route.query.sheetId,
+    }
+  })
+}
+
 onMounted(() => {
   fetchProblems();
   fetchGroups();
@@ -320,9 +340,17 @@ onMounted(() => {
                       </template>
                     </el-dropdown>
                   </el-form-item>
-                  <el-form-item style="float: right;">
-                    <el-button type="primary" @click="handleAddProblem">新增题目</el-button>
-                  </el-form-item>
+                  <el-dropdown>
+                    <el-button type="primary">
+                      新增题目<el-icon class="el-icon--right"><arrow-down /></el-icon>
+                    </el-button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item @click="handleSingleUpload">上传单道题目</el-dropdown-item>
+                        <el-dropdown-item @click="handleMultipleUpload">上传多道题目(只支持选择题)</el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
                 </el-form>
                 <!-- 显示选中标签的区域 -->
                 <div v-if="searchForm.selectedTags.length > 0" style="margin-top: 10px;">

@@ -35,7 +35,7 @@
         <el-form-item label="题目类型">
           <el-select v-model="problemForm.type" placeholder="请选择题目类型" @change="handleTypeChange">
             <el-option label="选择题" value="c"></el-option>
-            <el-option label="填空题" value="b"></el-option>
+<!--            <el-option label="填空题" value="b"></el-option>-->
           </el-select>
         </el-form-item>
         <el-form-item label="题目内容">
@@ -52,11 +52,11 @@
           </div>
         </el-form-item>
         <el-form-item
-            v-for="(answer, index) in problemForm.answers"
+            v-for="(_, index) in problemForm.answers"
             :key="index"
-            :label="problemForm.type === 'c' ? `选项${String.fromCharCode(65 + index)}` : `答案 ${index + 1}`"
+            :label="`选项${String.fromCharCode(65 + index)}`"
         >
-          <el-input v-model="problemForm.answers[index]"></el-input>
+          <el-input v-model="problemForm[`field${index + 1}`]"></el-input>
         </el-form-item>
         <el-form-item label="题目标签">
           <div class="tags-container">
@@ -89,7 +89,10 @@
           </template>
         </el-dialog>
         <el-form-item>
-          <el-button type="primary" @click="submitProblem">提交题目</el-button>
+          <el-form-item>
+            <el-button type="primary" @click="submitProblem">提交题目(结束本次上传并返回题单界面)</el-button>
+            <el-button type="success" @click="submitAndContinue">提交并继续(继续上传，不会返回)</el-button>
+          </el-form-item>
         </el-form-item>
       </el-form>
     </div>
@@ -97,10 +100,11 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive, nextTick} from 'vue'
+import {ref, reactive, nextTick, watch} from 'vue'
 import {ElMessage} from 'element-plus'
 import API from '@/plugins/axios'
 import router from "@/router";
+
 interface TreeNode {
   id: number
   label: string
@@ -134,6 +138,8 @@ const problemForm = reactive({
 })
 
 const ocrResult = ref('')
+const questions = ref([])
+const currentQuestionIndex = ref(0)
 const inputVisible = ref(false)
 const inputValue = ref('')
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -153,12 +159,39 @@ const customUpload = async (options: any) => {
       }
     })
     console.log(response.data.code)
+    console.log(response.data)
     ocrResult.value = response.data.text
+    questions.value = response.data.questions || []
+    if (questions.value.length > 0) {
+      fillProblemForm(questions.value[0])
+    }
     ElMessage.success('文件上传成功，OCR识别结果已更新')
   } catch (error) {
     console.error('上传失败:', error)
     ElMessage.error('文件上传失败，请重试')
   }
+}
+
+const fillProblemForm = (question: any) => {
+  problemForm.content = question.content
+  problemForm.ans_count = question.choices.length
+  problemForm.answers = question.choices.map((choice: string) => {
+    const parts = choice.split(' ')
+    return parts.slice(1).join(' ') // 去掉选项标识符（如 "A)"），只保留内容
+  })
+  problemForm.type = 'c' // 假设所有题目都是选择题
+  // 填充选项 A, B, C, D
+  const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+  question.choices.forEach((choice: string, index: number) => {
+    const fieldName = `field${index + 1}` as keyof typeof problemForm
+    problemForm[fieldName] = choice
+    console.log(fieldName)
+    console.log(problemForm[fieldName])
+  })
+}
+
+const submitAndContinue = () => {
+  submitProblem(false)
 }
 
 const handleNodeClick = (data: TreeNode) => {
@@ -217,7 +250,7 @@ const decreaseAnswerCount = () => {
   }
 }
 
-const submitProblem = () => {
+const submitProblem = (shouldReturn = true) => {
   // 准备提交数据
 
   const submitData: Record<string, any> = {
@@ -238,9 +271,9 @@ const submitProblem = () => {
     tags: problemForm.tags
   }
   // 根据ans_count设置答案
-  for (let i = 0; i < problemForm.ans_count; i++) {
-    submitData[`field${i + 1}`] = problemForm.answers[i]
-  }
+  // for (let i = 0; i < problemForm.ans_count; i++) {
+  //   submitData[`field${i + 1}`] = problemForm.answers[i]
+  // }
   console.log(submitData)
   // 发送请求到后端
   API.post('/problem_create', submitData,
@@ -253,6 +286,18 @@ const submitProblem = () => {
         if (response.data.code === 200) {
           console.log('提交成功:', response.data)
           ElMessage.success('题目提交成功')
+          if (shouldReturn) {
+            setTimeout(() => {
+              router.back()
+            }, 1000)
+          } else {
+            currentQuestionIndex.value++
+            if (currentQuestionIndex.value < questions.value.length) {
+              fillProblemForm(questions.value[currentQuestionIndex.value])
+            } else {
+              ElMessage.info('所有题目已提交完毕')
+            }
+          }
         } else {
           console.log('提交失败:', response.data)
           ElMessage.error('题目提交失败')
@@ -262,10 +307,14 @@ const submitProblem = () => {
         console.error('提交失败:', error)
         ElMessage.error('题目提交失败，请重试')
       })
-  setTimeout(() => {
-    router.go(-1)
-  }, 1000); // 延迟1000毫秒（1秒）
 }
+
+// 监听 ocrResult 的变化
+watch(ocrResult, (newValue) => {
+  if (newValue && questions.value.length > 0) {
+    fillProblemForm(questions.value[0])
+  }
+})
 </script>
 
 <style scoped>
