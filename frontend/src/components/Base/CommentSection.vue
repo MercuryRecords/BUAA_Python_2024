@@ -10,6 +10,31 @@
           <span class="timestamp">{{ formatDate(comment.timestamp) }}</span>
         </div>
         <div class="comment-content">{{ comment.content }}</div>
+
+        <!-- 回复按钮 -->
+        <el-button @click="showReplyForm(comment.id)" size="small">回复</el-button>
+
+        <!-- 回复表单 -->
+        <div v-if="replyingTo === comment.id" class="reply-form">
+          <el-input
+              v-model="replyContent"
+              type="textarea"
+              :rows="2"
+              placeholder="请输入您的回复"
+          />
+          <el-button @click="submitReply(comment.id)" type="primary" size="small">提交回复</el-button>
+        </div>
+
+        <!-- 子评论列表 -->
+        <div v-if="comment.replies && comment.replies.length > 0" class="replies">
+          <div v-for="reply in comment.replies" :key="reply.id" class="reply">
+            <div class="reply-header">
+              <span class="username">{{ reply.username }}</span>
+              <span class="timestamp">{{ formatDate(reply.timestamp) }}</span>
+            </div>
+            <div class="reply-content">{{ reply.content }}</div>
+          </div>
+        </div>
       </div>
     </div>
     <div v-else>暂无评论</div>
@@ -31,141 +56,131 @@
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import API from "@/plugins/axios";
+import { useRoute } from "vue-router";
 
-const props = defineProps({
-  questionId: {
-    type: Number,
-    required: true
-  },
-  username: {
-    type: String,
-    required: true
-  }
-});
-
+const data = defineProps(['username', 'questionId'])
 const comments = ref([]);
 const newComment = ref('');
+const replyingTo = ref(null);
+const replyContent = ref('');
 
 const getComments = async () => {
   try {
-    const response = await API.get(`/comments/${props.questionId}`);
-    comments.value = response.data.comments;
+    const response = await API.post('/comment_get_comments_from_id', {
+      username: data.username,
+      problem_id: data.questionId,
+      is_sub_comment: 'n'
+    }, {
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    });
+    if (response.data.code === 200) {
+      console.log(response.data)
+      comments.value = response.data.data;
+    } else {
+      ElMessage.error(response.data.message);
+    }
   } catch (error) {
     ElMessage.error('获取评论失败');
   }
 };
 
 const submitComment = async () => {
+  console.log(newComment.value, data.username,data.questionId);
   if (!newComment.value.trim()) {
     ElMessage.warning('评论内容不能为空');
     return;
   }
-
   try {
-    await API.post('/comments', {
-      questionId: props.questionId,
-      username: props.username,
-      content: newComment.value
+    const response = await API.post('/comment_add', {
+      username: data.username,
+      parent_id: data.questionId,
+      content: newComment.value,
+      is_sub_comment: 'n'
+    }, {
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     });
-    ElMessage.success('评论发表成功');
-    newComment.value = '';
-    await getComments(); // 重新加载评论
+    if (response.data.code === 200) {
+      console.log(newComment.value);
+      ElMessage.success('评论发表成功');
+      newComment.value = '';
+      await getComments(); // 重新加载评论
+    } else {
+      ElMessage.error(response.data.message);
+    }
   } catch (error) {
     ElMessage.error('评论发表失败');
   }
 };
 
+const showReplyForm = (commentId) => {
+  replyingTo.value = commentId;
+  replyContent.value = '';
+};
+
+const submitReply = async (commentId) => {
+  if (!replyContent.value.trim()) {
+    ElMessage.warning('回复内容不能为空');
+    return;
+  }
+  try {
+    const response = await API.post('/comment_add', {
+      username: route.query.username,
+      parent_id: commentId,
+      content: replyContent.value,
+      is_sub_comment: 'y'
+    }, {
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    });
+    if (response.data.code === 200) {
+      ElMessage.success('回复发表成功');
+      replyContent.value = '';
+      replyingTo.value = null;
+      await getComments(); // 重新加载评论
+    } else {
+      ElMessage.error(response.data.message);
+    }
+  } catch (error) {
+    ElMessage.error('回复发表失败');
+  }
+};
+
 const formatDate = (timestamp) => {
-  // 实现日期格式化逻辑
   return new Date(timestamp).toLocaleString();
 };
 
 onMounted(() => {
-  console.log("I'm Done")
   getComments();
 });
 </script>
 
 <style scoped>
-.comment-section {
+/* 保留原有的样式 */
 
+.reply-form {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
-.comment-list {
-  margin-bottom: 20px;
+.replies {
+  margin-top: 10px;
+  margin-left: 20px;
 }
 
-.comment {
-  background-color: #ffffff;
-  padding: 15px;
-  margin-bottom: 15px;
+.reply {
+  background-color: #f9f9f9;
+  padding: 10px;
+  margin-bottom: 10px;
   border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.comment-header {
+.reply-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.reply-content {
   font-size: 14px;
 }
-
-.username {
-  font-weight: bold;
-  color: #333;
-}
-
-.timestamp {
-  color: #888;
-}
-
-.comment-content {
-  font-size: 16px;
-}
-
-.add-comment {
-  margin-top: 20px;
-}
-
-.add-comment .el-button {
-  margin-top: 10px;
-}
-
-.result-and-comments {
-  display: flex;
-  gap: 20px;
-  margin-top: 30px;
-}
-
-.result-container {
-  flex: 1;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.comments-container {
-  flex: 1;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  padding: 20px;
-}
-
-.progress-bar {
-  background-color: #e0e0e0;
-  border-radius: 5px;
-  height: 10px;
-  margin: 10px 0;
-}
-
-.progress {
-  background-color: #1890ff;
-  height: 100%;
-  border-radius: 5px;
-}
-
-h3 {
-  margin-bottom: 10px;
-}
-
 </style>
