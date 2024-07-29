@@ -24,10 +24,12 @@
           <v-list-item prepend-icon="mdi-folder" title="题库管理" value="join"
                        :to="{name:'questions', query: {username: props.username}}">
           </v-list-item>
+          <v-list-item prepend-icon="mdi-folder" title="敏感词管理" value="join"
+                       :to="{name:'sensitive_words', query: {username: props.username}}">
+          </v-list-item>
 
         </v-list>
       </v-navigation-drawer>
-
       <v-main style=""></v-main>
     </v-layout>
   </v-card>

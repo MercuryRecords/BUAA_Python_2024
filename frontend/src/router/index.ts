@@ -107,6 +107,12 @@ const router = createRouter({ //创建路由器
             path: '/wrongQuestionSet',
             name: 'wrongQuestionSet',
             component: () => import('@/views/WrongQuestionSet.vue')
+        },
+        {
+            // 管理员敏感词管理
+            path: '/sensitive',
+            name: 'sensitive_words',
+            component: () => import('@/views/SensitiveWord.vue')
         }
     ]
 })
