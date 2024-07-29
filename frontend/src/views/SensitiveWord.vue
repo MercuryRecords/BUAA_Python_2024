@@ -1,73 +1,89 @@
 <template>
-  <div class="sensitive-words-manager">
-    <NavigatorM></NavigatorM> <!--导航栏补充-->
-    <el-card class="box-card">
-      <template #header>
-        <div class="card-header">
-          <span>敏感词管理</span>
-        </div>
-      </template>
+  <div class="common-layout">
+    <el-container>
+      <el-header>
+      </el-header>
 
-      <el-tabs type="border-card">
-        <el-tab-pane label="添加敏感词">
-          <el-input
-              v-model="wordsToAdd"
-              type="textarea"
-              :rows="5"
-              placeholder="请输入敏感词,每行一个"
-          />
-          <el-button type="primary" @click="addSensitiveWords" class="mt-3">添加敏感词</el-button>
+      <el-container>
+        <el-aside width="200px">
+          <NavigatorM :username="$route.query.username"></NavigatorM>
+        </el-aside>
 
-          <el-divider content-position="center">或</el-divider>
+        <el-container>
+          <el-main class="shifted-content">
+            <div class="sensitive-words-manager">
+              <el-card class="box-card">
+                <template #header>
+                  <div class="card-header">
+                    <span>敏感词管理</span>
+                  </div>
+                </template>
 
-          <el-upload
-              class="upload-demo"
-              action="#"
-              :on-change="handleFileUpload"
-              :auto-upload="false"
-              accept=".txt"
-          >
-            <template #trigger>
-              <el-button type="primary">选择文件</el-button>
-            </template>
-            <el-button class="ml-3" type="success" @click="addSensitiveWordsFromFile">
-              上传并添加
-            </el-button>
-          </el-upload>
-        </el-tab-pane>
+                <el-tabs type="border-card">
+                  <el-tab-pane label="添加敏感词">
+                    <el-input
+                        v-model="wordsToAdd"
+                        type="textarea"
+                        :rows="5"
+                        placeholder="请输入敏感词,每行一个"
+                    />
+                    <el-button type="primary" @click="addSensitiveWords" class="mt-3">添加敏感词</el-button>
 
-        <el-tab-pane label="管理敏感词">
-          <el-input
-              v-model="wordToDelete"
-              placeholder="请输入要删除的敏感词"
-              class="mb-3"
-          >
-            <template #append>
-              <el-button type="danger" @click="deleteSensitiveWord(wordToDelete.value)">删除敏感词</el-button>
-            </template>
-          </el-input>
+                    <el-divider content-position="center">或</el-divider>
 
-          <el-table :data="sensitiveWords" style="width: 100%" max-height="400">
-            <el-table-column prop="word" label="敏感词"/>
-            <el-table-column fixed="right" label="操作" width="120">
-              <template #default="scope">
-                <el-button
-                    type="danger"
-                    size="small"
-                    @click="deleteSensitiveWord(scope.row.word)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-tab-pane>
+                    <el-upload
+                        class="upload-demo"
+                        action="#"
+                        :on-change="handleFileUpload"
+                        :auto-upload="false"
+                        accept=".txt"
+                    >
+                      <template #trigger>
+                        <el-button type="primary">选择文件</el-button>
+                      </template>
+                      <el-button class="ml-3" type="success" @click="addSensitiveWordsFromFile">
+                        上传并添加
+                      </el-button>
+                    </el-upload>
+                  </el-tab-pane>
 
-        <el-tab-pane label="清除所有敏感词">
-          <el-button type="danger" @click="clearAllSensitiveWords">清除所有敏感词</el-button>
-        </el-tab-pane>
-      </el-tabs>
-    </el-card>
+                  <el-tab-pane label="管理敏感词">
+                    <el-input
+                        v-model="wordToDelete"
+                        placeholder="请输入要删除的敏感词"
+                        class="mb-3"
+                    >
+                      <template #append>
+                        <el-button type="danger" @click="deleteSensitiveWord(wordToDelete.value)">删除敏感词</el-button>
+                      </template>
+                    </el-input>
+
+                    <el-table :data="sensitiveWords" style="width: 100%" max-height="400">
+                      <el-table-column prop="word" label="敏感词"/>
+                      <el-table-column fixed="right" label="操作" width="120">
+                        <template #default="scope">
+                          <el-button
+                              type="danger"
+                              size="small"
+                              @click="deleteSensitiveWord(scope.row.word)"
+                          >
+                            删除
+                          </el-button>
+                        </template>
+                      </el-table-column>
+                    </el-table>
+                  </el-tab-pane>
+
+                  <el-tab-pane label="清除所有敏感词">
+                    <el-button type="danger" @click="clearAllSensitiveWords">清除所有敏感词</el-button>
+                  </el-tab-pane>
+                </el-tabs>
+              </el-card>
+            </div>
+          </el-main>
+        </el-container>
+      </el-container>
+    </el-container>
   </div>
 </template>
 
