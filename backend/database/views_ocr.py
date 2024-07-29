@@ -1,4 +1,3 @@
-import json
 import os
 import shutil
 import fitz
@@ -11,6 +10,9 @@ import jieba
 from keybert import KeyBERT
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+from .models import Tag
 
 
 # KeyBERT 初始化
@@ -20,9 +22,8 @@ def tokenize_zh(text):
 
 
 vectorizer = CountVectorizer(tokenizer=tokenize_zh)
-model = SentenceTransformer(f'{settings.BASE_DIR}/model_path/paraphrase-multilingual-MiniLM-L12-v2')
-kw_model = KeyBERT(model=model)
-
+st_model = SentenceTransformer(f'{settings.BASE_DIR}/model_path/paraphrase-multilingual-MiniLM-L12-v2')
+kw_model = KeyBERT(model=st_model)
 
 # PaddleOCR 初始化
 img_formats = ["jpeg", "jpg", "png", "tiff", "tif", "bmp"]
@@ -57,7 +58,7 @@ def text_split_to_questions(text):
 
         if not is_choice(text[i]) and not processing_content:
             tmp = content + " ".join(choices)
-            keywords = kw_model.extract_keywords(tmp, vectorizer=vectorizer)
+            keywords = _extract_keywords(tmp)
             ques = {"content": content,
                     "choices": choices,
                     "keywords": [keyword[0] for keyword in keywords]}
@@ -86,6 +87,21 @@ def pdf_to_images(pdf_path, output_folder):
         page = doc[page_num]
         pix = page.get_pixmap()
         pix.save(f"{output_folder}/page_{page_num}.png")
+
+
+def _extract_keywords(text):
+    text_embedding = st_model.encode(text, convert_to_tensor=True).reshape(1, -1)
+    keywords = kw_model.extract_keywords(text, vectorizer=vectorizer)
+    print(keywords)
+
+    tags = [f"{tag.name}{tag.description}" for tag in Tag.objects.all()]
+    tags_embeddings = st_model.encode(tags, convert_to_tensor=True)
+
+    similarities = cosine_similarity(text_embedding, tags_embeddings)
+    tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities)]
+    print(tag_similarity_list)
+
+    return keywords + tag_similarity_list
 
 
 @require_http_methods(["POST"])
@@ -135,5 +151,6 @@ def ocr_view(request):
 @require_http_methods(["POST"])
 def extract_keywords(request):
     text = request.POST.get('text')
-    keywords = kw_model.extract_keywords(text, vectorizer=vectorizer)
-    return JsonResponse({"code": 200, 'keywords': keywords})
+    keywords = _extract_keywords(text)
+
+    return JsonResponse({"code": 200, 'keywords': [keyword[0] for keyword in keywords]})

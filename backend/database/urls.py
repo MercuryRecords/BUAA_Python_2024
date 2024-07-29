@@ -52,6 +52,7 @@ urlpatterns = [
     path('admin_get_sensitive_word_list', views_sensitive_detection.admin_get_sensitive_word_list),
 
     path('ocr', views_ocr.ocr_view),
+    path('extract_keywords', views_ocr.extract_keywords),
 
     path('problem_group_create', views_problem.problem_group_create),
     path('problem_group_update', views_problem.problem_group_update),
