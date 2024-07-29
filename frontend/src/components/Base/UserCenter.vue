@@ -43,9 +43,11 @@
 </template>
 
 <script setup lang="ts">
-import {ref, reactive} from 'vue'
+import {ref, reactive, onMounted} from 'vue'
 import {ElMessage} from 'element-plus'
+import API from "@/plugins/axios";
 
+const data = defineProps(['username'])
 const userInfo = reactive({
   name: 'July',
   avatar: 'path_to_avatar_image',
@@ -80,10 +82,13 @@ const labelMap = {
   currentCourse: '当前课程'
 }
 
-const handleAvatarChange = (file) => {
+const handleAvatarChange = (file: any) => {
   const isJPG = file.raw.type === 'image/jpeg'
   const isPNG = file.raw.type === 'image/png'
   const isLt2M = file.raw.size / 1024 / 1024 < 2
+  const formData = new FormData()
+  formData.append('username', data.username)
+  formData.append('file', file)
 
   if (!isJPG && !isPNG) {
     ElMessage.error('头像图片只能是 JPG 或 PNG 格式!')
@@ -102,6 +107,41 @@ const handleAvatarChange = (file) => {
     userInfo.avatar = e.target.result
     ElMessage.success('头像更新成功')
   }
+  API.post('/edit_avatar', formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      }).then(
+      function (response) {
+        console.log("successfully edited!")
+      }
+  ).catch(
+      function () {
+        console.log('error')
+      }
+  )
+}
+
+onMounted(async () => showPicture());
+
+function showPicture() {
+  API.post('/get_avatar',
+      {
+        username: data.username
+      }, {
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+      }).then(
+          function(response){
+            console.log('successfully show!')
+            console.log(response)
+            userInfo.avatar = response.data.avatar
+          }
+  ).catch(
+      function(){
+        console.log('error')
+      }
+  )
 }
 </script>
 

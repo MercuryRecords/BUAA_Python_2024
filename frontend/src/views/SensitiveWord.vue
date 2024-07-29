@@ -1,5 +1,6 @@
 <template>
   <div class="sensitive-words-manager">
+    <NavigatorM></NavigatorM> <!--导航栏补充-->
     <el-card class="box-card">
       <template #header>
         <div class="card-header">
@@ -76,6 +77,7 @@ import {ElMessage, ElMessageBox} from 'element-plus'
 import axios from 'axios'
 import API from "@/plugins/axios";
 import {useRoute} from "vue-router";
+import NavigatorM from "@/components/Base/NavigatorM.vue";
 
 const route = useRoute()
 const wordsToAdd = ref('')
