@@ -109,14 +109,10 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/WrongQuestionSet.vue')
         },
         {
-            path: '/problemGroups',
-            name: 'problemGroups',
-            component: () => import('@/views/ProblemGroupsManagement.vue')
-        },
-        {
-            path: '/adminSheet',
-            name: 'adminSheet',
-            component: () => import('@/views/AdminSheet.vue')
+            // 管理员敏感词管理
+            path: '/sensitive',
+            name: 'sensitive_words',
+            component: () => import('@/views/SensitiveWord.vue')
         }
     ]
 })
