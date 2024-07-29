@@ -78,6 +78,6 @@ urlpatterns = [
     path('edit_avatar', views_avatar.edit_avatar, name='edit_avatar'),
     path('get_avatar', views_avatar.get_avatar, name='get_avatar'),
 
-    path('comment_get_comments_from_problem', views_comment.comment_get_comments_from_problem, name='comment_get_comments_from_problem'),
+    path('comment_get_comments_from_id', views_comment.comment_get_comments_from_id, name='comment_get_comments_from_id'),
     path('comment_add', views_comment.comment_add, name='comment_add'),
 ]
