@@ -47,7 +47,7 @@
           </el-input>
 
           <el-table :data="sensitiveWords" style="width: 100%" max-height="400">
-            <el-table-column prop="word" label="敏感词" />
+            <el-table-column prop="word" label="敏感词"/>
             <el-table-column fixed="right" label="操作" width="120">
               <template #default="scope">
                 <el-button
@@ -71,8 +71,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import {ref, onMounted} from 'vue'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import axios from 'axios'
 import API from "@/plugins/axios";
 import {useRoute} from "vue-router";
@@ -89,12 +89,12 @@ const fetchSensitiveWords = async () => {
   API.post('/admin_get_sensitive_word_list', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
           console.log(response.data.data);
-          sensitiveWords.value = response.data.data.map(word => ({ word }))
+          sensitiveWords.value = response.data.data.map(word => ({word}))
         } else {
           ElMessage.error(response.data.message);
         }
@@ -113,7 +113,7 @@ const addSensitiveWords = async () => {
     username: route.query.username,
     words: wordsToAdd.value.split('\n').filter(word => word.trim())
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       async function (response) {
         if (response.data.code === 200) {
@@ -147,7 +147,7 @@ const addSensitiveWordsFromFile = async () => {
   formData.append('file', file.value)
 
   API.post('/admin_add_sensitive_words_by_txt_file', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
+    headers: {'Content-Type': 'multipart/form-data'}
   }).then(
       async function (response) {
         if (response.data.code === 200) {
@@ -171,7 +171,7 @@ const deleteSensitiveWord = async (word = wordToDelete.value) => {
     username: route.query.username,
     word: word
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       async function (response) {
         if (response.data.code === 200) {
@@ -200,7 +200,7 @@ const clearAllSensitiveWords = async () => {
     API.post('/admin_clear_sensitive_word', {
       username: route.query.username,
     }, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     }).then(
         async function (response) {
           if (response.data.code === 200) {
@@ -228,17 +228,21 @@ const clearAllSensitiveWords = async () => {
   max-width: 800px;
   margin: 20px auto;
 }
+
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .mt-3 {
   margin-top: 12px;
 }
+
 .mb-3 {
   margin-bottom: 12px;
 }
+
 .ml-3 {
   margin-left: 12px;
 }

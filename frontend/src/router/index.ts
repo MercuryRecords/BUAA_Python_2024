@@ -113,6 +113,16 @@ const router = createRouter({ //创建路由器
             path: '/sensitive',
             name: 'sensitive_words',
             component: () => import('@/views/SensitiveWord.vue')
+        },
+        {
+            path: '/problemGroups',
+            name: 'problemGroups',
+            component: () => import('@/views/ProblemGroupsManagement.vue')
+        },
+        {
+            path: '/adminSheet',
+            name: 'adminSheet',
+            component: () => import('@/views/AdminSheet.vue')
         }
     ]
 })
