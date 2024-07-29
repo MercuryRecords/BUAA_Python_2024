@@ -7,6 +7,7 @@ from .views_problem import _cut_to_page
 
 from backend.middleware.sensitive_detection import setflag
 
+
 def _add_sensitive_words_by_list(words):
     if not words:
         return E_WORD_LIST_EMPTY
@@ -21,10 +22,11 @@ def _add_sensitive_words_by_list(words):
             success_cnt += 1
         except IntegrityError:
             error_flag = E_WORD_REPEAT
-    
+
     if not success_cnt:
         return error_flag
     return success_cnt
+
 
 @require_http_methods(["POST"])
 def admin_add_sensitive_words_by_list(request):
@@ -32,7 +34,7 @@ def admin_add_sensitive_words_by_list(request):
     success_cnt = _add_sensitive_words_by_list(words)
     if isinstance(success_cnt, JsonResponse):
         return success_cnt
-    
+
     setflag()
     return success_data("已添加" + str(success_cnt) + "个敏感词", success_cnt)
 
@@ -44,11 +46,11 @@ def admin_add_sensitive_words_by_txt_file(request):
         words = [line.decode(encoding='UTF-8').rstrip('\r\n') for line in txt_file.readlines()]
     except UnicodeDecodeError:
         return E_DECODE_FAILED
-    
+
     success_cnt = _add_sensitive_words_by_list(words)
     if isinstance(success_cnt, JsonResponse):
         return success_cnt
-    
+
     setflag()
     return success_data("已添加" + str(success_cnt) + "个敏感词", success_cnt)
 
@@ -60,9 +62,10 @@ def admin_delete_sensitive_word(request):
     if not check:
         return E_WORD_NOT_FIND
     check.delete()
-    
+
     setflag()
     return success("成功删除敏感词")
+
 
 @require_http_methods(["POST"])
 def admin_clear_sensitive_word(request):
@@ -87,4 +90,4 @@ def admin_get_sensitive_word_list(request):
     if isinstance(words, JsonResponse):
         return words
 
-    return success_data("敏感词列表", words)
+    return success_data("敏感词列表", [word.content for word in words])
