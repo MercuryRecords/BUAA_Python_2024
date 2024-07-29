@@ -4,6 +4,7 @@ from django.db.models import F, Q
 from .models import User, Group, ProblemGroup, Problem, ProblemPermission, Tag, Record, TemporaryProblemGroup
 from .errors import *
 
+
 # 定义一个函数，用于获取问题组
 def _get_problem_group(request, permission):
     # 获取请求中的用户名和问题组id
@@ -352,7 +353,7 @@ def _cut_to_page(request, query_set):
 
     if page < 0 or page * number_per_page >= query_set.count():
         return E_PAGE_OVERFLOW
-    
+
     # python 切片不会引发索引越界错误
     query_set = query_set[number_per_page * page:number_per_page * (page + 1)]
 
@@ -375,6 +376,7 @@ def _problem_groups_to_list(problem_groups):
     for problem_group in problem_groups:
         result.append(_problem_group_to_dict(problem_group))
     return result
+
 
 def _get_problem_groups_with_permissions__gte(user, group_name, permission):
     if group_name == '_created_by_self':
@@ -406,6 +408,7 @@ def _get_problem_groups_with_permissions__gte(user, group_name, permission):
 
     return problem_groups
 
+
 @require_http_methods(["POST"])
 def get_problem_groups_num(request):
     # 获取请求中的username
@@ -428,12 +431,12 @@ def get_problem_groups_num(request):
         problem_groups = _get_problem_groups_with_permissions__gte(user, '', 1)
         if isinstance(problem_groups, JsonResponse):
             return problem_groups
-        
+
         exclude_ids = problem_groups.values_list('id', flat=True)
         problem_groups = _get_problem_groups_with_permissions__gte(user, filter_group, 0)
         if isinstance(problem_groups, JsonResponse):
             return problem_groups
-        
+
         problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
     return success_data("问题组数量查询成功", problem_groups.count())
@@ -451,7 +454,7 @@ def get_problem_groups(request):
 
     mode = int(request.POST.get('mode'))
     filter_group = request.POST.get('filter_group')
- 
+
     if mode:
         problem_groups = _get_problem_groups_with_permissions__gte(user, filter_group, 1)
         if isinstance(problem_groups, JsonResponse):
@@ -460,14 +463,13 @@ def get_problem_groups(request):
         problem_groups = _get_problem_groups_with_permissions__gte(user, '', 1)
         if isinstance(problem_groups, JsonResponse):
             return problem_groups
-        
+
         exclude_ids = problem_groups.values_list('id', flat=True)
         problem_groups = _get_problem_groups_with_permissions__gte(user, filter_group, 0)
         if isinstance(problem_groups, JsonResponse):
             return problem_groups
-        
-        problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
+        problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
     # 如果问题组不存在，返回错误信息
     if not problem_groups:

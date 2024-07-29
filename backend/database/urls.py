@@ -1,5 +1,6 @@
 from django.urls import path
-from . import views, views_problem, views_ocr, views_admin, views_record, views_avatar, views_sensitive_detection
+from . import views, views_problem, views_ocr, views_admin, views_record, views_avatar, views_sensitive_detection, \
+    views_comment
 
 urlpatterns = [
     path('user_register', views.user_register, name='user_register'),
@@ -76,4 +77,7 @@ urlpatterns = [
 
     path('edit_avatar', views_avatar.edit_avatar, name='edit_avatar'),
     path('get_avatar', views_avatar.get_avatar, name='get_avatar'),
+
+    path('comment_get_comments_from_problem', views_comment.comment_get_comments_from_problem, name='comment_get_comments_from_problem'),
+    path('comment_add', views_comment.comment_add, name='comment_add'),
 ]

@@ -127,7 +127,7 @@ def ocr_view(request):
 
         os.remove(uploaded_file_path)
 
-        return JsonResponse({"code": 200, 'text': text})
+        return JsonResponse({"code": 200, 'text': text, 'questions': text_split_to_questions(text)})
 
     return JsonResponse({"code": 400, 'text': '上传文件格式错误'})
 

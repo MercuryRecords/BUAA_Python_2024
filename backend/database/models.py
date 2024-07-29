@@ -126,5 +126,14 @@ class TemporaryProblemGroup(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     problems = models.ManyToManyField(Problem)
 
+
 class SensitiveWord(models.Model):
     content = models.CharField(max_length=50, unique=True)
+
+
+class Comment(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+    content = models.TextField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
