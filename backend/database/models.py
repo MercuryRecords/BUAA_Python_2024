@@ -133,7 +133,7 @@ class SensitiveWord(models.Model):
 
 class Comment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+    is_sub_comment = models.BooleanField(default=False)
+    parent_id = models.IntegerField(default=0)
     content = models.TextField(max_length=200)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -16,33 +16,27 @@ def _comment_to_dict(comment: Comment):
 
 
 @require_http_methods(["POST"])
-def comment_get_comments_from_problem(request):
-    problem_id = request.POST.get("problem_id")
-    # 找到对应 problem
-    problem = Problem.objects.get(id=problem_id)
-    if not problem:
-        return E_PROBLEM_NOT_FIND
+def comment_get_comments_from_id(request):
+    parent_id = request.POST.get("parent_id")
+    is_sub_comment = request.POST.get("is_sub_comment") == "y"
+    print(f"parent_id: {parent_id}, is_sub_comment: {is_sub_comment}")
+    comments = Comment.objects.filter(parent_id=parent_id, is_sub_comment=is_sub_comment)
 
-    comments = Comment.objects.filter(problem=problem)
     return success_data("获取评论成功", [_comment_to_dict(comment) for comment in comments])
 
 
 @require_http_methods(["POST"])
 def comment_add(request):
-    problem_id = request.POST.get("problem_id")
-    problem = Problem.objects.get(id=problem_id)
-    if not problem:
-        return E_PROBLEM_NOT_FIND
 
     username = request.POST.get("username")
     user = User.objects.get(username=username)
     if not user:
         return E_USER_NOT_FIND
 
-    comment_id_to_reply = request.POST.get("comment_id_to_reply")
-    parent = Comment.objects.get(id=comment_id_to_reply) if comment_id_to_reply else None
-
+    parent_id = request.POST.get("parent_id")
+    is_sub_comment = request.POST.get("is_sub_comment") == "y"
     content = request.POST.get("content")
-    Comment.objects.create(problem=problem, user=user, content=content, parent=parent)
+
+    Comment.objects.create(user=user, parent_id=parent_id, content=content, is_sub_comment=is_sub_comment)
 
     return success("评论成功")
