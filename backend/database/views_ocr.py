@@ -57,8 +57,8 @@ def text_split_to_questions(text):
             continue
 
         if not is_choice(text[i]) and not processing_content:
-            tmp = content + " ".join(choices)
-            keywords = _extract_keywords(tmp)
+            # tmp = content + " ".join(choices)
+            # keywords = _extract_keywords(tmp)
             ques = {"content": content,
                     "choices": choices}
 
