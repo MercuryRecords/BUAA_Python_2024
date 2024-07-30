@@ -391,7 +391,7 @@ onMounted(() => {
 <style scoped>
 .shifted-content {
   margin-left: 80px;
-  margin-right: 80px;
+  margin-right: 225px;
 }
 
 .problem-list {

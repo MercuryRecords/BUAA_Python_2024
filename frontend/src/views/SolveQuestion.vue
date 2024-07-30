@@ -100,11 +100,12 @@
         <el-menu
             :default-active="currentIndex.toString()"
             @select="handleSelect"
+            class="question-menu"
         >
-          <el-menu-item v-for="(question, index) in problems" :key="index" :index="index.toString()">
-            <span class="question-item">
-              <span class="question-title">{{ question.problem_title }}</span>
-            </span>
+          <el-menu-item v-for="(question, index) in problems" :key="index" :index="index.toString()" class="question-menu-item">
+          <span class="question-item">
+            <span class="question-title">{{ question.problem_title }}</span>
+          </span>
           </el-menu-item>
         </el-menu>
       </el-scrollbar>
@@ -349,9 +350,9 @@ h2, h3 {
 }
 
 .question-title {
-  font-size: 20px;
+  font-size: 15px;
   font-weight: bold;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   color: #333;
 }
 
@@ -523,6 +524,53 @@ h2, h3 {
   margin-left: 10px;
   font-size: 14px;
   color: #666;
+}
+
+.question-menu {
+  padding: 10px;
+  background-color: transparent;
+  border-right: none;
+}
+
+.question-menu-item {
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.question-menu-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.question-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+}
+
+.question-title {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
+/* 覆盖 Element Plus 的默认样式 */
+.el-menu-item {
+  height: auto;
+  line-height: 1.5;
+  padding: 0;
+}
+
+.el-menu-item.is-active {
+  background-color: #e6f7ff;
+}
+
+.el-menu-item:hover {
+  background-color: #f5f5f5;
 }
 
 </style>

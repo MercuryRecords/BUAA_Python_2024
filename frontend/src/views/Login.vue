@@ -43,7 +43,7 @@
         <el-form-item class="login-options">
           <el-radio-group v-model="ruleForm.mode">
             <el-radio :label="0">管理员</el-radio>
-            <el-radio :label="1">用户</el-radio>
+            <el-radio :label="1" style="margin-left: 70px">用户</el-radio>
           </el-radio-group>
         </el-form-item>
         <div class="register-link">

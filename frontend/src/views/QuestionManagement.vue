@@ -283,7 +283,7 @@ const deleteProblem = (problem: data) => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    API.post('/api/admin_problem_delete', {
+    API.post('/admin_problem_delete', {
       username: route.query.username,
       problem_id: problem.id
     }, {
