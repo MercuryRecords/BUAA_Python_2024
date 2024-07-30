@@ -30,3 +30,9 @@ class Authentication(MiddlewareMixin):
 
         if not is_admin_path and is_admin:
             return JsonResponse({"code": 400, "message": "管理员用户不应访问普通用户接口"})
+
+
+    # def process_response(self, request, response):
+    #     if isinstance(response, JsonResponse):
+    #         print(response.content)
+    #     return response
