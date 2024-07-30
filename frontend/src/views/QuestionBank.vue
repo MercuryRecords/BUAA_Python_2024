@@ -37,33 +37,38 @@ const allProblems = ref<data[]>([
 const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
-const user_tags = ref([])
-const tagCategories = ref([
-  {name: '所有标签', tags: user_tags.value},
-  {name: '题目类型', tags: ['选择题', '填空题']},
-])
+
 
 const filteredProblems = ref<data[]>([])
-const getUserTags = () => {
-  API.post('/get_user_tags', {
-    username: route.query.username,
-  }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-  }).then(
-      function (response) {
-        if (response.data.code === 200) {
-          // 创建成功
-          console.log("Get the tags", response.data.data);
-          user_tags.value = response.data.data;
-        } else {
-          ElMessage.error(response.data.message);
-        }
-      }
-  ).catch(
-      function () {
-        console.log('error submit!')
-      }
-  )
+const user_tags = ref<string[]>([])
+const tagCategories = ref<{ name: string; tags: string[] }[]>([])
+
+async function getUserTags() {
+  try {
+    const response = await API.post('/get_user_tags', {
+      username: route.query.username,
+    }, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+
+    if (response.data.code === 200) {
+      user_tags.value = response.data.data.filter((tag: string) =>
+          !["选择题", "选择", "填空题", "填空"].includes(tag)
+      )
+
+      tagCategories.value = [
+        { name: '所有标签', tags: user_tags.value },
+        { name: '题目类型', tags: ['选择题', '填空题'] },
+      ]
+
+      console.log("Get the tags", user_tags.value)
+    } else {
+      ElMessage.error(response.data.message)
+    }
+  } catch (error) {
+    console.error('Error fetching user tags:', error)
+    ElMessage.error('获取标签失败')
+  }
 }
 
 const problems = computed(() => {
@@ -279,10 +284,10 @@ const handleCommand = (command: any) => {
   }
 }
 
-onMounted(() => {
-  fetchProblems();
-  fetchGroups();
-  getUserTags();
+onMounted(async () => {
+  await getUserTags()
+  await fetchProblems()
+  await fetchGroups()
 })
 </script>
 
