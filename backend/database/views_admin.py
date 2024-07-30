@@ -391,7 +391,7 @@ def admin_problem_update(request):
 
     problem = problem[0]
     title = request.POST.get('title')
-    title = title if title else problem.title
+    title = title[:30] if title else problem.title
     type = request.POST.get('type')
     type = type if type else problem.type
     content = request.POST.get('content')
