@@ -185,6 +185,11 @@ const addSensitiveWordsFromFile = async () => {
 }
 
 const deleteSensitiveWord = async (word = wordToDelete.value) => {
+  await ElMessageBox.confirm('确定要删除这个关键词吗？', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  });
   API.post('/admin_delete_sensitive_word', {
     username: route.query.username,
     word: word

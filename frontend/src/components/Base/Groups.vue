@@ -6,6 +6,7 @@
           placeholder="搜索群组"
           @input="handleSearch"
           clearable
+          style="width: 70%;"
       >
         <template #prefix>
           <el-icon><Search /></el-icon>
@@ -104,7 +105,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { ElMessage, type FormInstance } from 'element-plus'
+import {ElMessage, ElMessageBox, type FormInstance} from 'element-plus'
 import { Search } from '@element-plus/icons-vue'
 import API from "@/plugins/axios"
 
@@ -182,6 +183,11 @@ const showMemberManagement = (group: Group) => {
 }
 
 const deleteGroup = async (groupName: string) => {
+  await ElMessageBox.confirm('确定要删除这个群组吗？', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  });
   API.post('/admin_delete_group', {
     username: data.username,
     group_name: groupName
