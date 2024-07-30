@@ -248,14 +248,14 @@ const searchProblems = () => {
         <div class="filter-info">
           <span>共计 {{ totalProblems }} 个题单</span>
           <!-- 新增：搜索框和搜索按钮 -->
-          <div class="search-container">
+          <div class="search-container" style="margin-top: 5px">
             <el-input
                 v-model="searchKeyword"
                 placeholder="搜索编号、名称或创建者"
                 class="search-input"
                 style="width: 200px;"
             />
-            <el-button type="primary" @click="searchProblems">
+            <el-button type="primary" @click="searchProblems" style="margin-left: 10px">
               <el-icon>
                 <Search/>
               </el-icon>

@@ -384,20 +384,6 @@ onMounted(async () => {
 
 
                   <el-form-item>
-                    <el-dropdown @command="handleCommand">
-                      <span class="el-dropdown-link">
-                        {{ selectedGroup || '选择用户组' }}
-                        <el-icon class="el-icon--right"></el-icon>
-                      </span>
-                      <template #dropdown>
-                        <el-dropdown-menu>
-                          <el-dropdown-item command="">全部用户组</el-dropdown-item>
-                          <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
-                            {{ group }}
-                          </el-dropdown-item>
-                        </el-dropdown-menu>
-                      </template>
-                    </el-dropdown>
                     <el-form-item>
                       <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
                                 style="width: 310px; margin-left: 80px"

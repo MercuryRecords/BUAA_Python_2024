@@ -330,7 +330,6 @@ const deleteProblem = (problem: data) => {
 
 onMounted(async() => {
   await fetchProblems();
-  await getUserTags();
 })
 </script>
 

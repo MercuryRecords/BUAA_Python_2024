@@ -308,10 +308,6 @@ onMounted(async () => {
                   <el-form-item>
                     <el-button @click="openTagDialog">选择标签</el-button>
                   </el-form-item>
-                  <el-form-item>
-                    <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
-                  </el-form-item>
-
 
                   <el-dropdown @command="handleCommand">
                     <span class="el-dropdown-link">
@@ -328,6 +324,11 @@ onMounted(async () => {
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
+
+                  <el-form-item>
+                    <el-button type="primary" @click="clearFilters" style="margin-left: 20px">清除所有筛选条件</el-button>
+                  </el-form-item>
+
                   <el-form-item>
                     <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
                               style="width: 310px; margin-left: 60px"
