@@ -146,9 +146,11 @@ const jumpToQuestion = (problem: data) => {
 }
 
 const clearFilters = () => {
-  searchForm.keyword = ''
-  searchForm.tags = []
-  searchForm.selectedTags = []
+  searchForm.keyword = '';
+  searchForm.tags = [];
+  searchForm.selectedTags = [];
+  getProblems('');
+  selectedGroup.value = '';
   onSearch()
 }
 
@@ -271,16 +273,12 @@ const selectedGroup = ref('')
 
 const handleCommand = (command: any) => {
   selectedGroup.value = command
-  if (command !== '') {
-    if (command === '公开分享') {
-      getProblems('_shared_to_all');
-      // window.location.reload();
-    }
-    else {
-      console.log(command,666666666666666666666666666666)
-      getProblems(command as string);
-      // window.location.reload();
-    }
+  if (command === '公开分享') {
+    getProblems('_shared_to_all');
+    // window.location.reload();
+  }
+  else {
+    getProblems(command as string);
   }
 }
 
@@ -322,6 +320,7 @@ onMounted(async () => {
                     </span>
                     <template #dropdown>
                       <el-dropdown-menu>
+                        <el-dropdown-item command="">我可见的所有</el-dropdown-item>
                         <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
                         <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
                           {{ group }}
