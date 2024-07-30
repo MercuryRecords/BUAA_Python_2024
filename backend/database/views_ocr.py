@@ -92,16 +92,17 @@ def pdf_to_images(pdf_path, output_folder):
 def _extract_keywords(text):
     text_embedding = st_model.encode(text, convert_to_tensor=True).reshape(1, -1)
     keywords = kw_model.extract_keywords(text, vectorizer=vectorizer)
+
+    tags = [tag.name for tag in Tag.objects.all()]
+    if tags:
+        tags_embeddings = st_model.encode(tags, convert_to_tensor=True)
+
+        similarities = cosine_similarity(text_embedding, tags_embeddings)
+        tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities)]
+        keywords += tag_similarity_list
+
     print(keywords)
-
-    tags = [f"{tag.name}{tag.description}" for tag in Tag.objects.all()]
-    tags_embeddings = st_model.encode(tags, convert_to_tensor=True)
-
-    similarities = cosine_similarity(text_embedding, tags_embeddings)
-    tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities)]
-    print(tag_similarity_list)
-
-    return keywords + tag_similarity_list
+    return keywords
 
 
 @require_http_methods(["POST"])
