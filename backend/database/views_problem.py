@@ -1,9 +1,10 @@
 from django.views.decorators.http import require_http_methods
-from django.db.models import F, Q
+from django.db.models import F, Q, QuerySet
 
 from .models import User, Group, ProblemGroup, Problem, ProblemPermission, Tag, Record, TemporaryProblemGroup
 from .errors import *
 from .views_assessment import calc_single_problem_master_rate
+
 
 # 定义一个函数，用于获取问题组
 def _get_problem_group(request, permission):
@@ -745,8 +746,30 @@ def problem_check(request):
     })
     return success_data("判题成功", data)
 
-# @require_http_methods(["POST"])
+
+@require_http_methods(["POST"])
+# 获取用户有权限的所有标签
+def get_user_tags(request):
+    username = request.POST.get("username")
+    user = User.objects.filter(username=username)
+    if not user:
+        return E_USER_NOT_FIND
+    user = user[0]
+
+    # 获取用户有权限的所有问题
+    problems = _get_problems_with_permissions(username, "")
+    if isinstance(problems, JsonResponse):
+        return problems
+
+    # 获取问题中的所有标签
+    tags = QuerySet()
+    for problem in problems:
+        tags.union(problem.tags.all())
+
+    return success_data("获取用户有权限的所有标签成功", [tag.name for tag in tags.distinct()])
+
 # # 高级搜索问题
+
 # def problem_search_advanced(request):
 #     username = request.POST.get("username")
 #     problems = _get_problems_with_permissions(username)
