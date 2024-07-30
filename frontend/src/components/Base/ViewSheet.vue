@@ -244,12 +244,6 @@ const searchProblems = () => {
           <el-tabs v-model="activeTab">
             <el-tab-pane label="练习题单" name="practice"></el-tab-pane>
           </el-tabs>
-          <el-button type="primary" @click="openCreateDialog">
-            <el-icon>
-              <CirclePlusFilled/>
-            </el-icon>
-            <span>新建题单</span>
-          </el-button>
         </div>
         <div class="filter-info">
           <span>共计 {{ totalProblems }} 个题单</span>

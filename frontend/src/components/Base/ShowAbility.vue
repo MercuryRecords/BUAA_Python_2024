@@ -17,7 +17,7 @@
       </p>
     </div>
     <div class="ability-section">
-      <h2>{{props.username}}的{{ filterTag }}能力值</h2>
+      <h2>{{ props.username }}的{{ filterTag }}能力值</h2>
       <div class="chart-header">
         <div class="filter-container">
           <label for="filterTag">标签筛选器：{{ filterTag }}</label>
@@ -119,6 +119,19 @@ const fetchAvatar = async () => {
 
 const fetchData = async (tag = '') => {
   try {
+    switch (timeUnit.value) {
+      case 'minute':
+      case '': // 默认情况
+        duringInterval.value = 60; // 1分钟
+        break;
+      case 'hour':
+        duringInterval.value = 3600; // 1小时
+        break;
+      case 'day':
+        duringInterval.value = 86400; // 1天
+        break;
+    }
+
     const response = await API.post('/get_ability_trace', {
       username: props.username,
       during_interval: duringInterval.value,
