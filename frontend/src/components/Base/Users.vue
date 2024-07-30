@@ -1,70 +1,3 @@
-<template>
-  <div class="user-management">
-    <div class="table-container">
-      <div class="table-header">
-        <h2>用户列表</h2>
-      </div>
-      <div class="table-wrapper">
-        <el-button type="primary" @click="showAddUserDialog" class="add-user-button">新增用户</el-button>
-      <el-table :data="displayedUsers" style="width: 80%">
-        <el-table-column label="序号" width="80">
-          <template #default="scope">
-            {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="username" label="用户名" width="400" />
-        <el-table-column label="详细信息" width="140">
-          <template #default="scope">
-            <el-button type="" @click="showUserDetails(scope.row)">
-              详细信息
-            </el-button>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="140">
-          <template #default="scope">
-            <el-button type="danger" @click="deleteUser(scope.row.username)">
-              删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-        </div>
-    </div>
-
-    <el-pagination
-        v-model:current-page="currentPage"
-        :page-size="pageSize"
-        :total="totalUsers"
-        @current-change="handlePageChange"
-        layout="prev, pager, next"
-        class="pagination"
-    />
-
-    <el-dialog v-model="userDetailsVisible" title="用户详细信息">
-      <p><strong>用户名：</strong>{{ selectedUser.username }}</p>
-      <p><strong>密码：</strong>{{ selectedUser.password }}</p>
-      <p><strong>所属群组：</strong>{{ selectedUser.groups?.join(', ') }}</p>
-    </el-dialog>
-
-    <el-dialog v-model="addUserDialogVisible" title="新增用户">
-      <el-form :model="newUser" :rules="rules" ref="addUserForm" label-width="80px">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="newUser.username"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="newUser.password" type="password"></el-input>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="cancelAddUser">取消</el-button>
-          <el-button type="primary" @click="addUser">确认</el-button>
-        </span>
-      </template>
-    </el-dialog>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import {ElMessage, type FormInstance} from 'element-plus'
@@ -210,18 +143,90 @@ onMounted(() => {
 })
 </script>
 
+<template>
+  <div class="user-management">
+    <el-card class="table-container">
+      <template #header>
+        <div class="table-header">
+          <h2>用户管理</h2>
+          <el-button type="primary" @click="showAddUserDialog" class="add-user-button">
+            新增用户
+          </el-button>
+        </div>
+      </template>
+
+      <el-table :data="displayedUsers" style="width: 100%">
+        <el-table-column label="序号" width="80" align="center">
+          <template #default="scope">
+            {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="username" label="用户名" />
+        <el-table-column label="操作" width="240" align="center">
+          <template #default="scope">
+            <el-button @click="showUserDetails(scope.row)">
+              详细信息
+            </el-button>
+            <el-popconfirm
+                title="确定要删除该用户吗？"
+                @confirm="deleteUser(scope.row.username)"
+            >
+              <template #reference>
+                <el-button type="danger">
+                  删除
+                </el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-pagination
+          v-model:current-page="currentPage"
+          :page-size="pageSize"
+          :total="totalUsers"
+          @current-change="handlePageChange"
+          layout="prev, pager, next"
+          class="pagination"
+      />
+    </el-card>
+
+    <el-dialog v-model="userDetailsVisible" title="用户详细信息" width="30%">
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="用户名">{{ selectedUser.username }}</el-descriptions-item>
+        <el-descriptions-item label="密码">{{ selectedUser.password }}</el-descriptions-item>
+        <el-descriptions-item label="所属群组">{{ selectedUser.groups?.join(', ') || '无' }}</el-descriptions-item>
+      </el-descriptions>
+    </el-dialog>
+
+    <el-dialog v-model="addUserDialogVisible" title="新增用户" width="30%">
+      <el-form :model="newUser" :rules="rules" ref="addUserForm" label-width="80px">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="newUser.username"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="newUser.password" type="password" show-password></el-input>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="cancelAddUser">取消</el-button>
+          <el-button type="primary" @click="addUser">确认</el-button>
+        </span>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
 <style scoped>
 .user-management {
   padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
   font-size: 16px;
 }
 
 .table-container {
-  width: 90%;
-  max-width: 1000px;
   margin-bottom: 20px;
 }
 
@@ -234,40 +239,70 @@ onMounted(() => {
 
 .pagination {
   margin-top: 20px;
-  margin-right: 300px;
+  display: flex;
+  justify-content: center;
+}
+
+:deep(.el-card__header) {
+  padding: 15px 20px;
 }
 
 :deep(.el-table) {
-  font-size: 14px;
+  margin-top: 20px;
+  font-size: 16px;
 }
 
 :deep(.el-button) {
-  font-size: 14px;
-  padding: 8px 15px;
-  width: auto;
-  min-width: 90px;
+  font-size: 16px;
+  padding: 12px 20px;
 }
 
 :deep(.el-dialog__body) {
+  padding: 30px 20px;
   font-size: 16px;
+}
+
+:deep(.el-descriptions) {
+  margin: 20px 0;
+}
+
+:deep(.el-descriptions__label) {
+  font-weight: bold;
+}
+
+:deep(.el-pagination) {
+  font-size: 16px;
+}
+
+.add-user-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 :deep(.el-dialog__title) {
   font-size: 20px;
 }
 
-:deep(.el-pagination) {
-  font-size: 14px;
+:deep(.el-form-item__label) {
+  font-size: 16px;
 }
 
-.table-wrapper {
-  position: relative;
+:deep(.el-input__inner) {
+  font-size: 16px;
 }
 
-.add-user-button {
-  position: absolute;
-  top: -40px;
-  right: 0;
-  z-index: 1;
+.user-management {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  font-size: 16px;
+}
+
+.table-container {
+  width: 100%;
+  max-width: 1200px;
 }
 </style>

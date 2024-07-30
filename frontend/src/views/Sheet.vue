@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import {ref, reactive, computed, onMounted} from 'vue'
-import {ElMessage} from 'element-plus'
+import {ElMessage, ElMessageBox} from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
@@ -287,7 +287,12 @@ const handleMultipleUpload = () => {
   })
 }
 
-const handleDelete = (problem: data) => {
+const handleDelete = async (problem: data) => {
+  await ElMessageBox.confirm('确定要删除这个题目吗？', '警告', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  });
   API.post('/problem_delete', {
     username: route.query.username,
     problem_id: problem.id
@@ -344,14 +349,7 @@ onMounted(() => {
             <div class="problem-list">
               <el-card>
                 <el-form :inline="true" :model="searchForm" class="demo-form-inline">
-                  <el-form-item>
-                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                              style="width: 310px"
-                              @keyup.enter="onSearch"></el-input>
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button @click="onSearch">搜索</el-button>
-                  </el-form-item>
+
                   <el-form-item>
                     <el-button @click="openTagDialog">选择标签</el-button>
                   </el-form-item>
@@ -375,7 +373,16 @@ onMounted(() => {
                         </el-dropdown-menu>
                       </template>
                     </el-dropdown>
+                    <el-form-item>
+                      <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
+                                style="width: 310px; margin-left: 80px"
+                                @keyup.enter="onSearch"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                      <el-button @click="onSearch">搜索</el-button>
+                    </el-form-item>
                   </el-form-item>
+
                   <el-dropdown>
                     <el-button type="primary">
                       新增题目
