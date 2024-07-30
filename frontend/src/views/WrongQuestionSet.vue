@@ -356,7 +356,7 @@ onMounted(() => {
                 </div>
               </el-card>
 
-              <el-table :data="problems" style="width: 100%">
+              <el-table :data="problems" width="1200">
                 <el-table-column label="最近错误时间" width="200">
                   <template #default="scope">
                     {{ formatRelativeDate(scope.row.last_error_time) }}
