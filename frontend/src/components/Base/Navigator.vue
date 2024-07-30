@@ -154,7 +154,8 @@
               <v-list-item prepend-icon="mdi-star" title="我收藏的" value="starred"></v-list-item>
             </v-list>
           </v-list-item>
-          <v-list-item prepend-icon="mdi-star" title="Starred" value="starred"></v-list-item>
+          <v-list-item prepend-icon="mdi-medal" title="我的能力" value="medal"
+                       :to="{name:'abilityShowed' ,query: {username: props.username}}"></v-list-item>
           <v-list-item prepend-icon="mdi-account-cog" title="个人中心" value="account-cog"
                        :to="{name:'userCenters' ,query: {username: props.username}}"></v-list-item>
         </v-list>

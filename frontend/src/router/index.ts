@@ -134,6 +134,11 @@ const router = createRouter({ //创建路由器
             name: 'questionUpdate',
             component: () => import('@/views/QuestionUpdate.vue')
         },
+        {
+            path: '/abilityShowed',
+            name: 'abilityShowed',
+            component: () => import('@/views/AbilityShowed.vue')
+        }
     ]
 })
 
