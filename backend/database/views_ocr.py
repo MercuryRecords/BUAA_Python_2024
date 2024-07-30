@@ -57,11 +57,10 @@ def text_split_to_questions(text):
             continue
 
         if not is_choice(text[i]) and not processing_content:
-            tmp = content + " ".join(choices)
-            keywords = _extract_keywords(tmp)
+            # tmp = content + " ".join(choices)
+            # keywords = _extract_keywords(tmp)
             ques = {"content": content,
-                    "choices": choices,
-                    "keywords": [keyword[0] for keyword in keywords]}
+                    "choices": choices}
 
             content = ""
             choices = []
@@ -95,12 +94,15 @@ def _extract_keywords(text):
 
     tags = [tag.name for tag in Tag.objects.all()]
     if tags:
+        # print(tags)
         tags_embeddings = st_model.encode(tags, convert_to_tensor=True)
 
         similarities = cosine_similarity(text_embedding, tags_embeddings)
-        tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities)]
+        # print(similarities)
+        tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities.tolist()[0])]
         keywords += tag_similarity_list
 
+    keywords = [keyword for keyword in keywords if keyword[1] > 0.4]
     print(keywords)
     return keywords
 
