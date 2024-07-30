@@ -49,13 +49,45 @@ def _calc_ability(dict):
         ability += difficulty * value[0] / base # value[0] / base 是题目掌握度
     return ability
 
+# @require_http_methods(["POST"])
+# def get_ability_trace(request):
+#     user = User.objects.get(username=request.POST.get('username'))
+#     during_interval = int(request.POST.get('during_interval'))
+#     during_num = int(request.POST.get('during_num'))
+#     filter_tag = request.POST.get('filter_tag')
+#     current_time = (int(time.time()) + 28800) // during_interval # 28800为8个小时的秒数
+
+#     if filter_tag:
+#         tag = Tag.objects.filter(name=filter_tag)
+#         if not tag:
+#             return E_TAG_NOT_FIND
+#         problems = tag[0].problems.all()
+#         problems = problems.exclude(creator=user)
+#     else:
+#         problems = Problem.objects.exclude(creator=user)
+    
+#     records = Record.objects.filter(user=user, problem__in=problems).order_by('-created_at')
+#     # 伟大的列表套字典套列表
+#     datas = [{} for _ in range(during_num)]
+#     for record in records:
+#         record_time = (record.get_unix_timestamp() + 28800) // during_interval
+#         update_limit = min(current_time - record_time + 1, during_num)
+#         for i in range(0, update_limit):
+#             _update_dict(datas[i], record.problem.id, record.result)
+    
+#     result = []
+#     for data in datas:
+#         result.append(_calc_ability(data))
+
+#     return success_data("能力值获取成功", result[::-1])
+
 @require_http_methods(["POST"])
 def get_ability_trace(request):
     user = User.objects.get(username=request.POST.get('username'))
     during_interval = int(request.POST.get('during_interval'))
     during_num = int(request.POST.get('during_num'))
     filter_tag = request.POST.get('filter_tag')
-    current_time = (int(time.time()) + 28800) // during_interval # 28800为8个小时的秒数
+    current_time = int(time.time())
 
     if filter_tag:
         tag = Tag.objects.filter(name=filter_tag)
@@ -70,8 +102,8 @@ def get_ability_trace(request):
     # 伟大的列表套字典套列表
     datas = [{} for _ in range(during_num)]
     for record in records:
-        record_time = (record.get_unix_timestamp() + 28800) // during_interval
-        update_limit = min(current_time - record_time + 1, during_num)
+        record_time = (current_time - record.get_unix_timestamp()) // during_interval
+        update_limit = min(record_time + 1, during_num)
         for i in range(0, update_limit):
             _update_dict(datas[i], record.problem.id, record.result)
     
