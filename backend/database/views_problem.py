@@ -762,11 +762,13 @@ def get_user_tags(request):
         return problems
 
     # 获取问题中的所有标签
-    tags = QuerySet()
+    tags = set()
     for problem in problems:
-        tags.union(problem.tags.all())
+        for tag in problem.tags.all():
+            tags.add(tag.name)
 
-    return success_data("获取用户有权限的所有标签成功", [tag.name for tag in tags.distinct()])
+    print(tags)
+    return success_data("获取用户有权限的所有标签成功", list(tags))
 
 # # 高级搜索问题
 
