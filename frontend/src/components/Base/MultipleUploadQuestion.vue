@@ -77,6 +77,21 @@
               </el-button>
             </div>
           </el-form-item>
+          <el-dialog v-model="inputVisible" title="添加新标签" width="30%">
+            <el-input
+                v-model="inputValue"
+                ref="inputRef"
+                placeholder="请输入标签名称"
+            ></el-input>
+            <template #footer>
+              <span class="dialog-footer">
+                <el-button type="primary" @click="handleInputConfirm">
+                  确定
+                </el-button>
+                <el-button @click="inputVisible = false">取消</el-button>
+              </span>
+            </template>
+          </el-dialog>
           <el-form-item>
             <div class="submit-buttons">
               <el-button type="primary" @click="submitProblem">提交题目(结束本次上传并返回题单界面)</el-button>
@@ -163,6 +178,7 @@ const customUpload = async (options: any) => {
 }
 
 const fillProblemForm = (question: any) => {
+  problemForm.tags.length = 0
   problemForm.content = question.content
   problemForm.ans_count = question.choices.length
   problemForm.answers = question.choices.map((choice: string) => {
