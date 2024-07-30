@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import {ref, reactive, onMounted, computed, type ComputedRef, toRef, watch, type Ref} from 'vue';
+import { ref, reactive, onMounted, computed, type FormInstance, type FormRules } from 'vue';
 import {
   ElButton,
   ElDialog,
@@ -9,21 +9,22 @@ import {
   ElMessage,
   ElTable,
   ElTableColumn,
-  type FormInstance,
-  type FormRules
+  ElCard,
+  ElPopconfirm,
+  ElTag,
+  ElTooltip
 } from 'element-plus';
 import 'element-plus/dist/index.css';
 import API from '@/plugins/axios';
 import Navigator from "@/components/Base/Navigator.vue";
 
-const data = defineProps(['username']) //从Navigator拿到的username
+const data = defineProps(['username'])
 const dialogVisible = ref(false);
 const form = reactive({
   name: '',
   description: ''
 });
 let editVisible = ref(false);
-let deleteVisible = ref(false);
 let descriptionDialogVisible = ref(false);
 let edit_loading = ref(true);
 let currentGroupName = ref('');
@@ -59,7 +60,6 @@ const filterTableData = computed(() =>
     )
 );
 
-// 表单验证规则
 const ruleFormRef = ref<FormInstance>();
 const validateName = (rule: any, value: any, callback: any) => {
   if (value === '') {
@@ -226,10 +226,57 @@ function openDescriptionDialog(group: Group) {
 </script>
 
 <template>
-  <div>
-    <el-button type="primary" @click="handleClick">新建群组</el-button>
+  <div class="group-management">
+    <el-card class="group-card">
+      <template #header>
+        <div class="card-header">
+          <span>我创建的群组</span>
+          <el-button type="primary" @click="handleClick">新建群组</el-button>
+        </div>
+      </template>
 
-    <el-dialog title="新建" v-model="dialogVisible" width="30%">
+      <el-input
+          v-model="search"
+          placeholder="搜索群组"
+          prefix-icon="el-icon-search"
+          clearable
+          class="search-input"
+      />
+
+      <el-table :data="filterTableData" style="width: 100%" class="group-table">
+        <el-table-column label="群组名称" prop="name" />
+        <el-table-column label="创建者" prop="creator">
+          <template #default="{ row }">
+            <el-tag size="small" :type="row.creator === data.username ? 'success' : 'info'">
+              {{ row.creator }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="人数" prop="number" width="80" />
+        <el-table-column label="操作" align="center" width="280">
+          <template #default="{ row }">
+            <el-button type="" size="small" @click="openDescriptionDialog(row)">
+              详情
+            </el-button>
+            <el-button type="" size="small" @click="handleEdit(row)">
+              管理群组
+            </el-button>
+            <el-popconfirm
+                title="确定要删除该群组吗？"
+                @confirm="handleDelete(row)"
+            >
+              <template #reference>
+                <el-button type="danger" size="small">
+                  删除群组
+                </el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <el-dialog v-model="dialogVisible" title="新建群组" width="30%">
       <el-form :model="form" label-width="80px" :rules="rules" ref="ruleFormRef">
         <el-form-item label="群组名称" prop="name">
           <el-input v-model="form.name" autocomplete="off" clearable />
@@ -237,10 +284,9 @@ function openDescriptionDialog(group: Group) {
         <el-form-item label="描述">
           <el-input
               v-model="form.description"
-              style="width: 240px"
-              autosize
               type="textarea"
-              placeholder="Please input"
+              :rows="3"
+              placeholder="请输入群组描述"
           />
         </el-form-item>
       </el-form>
@@ -251,38 +297,15 @@ function openDescriptionDialog(group: Group) {
         </span>
       </template>
     </el-dialog>
-  </div>
 
-  <div>
-    <el-table :data="filterTableData" style="width: 100%">
-      <el-table-column label="群组名称" prop="name" />
-      <el-table-column label="创建者" prop="creator" />
-      <el-table-column label="人数" prop="number" />
-      <el-table-column label="详情">
-        <template #default="{ row }">
-          <el-button size="large" @click="openDescriptionDialog(row)">
-            详情
-          </el-button>
-        </template>
-      </el-table-column>
-      <el-table-column align="center">
-        <template #header>
-          <el-input v-model="search" size="large" placeholder="Type to search" clearable />
-        </template>
-        <template #default="{ row }">
-          <el-button size="large" @click="handleEdit(row)" style="">
-            管理群组
-          </el-button>
-          <el-button size="large" type="danger" @click="handleDelete(row)">
-            删除群组
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <el-dialog v-model="descriptionDialogVisible" title="群组详情" width="50%">
-      <p><strong>群组名称：</strong>{{ currentGroupName }}</p>
-      <p><strong>描述：</strong>{{ currentDescription }}</p>
+    <el-dialog v-model="descriptionDialogVisible"
+               title="群组详情"
+               width="30%"
+               align-center>
+      <el-descriptions :column="1" border>
+        <el-descriptions-item label="群组名称">{{ currentGroupName }}</el-descriptions-item>
+        <el-descriptions-item label="描述">{{ currentDescription }}</el-descriptions-item>
+      </el-descriptions>
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="descriptionDialogVisible = false">关闭</el-button>
@@ -290,17 +313,25 @@ function openDescriptionDialog(group: Group) {
       </template>
     </el-dialog>
 
-    <el-dialog v-model="editVisible" title="编辑信息" width="50%">
+    <el-dialog v-model="editVisible" title="群组成员管理" width="50%">
       <el-table :data="getMember(currentGroupName)" v-loading="edit_loading">
         <el-table-column prop="username" label="名称"></el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" width="120" align="center">
           <template #default="{ row }">
-            <el-button
-                size="large"
-                type="danger"
-                @click="handleDeleteMember(row)"
-                :disabled="isCreator(row.username)"
-            >踢出群组</el-button>
+            <el-tooltip
+                :content="isCreator(row.username) ? '无法移除创建者' : '移除成员'"
+                placement="top"
+                :disabled="!isCreator(row.username)"
+            >
+              <el-button
+                  size="small"
+                  type="danger"
+                  @click="handleDeleteMember(row)"
+                  :disabled="isCreator(row.username)"
+              >
+                移除
+              </el-button>
+            </el-tooltip>
           </template>
         </el-table-column>
       </el-table>
@@ -312,3 +343,32 @@ function openDescriptionDialog(group: Group) {
     </el-dialog>
   </div>
 </template>
+
+<style scoped>
+.group-management {
+  padding: 20px;
+}
+
+.group-card {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-input {
+  margin-bottom: 20px;
+}
+
+.group-table {
+  margin-top: 20px;
+}
+
+.dialog-footer {
+  text-align: right;
+  margin-top: 20px;
+}
+</style>

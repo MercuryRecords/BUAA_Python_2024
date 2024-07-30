@@ -1,36 +1,51 @@
 <script lang="ts" setup>
-import {ref, reactive, onMounted, computed} from 'vue';
-import {ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage} from 'element-plus';
+import { ref, reactive, onMounted, computed } from 'vue';
+import { ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage } from 'element-plus';
+import type { FormInstance, FormRules } from 'element-plus'
 import 'element-plus/dist/index.css';
 import API from '@/plugins/axios';
 
-
-const data = defineProps(['username']) //从Navigator拿到的username
+const data = defineProps(['username']);
 const dialogVisible = ref(false);
+const formRef = ref<FormInstance>();
 const form = reactive({
   name: '',
   description: ''
 });
+
+// 定义表单验证规则
+const rules = reactive<FormRules>({
+  name: [
+    { required: true, message: '请输入群组名称', trigger: 'blur' },
+  ],
+  description: [
+    { required: true, message: '请输入申请理由', trigger: 'blur' },
+  ],
+});
+
 let editVisible = ref(false);
 let deleteVisible = ref(false);
-let centerDialogVisible = ref(false)
-let searchVisible = ref(false)
+let centerDialogVisible = ref(false);
+let searchVisible = ref(false);
 
 interface Group {
-  name: string
-  creator: string
-  number: number
+  name: string;
+  creator: string;
+  number: number;
+  description?: string;
 }
 
-const tableData: Group[] = reactive([]) //存储这个人所在的组
-const search = ref('')
-const searchData: Group[] = reactive([])
+const tableData: Group[] = reactive([]);
+const search = ref('');
+const searchData: Group[] = reactive([]);
 const dialogTitle = computed(() => search.value.length === 0 ? '加入群组' : '加入搜索到的群组');
+const selectedGroup = ref<Group | null>(null);
+
 onMounted(async () => showData());
 
-function showData() { //只显示加入的群聊，与创建的群聊隔开
+function showData() {
   console.log("showing data");
-  console.log(data.username)
+  console.log(data.username);
   API.post('/group_get_groups_joined',
       {
         username: data.username,
@@ -40,50 +55,56 @@ function showData() { //只显示加入的群聊，与创建的群聊隔开
         }
       }).then(
       function (response) {
-        if (response.data.code === 200) { // 成功接收，得到了这个人所加入的群
-          for (let i = 0; i < response.data.groups.length; i++) {
-            tableData.push(response.data.groups[i]) //将群组加入tableData，准备在挂载的时候显示出来
-          }
-        } else if (response.data.code === 401) { //用户不存在的情况报错，否则只是没有加入的群显示罢了
+        if (response.data.code === 200) {
+          tableData.splice(0, tableData.length, ...response.data.groups);
+        } else if (response.data.code === 401) {
           ElMessage.error("JG showData " + response.data.message);
         }
       }
   ).catch(
       function () {
-        console.log('error submit!')
-      })
+        console.log('error submit!');
+      });
 }
 
-function handleSubmit() {
-  dialogVisible.value = false;
-  API.post('/group_join_forced',
-      {
-        username: data.username,
-        group_name: form.name,
-      }, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        }
-      }).then(
-      function (response) {
-        if (response.data.code === 200) {
-          ElMessage.success(response.data.message);
-          if (search.value) {
-            // 如果是从搜索结果加入，刷新搜索结果
-            handleSearch();
-            window.location.reload()
-          } else {
-            // 如果是直接加入，刷新页面
-            window.location.reload();
+function handleSubmit(formEl: FormInstance | undefined) {
+  if (!formEl) return
+  formEl.validate((valid) => {
+    if (valid) {
+      dialogVisible.value = false;
+      API.post('/group_join_forced',
+          {
+            username: data.username,
+            group_name: form.name,
+          }, {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded'
+            }
+          }).then(
+          function (response) {
+            if (response.data.code === 200) {
+              ElMessage.success(response.data.message);
+              if (search.value) {
+                handleSearch();
+              } else {
+                showData();
+              }
+            } else {
+              ElMessage.error("handleSubmit " + response.data.message);
+            }
+            // 清空表单
+            form.name = '';
+            form.description = '';
           }
-        } else {
-          ElMessage.error("handleSubmit " + response.data.message);
-        }
-      }
-  ).catch(
-      function () {
-        console.log('error submit!')
-      })
+      ).catch(
+          function () {
+            console.log('error submit!');
+          });
+    } else {
+      console.log('error submit!');
+      return false
+    }
+  })
 }
 
 function handleClick() {
@@ -92,16 +113,18 @@ function handleClick() {
 
 function handleClose() {
   dialogVisible.value = false;
+  // 清空表单
+  form.name = '';
+  form.description = '';
 }
-
 
 function handleEdit() {
   editVisible.value = true;
 }
 
 function handleSearch() {
-  searchVisible.value = true
-  searchData.length = 0 //清空搜索结果
+  searchVisible.value = true;
+  searchData.length = 0;
   API.post('/group_search', {
     username: data.username,
     keywords: search.value,
@@ -112,21 +135,17 @@ function handleSearch() {
   }).then(
       function (response) {
         if (response.data.code === 200) {
-          console.log(response.data)
-          for (let i = 0; i < response.data.groups.length; i++) {
-            searchData.push(response.data.groups[i])
-          }
-          ElMessage.success(response.data.message); //成功退出
+          console.log(response.data);
+          searchData.splice(0, searchData.length, ...response.data.groups);
+          ElMessage.success(response.data.message);
         } else {
           ElMessage.error(response.data.message);
         }
-        //window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
-        //showData();
       }
   ).catch(
       function () {
-        console.log('error search!')
-      })
+        console.log('error search!');
+      });
 }
 
 function handleDelete(row: Group) {
@@ -141,42 +160,41 @@ function handleDelete(row: Group) {
   }).then(
       function (response) {
         if (response.data.code === 200) {
-          ElMessage.success(response.data.message); //成功退出
+          ElMessage.success(response.data.message);
+          showData();
         } else {
           ElMessage.error(response.data.message);
         }
-        window.location.reload(); // 在点击确定之后刷新页面，更新所加入的群组，即重新挂载一下
-        showData();
       }
   ).catch(
       function () {
-        console.log('error delete!')
-      })
+        console.log('error delete!');
+      });
 }
 
 function handleJoin(row: Group) {
-  form.name = row.name; // 设置群组名称
-  form.description = ''; // 清空申请理由
-  dialogVisible.value = true; // 显示对话框
+  form.name = row.name;
+  form.description = '';
+  dialogVisible.value = true;
 }
 
+function showDetails(row: Group) {
+  selectedGroup.value = row;
+  centerDialogVisible.value = true;
+}
 
 </script>
 
-
 <template>
-
   <div>
     <el-button type="primary" @click="handleClick">加入群组</el-button>
 
-    <el-dialog :title="search.length === 0 ? '加入群组' : '加入搜索到的群组'" v-model="dialogVisible" width="30%">
-      <el-form :model="form" label-width="80px">
-
-        <el-form-item label="群组名称">
+    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="30%">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" status-icon>
+        <el-form-item label="群组名称" prop="name">
           <el-input v-model="form.name" autocomplete="off"/>
         </el-form-item>
-
-        <el-form-item label="申请理由">
+        <el-form-item label="申请理由" prop="description">
           <el-input
               v-model="form.description"
               style="width: 240px"
@@ -185,46 +203,27 @@ function handleJoin(row: Group) {
               placeholder="Please input"
           />
         </el-form-item>
-
       </el-form>
-      <span slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="handleSubmit">确 定</el-button>
-        <el-button @click="handleClose">取 消</el-button>
-      </span>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button type="primary" @click="handleSubmit(formRef)">确 定</el-button>
+          <el-button @click="handleClose">取 消</el-button>
+        </span>
+      </template>
     </el-dialog>
   </div>
 
-  <!--  展示所有的群组-->
   <div>
     <el-table :data="search.length===0?tableData:searchData" style="width: 100%">
       <el-table-column label="群组名称" prop="name"/>
       <el-table-column label="创建者" prop="creator"/>
       <el-table-column label="人数" prop="number"/>
       <el-table-column label="详情">
-
-        <div> <!--对话框-->
-          <el-button size="large" @click="centerDialogVisible = true">
-            Click to open the Dialog
+        <template #default="scope">
+          <el-button size="large" @click="showDetails(scope.row)">
+            详情
           </el-button>
-
-          <el-dialog
-              v-model="centerDialogVisible"
-
-              width="500"
-              align-center
-          >
-            <span>Open the dialog from the center from the screen</span>
-            <template #footer>
-              <div class="dialog-footer">
-                <el-button @click="centerDialogVisible = false">Cancel</el-button>
-                <el-button type="primary" @click="centerDialogVisible = false">
-                  Confirm
-                </el-button>
-              </div>
-            </template>
-          </el-dialog>
-        </div>
-
+        </template>
       </el-table-column>
       <el-table-column align="center">
         <template #header>
@@ -232,15 +231,12 @@ function handleJoin(row: Group) {
         </template>
         <template #default="scope">
           <template v-if="search.length === 0">
-            <el-button size="large" @click="handleEdit()">
-              Edit
-            </el-button>
             <el-button
                 size="large"
                 type="danger"
                 @click="handleDelete(scope.row)"
             >
-              Delete
+              退出
             </el-button>
           </template>
           <template v-else>
@@ -249,7 +245,7 @@ function handleJoin(row: Group) {
                 type="danger"
                 @click="handleJoin(scope.row)"
             >
-              Join
+              加入
             </el-button>
           </template>
         </template>
@@ -257,5 +253,21 @@ function handleJoin(row: Group) {
     </el-table>
   </div>
 
-
+  <el-dialog
+      v-model="centerDialogVisible"
+      title="群组详情"
+      width="30%"
+      align-center
+  >
+    <template v-if="selectedGroup">
+      <p><strong>群组名称：</strong>{{ selectedGroup.name }}</p>
+      <p><strong>群主：</strong>{{ selectedGroup.creator }}</p>
+      <p><strong>群组描述：</strong>{{ selectedGroup.description || '暂无描述' }}</p>
+    </template>
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="centerDialogVisible = false">关闭</el-button>
+      </span>
+    </template>
+  </el-dialog>
 </template>

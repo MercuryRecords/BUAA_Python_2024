@@ -282,14 +282,6 @@ onMounted(() => {
               <el-card>
                 <el-form :inline="true" :model="searchForm" class="demo-form-inline">
                   <el-form-item>
-                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                              style="width: 310px"
-                              @keyup.enter="onSearch"></el-input>
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button @click="onSearch">搜索</el-button>
-                  </el-form-item>
-                  <el-form-item>
                     <el-button @click="openTagDialog">选择标签</el-button>
                   </el-form-item>
                   <el-form-item>
@@ -311,6 +303,15 @@ onMounted(() => {
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
+                  <el-form-item>
+                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
+                              style="width: 310px; margin-left: 80px"
+                              @keyup.enter="onSearch"></el-input>
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button @click="onSearch">搜索</el-button>
+                  </el-form-item>
+
 
                 </el-form>
                 <!-- 显示选中标签的区域 -->
@@ -353,16 +354,20 @@ onMounted(() => {
                 </el-table-column>
               </el-table>
 
-              <el-pagination
-                  class="pages"
-                  @size-change="handleSizeChange"
-                  @current-change="handleCurrentChange"
-                  :current-page="currentPage"
-                  :page-sizes="[10, 20, 50, 100]"
-                  :page-size="pageSize"
-                  layout="total, sizes, prev, pager, next, jumper"
-                  :total="total">
-              </el-pagination>
+              <div class="pagination-container">
+                <el-pagination
+                    style="justify-content: center"
+                    class="pagination"
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="currentPage"
+                    :page-sizes="[10, 20, 50, 100]"
+                    :page-size="pageSize"
+                    layout="total, sizes, jumper, ->, prev, pager, next"
+                    :total="total">
+                </el-pagination>
+              </div>
+
             </div>
           </el-main>
         </el-container>
@@ -477,13 +482,10 @@ onMounted(() => {
   color: #409EFF;
 }
 
-:deep(.el-dropdown-menu__item:focus) {
-  background-color: #f5f7fa;
-  color: #409EFF;
+.pagination {
+  margin-top: 20px;
+  text-align: right;
 }
 
-:deep(.el-dropdown-menu__item.is-disabled) {
-  color: #c0c4cc;
-  cursor: not-allowed;
-}
+
 </style>
