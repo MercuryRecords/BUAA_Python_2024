@@ -7,8 +7,8 @@
       >
         <v-list>
           <v-list-item
-              prepend-avatar="https://randomuser.me/api/portraits/women/85.jpg"
-              title="用户名"
+              :prepend-avatar='picture'
+              :title="props.username"
           ></v-list-item>
         </v-list>
 
@@ -30,7 +30,8 @@
           <v-list-item prepend-icon="mdi-shield-alert-outline" title="敏感词管理" value="join"
                        :to="{name:'sensitive_words', query: {username: props.username}}">
           </v-list-item>
-
+          <v-list-item prepend-icon="mdi-account-cog" title="个人中心" value="account-cog"
+                       :to="{name:'adminCenters' ,query: {username: props.username}}"></v-list-item>
         </v-list>
       </v-navigation-drawer>
       <v-main style=""></v-main>
@@ -39,8 +40,9 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, onUnmounted} from "vue";
+import {onMounted, onUnmounted, ref} from "vue";
+import API from "@/plugins/axios";
+import picture from "@/assets/default.png"
 
 const props = defineProps(['username']) //Navigator拿到一直传进来的username，之后的函数操作都要有
-onMounted(() => console.log(props.username))
 </script>
