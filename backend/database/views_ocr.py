@@ -60,8 +60,7 @@ def text_split_to_questions(text):
             tmp = content + " ".join(choices)
             keywords = _extract_keywords(tmp)
             ques = {"content": content,
-                    "choices": choices,
-                    "keywords": [keyword[0] for keyword in keywords]}
+                    "choices": choices}
 
             content = ""
             choices = []
@@ -103,6 +102,7 @@ def _extract_keywords(text):
         tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities.tolist()[0])]
         keywords += tag_similarity_list
 
+    keywords = [keyword for keyword in keywords if keyword[1] > 0.4]
     print(keywords)
     return keywords
 
