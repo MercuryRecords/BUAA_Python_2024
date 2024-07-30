@@ -185,89 +185,130 @@ function showDetails(row: Group) {
 
 </script>
 
-<template>
-  <div>
-    <el-button type="primary" @click="handleClick">加入群组</el-button>
 
-    <el-dialog :title="dialogTitle" v-model="dialogVisible" width="30%">
+<template>
+  <div class="group-management">
+    <el-card class="group-card">
+      <template #header>
+        <div class="card-header">
+          <span>我加入的群组</span>
+          <el-button type="primary" @click="handleClick">加入群组</el-button>
+        </div>
+      </template>
+
+      <el-input
+          v-model="search"
+          placeholder="搜索群组"
+          prefix-icon="el-icon-search"
+          clearable
+          class="search-input"
+          @keyup.enter="handleSearch"
+      />
+
+      <el-table :data="search.length === 0 ? tableData : searchData" style="width: 100%" class="group-table">
+        <el-table-column label="群组名称" prop="name" />
+        <el-table-column label="创建者" prop="creator">
+          <template #default="{ row }">
+            <el-tag size="small" type="info">
+              {{ row.creator }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="人数" prop="number" width="80" />
+        <el-table-column label="操作" align="center" width="280">
+          <template #default="{ row }">
+            <el-button type="" size="small" @click="showDetails(row)">
+              详情
+            </el-button>
+            <template v-if="search.length === 0">
+              <el-popconfirm
+                  title="确定要退出该群组吗？"
+                  @confirm="handleDelete(row)"
+              >
+                <template #reference>
+                  <el-button type="danger" size="small">
+                    退出群组
+                  </el-button>
+                </template>
+              </el-popconfirm>
+            </template>
+            <template v-else>
+              <el-button type="primary" size="small" @click="handleJoin(row)">
+                加入群组
+              </el-button>
+            </template>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <el-dialog v-model="dialogVisible" :title="dialogTitle" width="30%">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" status-icon>
         <el-form-item label="群组名称" prop="name">
-          <el-input v-model="form.name" autocomplete="off"/>
+          <el-input v-model="form.name" autocomplete="off" clearable />
         </el-form-item>
         <el-form-item label="申请理由" prop="description">
           <el-input
               v-model="form.description"
-              style="width: 240px"
-              autosize
               type="textarea"
-              placeholder="Please input"
+              :rows="3"
+              placeholder="请输入申请理由"
           />
         </el-form-item>
       </el-form>
       <template #footer>
         <span class="dialog-footer">
-          <el-button type="primary" @click="handleSubmit(formRef)">确 定</el-button>
           <el-button @click="handleClose">取 消</el-button>
+          <el-button type="primary" @click="handleSubmit(formRef)">确 定</el-button>
         </span>
       </template>
     </el-dialog>
-  </div>
 
-  <div>
-    <el-table :data="search.length===0?tableData:searchData" style="width: 100%">
-      <el-table-column label="群组名称" prop="name"/>
-      <el-table-column label="创建者" prop="creator"/>
-      <el-table-column label="人数" prop="number"/>
-      <el-table-column label="详情">
-        <template #default="scope">
-          <el-button size="large" @click="showDetails(scope.row)">
-            详情
-          </el-button>
-        </template>
-      </el-table-column>
-      <el-table-column align="center">
-        <template #header>
-          <el-input v-model="search" @keyup.enter="handleSearch" size="large" placeholder="输入完毕请按回车！"/>
-        </template>
-        <template #default="scope">
-          <template v-if="search.length === 0">
-            <el-button
-                size="large"
-                type="danger"
-                @click="handleDelete(scope.row)"
-            >
-              退出
-            </el-button>
-          </template>
-          <template v-else>
-            <el-button
-                size="large"
-                type="danger"
-                @click="handleJoin(scope.row)"
-            >
-              加入
-            </el-button>
-          </template>
-        </template>
-      </el-table-column>
-    </el-table>
+    <el-dialog
+        v-model="centerDialogVisible"
+        title="群组详情"
+        width="30%"
+        align-center
+    >
+      <el-descriptions :column="1" border v-if="selectedGroup">
+        <el-descriptions-item label="群组名称">{{ selectedGroup.name }}</el-descriptions-item>
+        <el-descriptions-item label="群主">{{ selectedGroup.creator }}</el-descriptions-item>
+        <el-descriptions-item label="描述">{{ selectedGroup.description || '暂无描述' }}</el-descriptions-item>
+      </el-descriptions>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="centerDialogVisible = false">关闭</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
-
-  <el-dialog
-      v-model="centerDialogVisible"
-      title="群组详情"
-      width="30%"
-      align-center
-  >
-    <template v-if="selectedGroup">
-      <p><strong>群组名称：</strong>{{ selectedGroup.name }}</p>
-      <p><strong>群主：</strong>{{ selectedGroup.creator }}</p>
-      <p><strong>群组描述：</strong>{{ selectedGroup.description || '暂无描述' }}</p>
-    </template>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="centerDialogVisible = false">关闭</el-button>
-      </span>
-    </template>
-  </el-dialog>
 </template>
+
+<style scoped>
+.group-management {
+  padding: 20px;
+}
+
+.group-card {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-input {
+  margin-bottom: 20px;
+}
+
+.group-table {
+  margin-top: 20px;
+}
+
+.dialog-footer {
+  text-align: right;
+  margin-top: 20px;
+}
+</style>

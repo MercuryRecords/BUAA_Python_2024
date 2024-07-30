@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive, onMounted, computed, type FormInstance, type FormRules } from 'vue';
+import { ref, reactive, onMounted, computed} from 'vue';
 import {
   ElButton,
   ElDialog,
@@ -12,7 +12,7 @@ import {
   ElCard,
   ElPopconfirm,
   ElTag,
-  ElTooltip
+  ElTooltip, type FormInstance, type FormRules
 } from 'element-plus';
 import 'element-plus/dist/index.css';
 import API from '@/plugins/axios';
