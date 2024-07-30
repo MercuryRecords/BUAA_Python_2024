@@ -213,7 +213,7 @@ def problem_create(request):
     type = request.POST.get('type')
     content = request.POST.get('content')
     ans_count = int(request.POST.get('ans_count'))
-    title = title if title else content[:30]
+    title = title[:30] if title else content[:30]
 
     if type not in ['c', 'b']:
         return E_UNKNOWN_TYPE
@@ -260,7 +260,7 @@ def problem_update(request):
 
     problem = res[1]
     title = request.POST.get('title')
-    title = title if title else problem.title
+    title = title[:30] if title else problem.title
     type = request.POST.get('type')
     type = type if type else problem.type
     content = request.POST.get('content')
