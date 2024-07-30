@@ -289,7 +289,7 @@ const deleteProblemGroup = async (problem: any) => {
           :current-page="currentPage"
           :page-sizes="[20, 50, 100]"
           :page-size="pageSize"
-          layout="total, sizes, prev, pager, next, jumper"
+          layout="total, sizes, jumper, ->, prev, pager, next"
           :total="totalProblems">
       </el-pagination>
     </div>
@@ -424,6 +424,6 @@ const deleteProblemGroup = async (problem: any) => {
 }
 
 .pages {
-  margin-top: 10px;
+  margin-top: 20px;
 }
 </style>
