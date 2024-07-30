@@ -17,9 +17,17 @@
       </p>
     </div>
     <div class="ability-section">
-      <h2>用户{{filterTag}}能力值随时间变化</h2>
-      <div class="filter-container">
-        <label for="filterTag">标签筛选器：{{filterTag}}</label>
+      <h2>{{props.username}}的{{ filterTag }}能力值</h2>
+      <div class="chart-header">
+        <div class="filter-container">
+          <label for="filterTag">标签筛选器：{{ filterTag }}</label>
+        </div>
+        <el-select v-model="timeUnit" @change="updateChart(filterTag)" class="time-unit-select">
+          <el-option value="" label="默认"></el-option>
+          <el-option value="minute" label="分钟"></el-option>
+          <el-option value="hour" label="小时"></el-option>
+          <el-option value="day" label="天"></el-option>
+        </el-select>
       </div>
       <v-chart class="chart" :option="chartOption" :key="chartKey" autoresize/>
     </div>
@@ -27,7 +35,7 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue'
+import {ref, onMounted, watch} from 'vue'
 import {use} from 'echarts/core'
 import {CanvasRenderer} from 'echarts/renderers'
 import {LineChart} from 'echarts/charts'
@@ -37,6 +45,7 @@ import API from "@/plugins/axios";
 
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent, TitleComponent])
 
+const timeUnit = ref('')
 const props = defineProps(['username'])
 const duringInterval = ref(60)
 const duringNum = ref(10)
@@ -119,28 +128,39 @@ const fetchData = async (tag = '') => {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       }
-    })
+    });
     console.log('API Response:', response.data);
     if (response.data.code === 200) {
       const data = response.data.data;
       console.log('Original data:', data);
 
-      // 生成时间戳
-      const currentTime = new Date().getTime();
-      const interval = duringInterval.value * 1000; // 转换为毫秒
+      const currentTime = new Date();
+      let timeInterval;
+
+      switch (timeUnit.value) {
+        case 'minute':
+        case '': // 默认情况
+          timeInterval = 60 * 1000; // 1分钟
+          break;
+        case 'hour':
+          timeInterval = 60 * 60 * 1000; // 1小时
+          break;
+        case 'day':
+          timeInterval = 24 * 60 * 60 * 1000; // 1天
+          break;
+      }
 
       chartOption.value.series[0].data = data.map((value, index) => {
-        const timestamp = currentTime - (data.length - 1 - index) * interval;
-        console.log(`Mapped data point: [${new Date(timestamp).toISOString()}, ${value}]`);
-        return [timestamp, value];
+        const time = new Date(currentTime - (data.length - 1 - index) * timeInterval);
+        return [time.getTime(), value];
       });
 
       console.log('Processed chart data:', chartOption.value.series[0].data);
 
-      const times = chartOption.value.series[0].data.map(item => item[0]);
-      chartOption.value.xAxis.min = Math.min(...times);
-      chartOption.value.xAxis.max = Math.max(...times);
-      console.log('X-axis range:', [new Date(chartOption.value.xAxis.min).toISOString(), new Date(chartOption.value.xAxis.max).toISOString()]);
+      // 更新 x 轴配置
+      chartOption.value.xAxis.type = 'time';
+      chartOption.value.xAxis.min = chartOption.value.series[0].data[0][0];
+      chartOption.value.xAxis.max = chartOption.value.series[0].data[data.length - 1][0];
 
       // 强制图表重新渲染
       chartKey.value += 1;
@@ -150,7 +170,8 @@ const fetchData = async (tag = '') => {
   } catch (error) {
     console.error('请求出错：', error);
   }
-}
+};
+
 
 const fetchBestTags = async () => {
   try {
@@ -194,17 +215,53 @@ const fetchWeakestTags = async () => {
   }
 }
 
-const updateChart = (tag) => {
+const updateChart = async (tag) => {
   filterTag.value = tag
-  fetchData(tag)
+  await fetchData(tag)
+  updateChartDisplay()
 }
 
+const updateChartDisplay = () => {
+  const data = chartOption.value.series[0].data;
+  if (data.length === 0) return;
+
+  // 根据时间单位更新 x 轴标签格式
+  switch (timeUnit.value) {
+    case 'minute':
+    case '': // 默认情况
+      chartOption.value.xAxis.axisLabel.formatter = (value) => {
+        const date = new Date(value);
+        return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+      };
+      break;
+    case 'hour':
+      chartOption.value.xAxis.axisLabel.formatter = (value) => {
+        const date = new Date(value);
+        return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:00`;
+      };
+      break;
+    case 'day':
+      chartOption.value.xAxis.axisLabel.formatter = (value) => {
+        const date = new Date(value);
+        return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      };
+      break;
+  }
+
+  // 设置 x 轴刻度数量
+  chartOption.value.xAxis.splitNumber = 10;
+
+  // Force chart to re-render
+  chartKey.value += 1;
+};
+
+watch(timeUnit, updateChartDisplay)
 
 onMounted(() => {
   fetchAvatar()
   fetchBestTags()
   fetchWeakestTags()
-  fetchData()
+  fetchData().then(updateChartDisplay)
 })
 </script>
 
@@ -219,7 +276,6 @@ onMounted(() => {
 .avatar-section {
   flex: 0 0 180px;
   text-align: center;
-  margin-left: -20px;
 }
 
 .avatar-image {
@@ -229,29 +285,28 @@ onMounted(() => {
   object-fit: cover;
 }
 
-.tag {
-  cursor: pointer;
-  color: #1890ff;
-  text-decoration: underline;
-}
-
 .ability-section {
   flex: 1;
-  padding-top: 20px;
 }
 
-.ability-title {
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
 .filter-container {
-  margin-bottom: 20px;
+  /* styles for filter container */
+}
+
+.time-unit-select {
+  width: 120px;
 }
 
 .chart {
   height: 400px;
   width: 100%;
-  margin-top: 20px;
 }
 
 .tag {
@@ -266,7 +321,6 @@ onMounted(() => {
   color: #999;
 }
 
-/* New styles to keep tags on the same line */
 .avatar-section p {
   white-space: nowrap;
   overflow: hidden;

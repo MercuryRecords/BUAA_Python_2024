@@ -293,40 +293,28 @@ onMounted(() => {
   fetchGroups();
 })
 </script>
-
 <template>
   <div class="common-layout">
-    <el-container>
-      <el-header>
-      </el-header>
+    <el-container class="main-container">
+      <el-aside width="auto" class="sidebar">
+        <Navigator :username="$route.query.username"></Navigator>
+      </el-aside>
 
-      <el-container>
-        <el-aside width="200px">
-          <Navigator :username="$route.query.username"></Navigator>
-        </el-aside>
+      <el-container class="content-container">
+        <el-main class="main-content">
+          <div class="problem-list">
+            <el-card class="search-card">
+              <el-form :inline="true" :model="searchForm" class="search-form">
+                <el-form-item class="search-input">
+                  <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
+                            @keyup.enter="onSearch"></el-input>
+                </el-form-item>
+                <el-form-item class="button-group">
+                  <el-button @click="onSearch">搜索</el-button>
+                  <el-button @click="openTagDialog">选择标签</el-button>
+                  <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
 
-        <el-container>
-          <el-main class="shifted-content">
-            <div class="problem-list">
-              <el-card>
-                <el-form :inline="true" :model="searchForm" class="demo-form-inline">
-                  <el-form-item>
-                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                              style="width: 310px"
-                              @keyup.enter="onSearch"></el-input>
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button @click="onSearch">搜索</el-button>
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button @click="openTagDialog">选择标签</el-button>
-                  </el-form-item>
-                  <el-form-item>
-                    <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
-                  </el-form-item>
-
-
-                  <el-dropdown @command="handleCommand">
+                  <el-dropdown @command="handleCommand" class="group-dropdown">
                     <span class="el-dropdown-link">
                       {{ selectedGroup || '选择用户组' }}
                       <el-icon class="el-icon--right"></el-icon>
@@ -340,66 +328,65 @@ onMounted(() => {
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
+                </el-form-item>
+              </el-form>
 
-                </el-form>
-                <!-- 显示选中标签的区域 -->
-                <div v-if="searchForm.selectedTags.length > 0" style="margin-top: 10px;">
-                  <el-tag
-                      v-for="tag in searchForm.selectedTags"
-                      :key="tag"
-                      closable
-                      @close="removeTag(tag)"
-                      style="margin-right: 5px;"
-                  >
+              <div v-if="searchForm.selectedTags.length > 0" class="selected-tags">
+                <el-tag
+                    v-for="tag in searchForm.selectedTags"
+                    :key="tag"
+                    closable
+                    @close="removeTag(tag)"
+                    class="tag"
+                >
+                  {{ tag }}
+                </el-tag>
+              </div>
+            </el-card>
+
+            <el-table :data="problems" style="width: 100%" class="problem-table">
+              <el-table-column label="最近错误时间" min-width="150">
+                <template #default="scope">
+                  {{ formatRelativeDate(scope.row.last_error_time) }}
+                </template>
+              </el-table-column>
+              <el-table-column prop="id" label="题号" min-width="80"></el-table-column>
+              <el-table-column prop="problem_title" label="题目名称" min-width="150"></el-table-column>
+              <el-table-column prop="creator" label="上传者" min-width="100"></el-table-column>
+              <el-table-column prop="problem_group_title" label="所属题单" min-width="150"></el-table-column>
+              <el-table-column label="标签" min-width="150">
+                <template #default="scope">
+                  <el-tag v-for="tag in scope.row.tags" :key="tag" size="small" class="tag">
                     {{ tag }}
                   </el-tag>
-                </div>
-              </el-card>
+                </template>
+              </el-table-column>
+              <el-table-column prop="accuracy" label="正确率" min-width="100">
+                <template #default="scope">
+                  <el-tag :type="getAccuracyColor(scope.row.accuracy)" size="small">
+                    {{ (scope.row.accuracy * 100).toFixed(2) }}%
+                  </el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作" min-width="80">
+                <template #default="scope">
+                  <el-button type="text" size="small" @click="jumpToQuestion(scope.row)">解题</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
 
-              <el-table :data="problems" width="1200">
-                <el-table-column label="最近错误时间" width="200">
-                  <template #default="scope">
-                    {{ formatRelativeDate(scope.row.last_error_time) }}
-                  </template>
-                </el-table-column>
-                <el-table-column prop="id" label="题号" width="100"></el-table-column>
-                <el-table-column prop="problem_title" label="题目名称" width="200"></el-table-column>
-                <el-table-column prop="creator" label="上传者" width="100"></el-table-column>
-                <el-table-column prop="problem_group_title" label="所属题单" width="200"></el-table-column>
-                <el-table-column label="标签" width="200">
-                  <template #default="scope">
-                    <el-tag v-for="tag in scope.row.tags" :key="tag" size="small" style="margin-right: 5px;">
-                      {{ tag }}
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="accuracy" label="正确率" width="200">
-                  <template #default="scope">
-                    <el-tag :type="getAccuracyColor(scope.row.accuracy)" size="small">
-                      {{ (scope.row.accuracy * 100).toFixed(2) }}%
-                    </el-tag>
-                  </template>
-                </el-table-column>
-                <el-table-column label="操作" width="100">
-                  <template #default="scope">
-                    <el-button type="text" size="small" @click="jumpToQuestion(scope.row)">解题</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-
-              <el-pagination
-                  class="pages"
-                  @size-change="handleSizeChange"
-                  @current-change="handleCurrentChange"
-                  :current-page="currentPage"
-                  :page-sizes="[10, 20, 50, 100]"
-                  :page-size="pageSize"
-                  layout="total, sizes, prev, pager, next, jumper"
-                  :total="total">
-              </el-pagination>
-            </div>
-          </el-main>
-        </el-container>
+            <el-pagination
+                class="pagination"
+                @size-change="handleSizeChange"
+                @current-change="handleCurrentChange"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 50, 100]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="total">
+            </el-pagination>
+          </div>
+        </el-main>
       </el-container>
     </el-container>
 
@@ -423,101 +410,98 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.shifted-content {
-  margin-left: 80px;
-  margin-right: 80px;
+.main-container {
+  height: 100vh;
 }
 
-.problem-list {
+.sidebar {
+  flex-shrink: 0;
+  z-index: 1001; /* 增加此行 */
+}
+
+.content-container {
+  flex-grow: 1;
+  overflow-x: hidden;
+}
+
+.main-content {
   padding: 20px;
 }
 
-.pages {
-  margin-top: 10px;
+.problem-list {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-.filter-container {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+.search-card {
   margin-bottom: 20px;
 }
 
-.el-dropdown-link {
-  cursor: pointer;
-  color: #409EFF;
+.search-form {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 10px;
 }
 
-.selected-filters {
+.search-input {
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.button-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selected-tags {
   margin-top: 10px;
-  font-size: 14px;
-  color: #606266;
 }
 
-.total-count {
+.tag {
+  margin-right: 5px;
+  margin-bottom: 5px;
+}
+
+.problem-table {
+  margin-bottom: 20px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+}
+
+.group-dropdown {
   margin-left: 10px;
-  color: #909399;
-}
-
-.groups {
-  width: 100px;
-}
-
-.user-group-dropdown {
-  display: inline-block;
 }
 
 .el-dropdown-link {
   cursor: pointer;
-  color: #606266;
-  font-size: 14px;
+  color: #409EFF;
   display: flex;
   align-items: center;
-  padding: 8px 16px;
-  border: 1px solid #dcdfe6;
-  border-radius: 4px;
-  transition: all 0.3s;
 }
 
-.el-dropdown-link:hover {
-  color: #409EFF;
-  border-color: #c6e2ff;
-  background-color: #ecf5ff;
-}
+@media (max-width: 768px) {
+  .search-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-.el-icon--right {
-  margin-left: 5px;
-  transition: transform 0.3s;
-}
+  .search-input {
+    width: 100%;
+  }
 
-.el-dropdown-link:hover .el-icon--right {
-  transform: rotate(180deg);
-}
+  .button-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
 
-:deep(.el-dropdown-menu) {
-  padding: 5px 0;
-}
-
-:deep(.el-dropdown-menu__item) {
-  padding: 8px 20px;
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-:deep(.el-dropdown-menu__item:hover) {
-  background-color: #f5f7fa;
-  color: #409EFF;
-}
-
-:deep(.el-dropdown-menu__item:focus) {
-  background-color: #f5f7fa;
-  color: #409EFF;
-}
-
-:deep(.el-dropdown-menu__item.is-disabled) {
-  color: #c0c4cc;
-  cursor: not-allowed;
+  .group-dropdown {
+    margin-left: 0;
+    margin-top: 10px;
+  }
 }
 </style>
