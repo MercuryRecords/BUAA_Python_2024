@@ -318,42 +318,56 @@ onMounted(async () => {
   await fetchGroups()
 })
 </script>
+
 <template>
   <div class="common-layout">
+    <el-container>
+      <el-header>
+      </el-header>
     <el-container class="main-container">
-      <el-aside width="auto" class="sidebar">
+      <el-aside width="200px">
         <Navigator :username="$route.query.username"></Navigator>
       </el-aside>
 
       <el-container class="content-container">
-        <el-main class="main-content">
+        <el-main class="shifted-content">
           <div class="problem-list">
-            <el-card class="search-card">
-              <el-form :inline="true" :model="searchForm" class="search-form">
-                <el-form-item class="search-input">
-                  <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                            @keyup.enter="onSearch"></el-input>
-                </el-form-item>
-                <el-form-item class="button-group">
-                  <el-button @click="onSearch">搜索</el-button>
+            <el-card>
+              <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+                <el-form-item>
                   <el-button @click="openTagDialog">选择标签</el-button>
-                  <el-button type="primary" @click="clearFilters">清除所有筛选条件</el-button>
+                </el-form-item>
 
-                  <el-dropdown @command="handleCommand" class="group-dropdown">
+                <el-dropdown @command="handleCommand">
                     <span class="el-dropdown-link">
                       {{ selectedGroup || '选择用户组' }}
                       <el-icon class="el-icon--right"></el-icon>
                     </span>
-                    <template #dropdown>
-                      <el-dropdown-menu>
-                        <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
-                        <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
-                          {{ group }}
-                        </el-dropdown-item>
-                      </el-dropdown-menu>
-                    </template>
-                  </el-dropdown>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="">我可见的所有</el-dropdown-item>
+                      <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
+                      <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
+                        {{ group }}
+                      </el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+
+                <el-form-item>
+                  <el-button type="primary" @click="clearFilters" style="margin-left: 20px">清除所有筛选条件</el-button>
                 </el-form-item>
+
+                <el-form-item>
+                  <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
+                            style="width: 310px; margin-left: 60px"
+                            @keyup.enter="onSearch"></el-input>
+                </el-form-item>
+                <el-form-item>
+                  <el-button @click="onSearch">搜索</el-button>
+                </el-form-item>
+
+
               </el-form>
 
               <div v-if="searchForm.selectedTags.length > 0" class="selected-tags">
@@ -414,6 +428,7 @@ onMounted(async () => {
         </el-main>
       </el-container>
     </el-container>
+    </el-container>
 
     <!-- 标签选择对话框 -->
     <el-dialog v-model="tagDialogVisible" title="选择标签" width="50%">
@@ -435,71 +450,24 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.main-container {
-  height: 100vh;
-}
-
-.sidebar {
-  flex-shrink: 0;
-  z-index: 1001; /* 增加此行 */
-}
-
-.content-container {
-  flex-grow: 1;
-  overflow-x: hidden;
-}
-
-.main-content {
-  padding: 20px;
+.shifted-content {
+  margin-left: 80px;
+  margin-right: 225px;
 }
 
 .problem-list {
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 20px;
 }
 
-.search-card {
-  margin-bottom: 20px;
-}
-
-.search-form {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-}
-
-.search-input {
-  flex-grow: 1;
-  min-width: 200px;
-}
-
-.button-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.selected-tags {
+.pages {
   margin-top: 10px;
 }
 
-.tag {
-  margin-right: 5px;
-  margin-bottom: 5px;
-}
-
-.problem-table {
-  margin-bottom: 20px;
-}
-
-.pagination {
+.filter-container {
   display: flex;
-  justify-content: center;
-}
-
-.group-dropdown {
-  margin-left: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 20px;
 }
 
 .el-dropdown-link {
@@ -509,24 +477,71 @@ onMounted(async () => {
   align-items: center;
 }
 
-@media (max-width: 768px) {
-  .search-form {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-input {
-    width: 100%;
-  }
-
-  .button-group {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .group-dropdown {
-    margin-left: 0;
-    margin-top: 10px;
-  }
+.selected-filters {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #606266;
 }
+
+.total-count {
+  margin-left: 10px;
+  color: #909399;
+}
+
+.groups {
+  width: 100px;
+}
+
+.user-group-dropdown {
+  display: inline-block;
+}
+
+.el-dropdown-link {
+  cursor: pointer;
+  color: #606266;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.el-dropdown-link:hover {
+  color: #409EFF;
+  border-color: #c6e2ff;
+  background-color: #ecf5ff;
+}
+
+.el-icon--right {
+  margin-left: 5px;
+  transition: transform 0.3s;
+}
+
+.el-dropdown-link:hover .el-icon--right {
+  transform: rotate(180deg);
+}
+
+:deep(.el-dropdown-menu) {
+  padding: 5px 0;
+}
+
+:deep(.el-dropdown-menu__item) {
+  padding: 8px 20px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+:deep(.el-dropdown-menu__item:hover) {
+  background-color: #f5f7fa;
+  color: #409EFF;
+}
+
+.pagination {
+  margin-top: 20px;
+  text-align: right;
+}
+
+
 </style>
