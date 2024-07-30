@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import {ElMessage, type FormInstance} from 'element-plus'
+import { ElMessage, type FormInstance } from 'element-plus'
 import API from "@/plugins/axios"
-const data = defineProps(['username']) //从Navigator拿到的username
+
+const data = defineProps(['username'])
 
 interface User {
   username: string;
@@ -12,7 +13,7 @@ interface User {
 
 const users = ref<User[]>([])
 const currentPage = ref(1)
-const pageSize = 10
+const pageSize = ref(10)
 const totalUsers = ref(0)
 const userDetailsVisible = ref(false)
 const selectedUser = ref<User>({} as User)
@@ -30,15 +31,15 @@ const rules = {
 }
 
 const displayedUsers = computed(() => {
-  const start = (currentPage.value - 1) * pageSize
-  const end = start + pageSize
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
   return users.value.slice(start, end)
 })
 
 const fetchUsers = async () => {
   try {
     const response = await API.post('/admin_get_user_list', {
-      username: data.username, // 这里应该使用实际的管理员用户名
+      username: data.username,
     }, {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -84,8 +85,13 @@ const deleteUser = async (username: string) => {
   )
 }
 
-const handlePageChange = (page: number) => {
-  currentPage.value = page;
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  currentPage.value = 1
+}
+
+const handleCurrentChange = (val: number) => {
+  currentPage.value = val
 }
 
 const showAddUserDialog = () => {
@@ -97,7 +103,7 @@ const addUser = async () => {
   addUserForm.value.validate((valid) => {
     if (valid) {
       API.post('/admin_register_user', {
-        username: data.username, // 这里应该使用实际的管理员用户名
+        username: data.username,
         name: newUser.value.username,
         password: newUser.value.password
       }, {
@@ -183,10 +189,12 @@ onMounted(() => {
 
       <el-pagination
           v-model:current-page="currentPage"
-          :page-size="pageSize"
+          v-model:page-size="pageSize"
+          :page-sizes="[10, 20, 30, 50]"
           :total="totalUsers"
-          @current-change="handlePageChange"
-          layout="prev, pager, next"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          layout="total, sizes, prev, pager, next, jumper"
           class="pagination"
       />
     </el-card>
@@ -240,7 +248,7 @@ onMounted(() => {
 .pagination {
   margin-top: 20px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 :deep(.el-card__header) {
@@ -253,8 +261,8 @@ onMounted(() => {
 }
 
 :deep(.el-button) {
-  font-size: 16px;
-  padding: 12px 20px;
+  font-size: 14px;
+  padding: 10px 16px;
 }
 
 :deep(.el-dialog__body) {
@@ -271,7 +279,7 @@ onMounted(() => {
 }
 
 :deep(.el-pagination) {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .add-user-button {
@@ -295,7 +303,7 @@ onMounted(() => {
 .user-management {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   min-height: 100vh;
   padding: 20px;
   font-size: 16px;

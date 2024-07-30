@@ -1,100 +1,90 @@
 <template>
   <div class="upload-problem-container">
-    <div class="left-panel">
-      <div style="text-align: center;">
-        <h2>OCR识别结果</h2>
+    <div class="panels-container">
+      <div class="panel left-panel">
+        <div class="panel-header">
+          <h2>OCR识别结果</h2>
+        </div>
+        <el-input
+            type="textarea"
+            v-model="ocrResult"
+            :rows="32"
+            class="ocr-textarea"
+            placeholder="OCR识别结果将显示在这里，处理会有点慢，请耐心等候~"
+        ></el-input>
+        <div class="upload-button-container">
+          <el-upload
+              class="upload-demo"
+              action="#"
+              :http-request="customUpload"
+              :show-file-list="false"
+          >
+            <el-button type="primary">上传题目文件</el-button>
+          </el-upload>
+        </div>
+        <div class="el-upload__tip">
+          支持jpg/png/pdf文件，大小不超过5MB
+        </div>
       </div>
-      <el-input
-          type="textarea"
-          v-model="ocrResult"
-          :rows="32"
-          placeholder="OCR识别结果将显示在这里，处理会有点慢，请耐心等候~"
-      ></el-input>
-      <el-upload
-          class="upload-demo"
-          action="#"
-          :http-request="customUpload"
-          :show-file-list="false"
-      >
-        <el-button type="primary">上传题目文件</el-button>
-        <template #tip>
-          <div class="el-upload__tip">
-            支持jpg/png/pdf文件，大小不超过5MB
-          </div>
-        </template>
-      </el-upload>
-    </div>
-    <div class="right-panel">
-      <div style="text-align: center;">
-        <h2>题目信息</h2>
-      </div>
-      <el-form :model="problemForm" label-width="120px">
-        <el-form-item label="题目名称">
-          <el-input v-model="problemForm.title" placeholder="请输入题目名称"></el-input>
-        </el-form-item>
-        <el-form-item label="题目类型">
-          <el-select v-model="problemForm.type" placeholder="请选择题目类型" @change="handleTypeChange">
-            <el-option label="选择题" value="c"></el-option>
-<!--            <el-option label="填空题" value="b"></el-option>-->
-          </el-select>
-        </el-form-item>
-        <el-form-item label="题目内容">
-          <el-input type="textarea" v-model="problemForm.content" :rows="6" placeholder="请输入题目内容"></el-input>
-        </el-form-item>
-        <el-form-item v-if="problemForm.type === 'c'" label="正确答案">
-          <el-input v-model="problemForm.answer" placeholder="请输入正确答案（如：A）"></el-input>
-        </el-form-item>
-        <el-form-item :label="problemForm.type === 'c' ? '选项数量' : '答案数量'">
-          <div class="answer-count-controls">
-            <el-button @click="decreaseAnswerCount" :disabled="problemForm.ans_count <= 1">-</el-button>
-            <span>{{ problemForm.ans_count }}</span>
-            <el-button @click="increaseAnswerCount" :disabled="problemForm.ans_count >= 7">+</el-button>
-          </div>
-        </el-form-item>
-        <el-form-item
-            v-for="(_, index) in problemForm.answers"
-            :key="index"
-            :label="`选项${String.fromCharCode(65 + index)}`"
-        >
-          <el-input v-model="problemForm[`field${index + 1}`]"></el-input>
-        </el-form-item>
-        <el-form-item label="题目标签">
-          <div class="tags-container">
-            <el-tag
-                v-for="tag in problemForm.tags"
-                :key="tag"
-                closable
-                @close="handleClose(tag)"
-            >
-              {{ tag }}
-            </el-tag>
-            <el-button class="button-new-tag" size="small" @click="showInput">
-              + 新标签
-            </el-button>
-          </div>
-        </el-form-item>
-        <el-dialog v-model="inputVisible" title="添加新标签" width="30%">
-          <el-input
-              v-model="inputValue"
-              ref="inputRef"
-              placeholder="请输入标签名称"
-          ></el-input>
-          <template #footer>
-            <span class="dialog-footer">
-              <el-button @click="inputVisible = false">取消</el-button>
-              <el-button type="primary" @click="handleInputConfirm">
-                确定
-              </el-button>
-            </span>
-          </template>
-        </el-dialog>
-        <el-form-item>
-          <el-form-item>
-            <el-button type="primary" @click="submitProblem">提交题目(结束本次上传并返回题单界面)</el-button>
-            <el-button type="success" @click="submitAndContinue">提交并继续(继续上传，不会返回)</el-button>
+      <div class="panel right-panel">
+        <div class="panel-header">
+          <h2>题目信息</h2>
+        </div>
+        <el-form :model="problemForm" label-position="left" label-width="120px">
+          <el-form-item label="题目名称">
+            <el-input v-model="problemForm.title" placeholder="请输入题目名称"></el-input>
           </el-form-item>
-        </el-form-item>
-      </el-form>
+          <el-form-item label="题目类型">
+            <el-select v-model="problemForm.type" placeholder="请选择题目类型" @change="handleTypeChange">
+              <el-option label="选择题" value="c"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item label="题目内容">
+            <el-input type="textarea" v-model="problemForm.content" :rows="6" placeholder="请输入题目内容"></el-input>
+          </el-form-item>
+          <el-form-item v-if="problemForm.type === 'c'" label="正确答案">
+            <el-input v-model="problemForm.answer" placeholder="请输入正确答案（如：A）"></el-input>
+          </el-form-item>
+          <el-form-item :label="problemForm.type === 'c' ? '选项数量' : '答案数量'">
+            <div class="answer-count-controls">
+              <el-button @click="decreaseAnswerCount" :disabled="problemForm.ans_count <= 1">-</el-button>
+              <span>{{ problemForm.ans_count }}</span>
+              <el-button @click="increaseAnswerCount" :disabled="problemForm.ans_count >= 7">+</el-button>
+            </div>
+          </el-form-item>
+          <el-form-item
+              v-for="(_, index) in problemForm.answers"
+              :key="index"
+              :label="`选项${String.fromCharCode(65 + index)}`"
+          >
+            <el-input v-model="problemForm[`field${index + 1}`]"></el-input>
+          </el-form-item>
+          <el-form-item label="题目标签">
+            <div class="tags-container">
+              <el-tag
+                  v-for="tag in problemForm.tags"
+                  :key="tag"
+                  closable
+                  @close="handleClose(tag)"
+              >
+                {{ tag }}
+              </el-tag>
+              <el-button class="button-new-tag" size="small" @click="showInput">
+                + 新标签
+              </el-button>
+              <el-button class="button-new-tag" size="small" @click="getRecommendedTags" type="danger">
+                推荐标签
+              </el-button>
+            </div>
+          </el-form-item>
+          <el-form-item>
+            <div class="submit-buttons">
+              <el-button type="primary" @click="submitProblem">提交题目(结束本次上传并返回题单界面)</el-button>
+              <el-button type="success" @click="submitAndContinue">提交并继续(继续上传，不会返回)</el-button>
+            </div>
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
@@ -309,6 +299,35 @@ const submitProblem = (shouldReturn = true) => {
       })
 }
 
+const getRecommendedTags = async () => {
+  try {
+    console.log(data.username)
+    console.log(problemForm.content)
+    const response = await API.post('/extract_keywords', {
+      username: data.username,
+      text: problemForm.content
+    }, {
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    });
+
+    if (response.data.code === 200) {
+      const recommendedTags = response.data.keywords;
+      // 将推荐的标签添加到现有标签中，避免重复
+      recommendedTags.forEach(tag => {
+        if (!problemForm.tags.includes(tag)) {
+          problemForm.tags.push(tag);
+        }
+      });
+      ElMessage.success('已添加推荐标签');
+    } else {
+      ElMessage.warning('获取推荐标签失败');
+    }
+  } catch (error) {
+    console.error('获取推荐标签出错:', error);
+    ElMessage.error('获取推荐标签失败，请重试');
+  }
+}
+
 // 监听 ocrResult 的变化
 watch(ocrResult, (newValue) => {
   if (newValue && questions.value.length > 0) {
@@ -320,27 +339,51 @@ watch(ocrResult, (newValue) => {
 <style scoped>
 .upload-problem-container {
   display: flex;
-  height: 100vh;
+  height: calc(100vh - 60px); /* 减少高度以消除滚动条 */
+  padding: 20px;
+  align-items: flex-start;
+  overflow: hidden; /* 防止出现滚动条 */
 }
 
-.left-panel {
-  width: 300px;
-  padding: 0 20px 0 20px;
-  border-right: 1px solid #dcdfe6;
+.panels-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
 }
 
-.right-panel {
-  flex: 1;
+.panel {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
   padding: 20px;
 }
 
-.custom-tree-node {
+.left-panel {
   flex: 1;
+  margin-right: 10px;
+}
+
+.right-panel {
+  flex: 2;
+  margin-left: 10px;
+  overflow-y: auto;
+}
+
+.panel-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.upload-button-container {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 14px;
-  padding-right: 8px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.el-upload__tip {
+  text-align: center;
+  margin-top: 10px;
 }
 
 .answer-count-controls {
@@ -365,5 +408,26 @@ watch(ocrResult, (newValue) => {
   width: 90px;
   margin-bottom: 10px;
   vertical-align: bottom;
+}
+
+.submit-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+/* 移除右侧面板的滚动条 */
+.right-panel::-webkit-scrollbar {
+  display: none;
+}
+
+.right-panel {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+:deep(.ocr-textarea .el-textarea__inner) {
+  height: calc(100vh - 300px);
+  max-height: none;
 }
 </style>

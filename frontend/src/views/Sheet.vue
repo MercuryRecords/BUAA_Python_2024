@@ -38,12 +38,36 @@ const allProblems = ref<data[]>([
 const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
-const tagCategories = ref([
-  {name: '数学', tags: ['多项式', '矩阵', '行列式', '线性代数']},
-  {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
-  {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
-  {name: '题目类型', tags: ['选择题', '填空题']},
-])
+const user_tags = ref<string[]>([])
+const tagCategories = ref<{ name: string; tags: string[] }[]>([])
+
+async function getUserTags() {
+  try {
+    const response = await API.post('/get_user_tags', {
+      username: route.query.username,
+    }, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+
+    if (response.data.code === 200) {
+      user_tags.value = response.data.data.filter((tag: string) =>
+          !["选择题", "选择", "填空题", "填空"].includes(tag)
+      )
+
+      tagCategories.value = [
+        { name: '所有标签', tags: user_tags.value },
+        { name: '题目类型', tags: ['选择题', '填空题'] },
+      ]
+
+      console.log("Get the tags", user_tags.value)
+    } else {
+      ElMessage.error(response.data.message)
+    }
+  } catch (error) {
+    console.error('Error fetching user tags:', error)
+    ElMessage.error('获取标签失败')
+  }
+}
 
 const filteredProblems = ref<data[]>([])
 
@@ -327,9 +351,10 @@ const handleEdit = (problem: data) => {
   })
 }
 
-onMounted(() => {
-  fetchProblems();
-  fetchGroups();
+onMounted(async () => {
+  await getUserTags()
+  await fetchProblems()
+  await fetchGroups()
 })
 </script>
 

@@ -33,9 +33,23 @@ def admin_register_user(request):
 
 
 @require_http_methods(["POST"])
-def admin_manage_user_profile(request):
-    # 修改个人信息，虽然现在还不知道有什么个人信息
-    pass
+def admin_edit_user_password(request):
+    username = request.POST.get('name')
+    check = User.objects.filter(username=username)
+    if not check:
+        # 用户不存在，返回错误信息
+        res = {"code": 401, "message": "用户不存在"}
+        return JsonResponse(res)
+
+    password = request.POST.get('password')
+    if password == "" or len(password) > 100:
+        res = {"code": 402, "message": "密码不能为空且长度不能超过100"}
+        return JsonResponse(res)
+
+    check[0].update(password=password)
+
+    res = {"code": 200, "message": "用户密码修改成功"}
+    return JsonResponse(res)
 
 
 @require_http_methods(["POST"])

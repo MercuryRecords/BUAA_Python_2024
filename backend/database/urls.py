@@ -22,6 +22,7 @@ urlpatterns = [
     # 初版接口
     path('group_join_forced', views.group_join_forced, name='group_join_forced'),
 
+    path('admin_edit_user_password', views_admin.admin_edit_user_password, name='admin_edit_user_password'),
     path('admin_register_user', views_admin.admin_register_user, name='admin_register_user'),
     path('admin_delete_user', views_admin.admin_delete_user, name='admin_delete_user'),
     path('admin_get_user_list_num', views_admin.admin_get_user_list_num, name='admin_get_user_list_num'),
@@ -73,6 +74,7 @@ urlpatterns = [
     path('get_problem_group_detail', views_problem.get_single_problem_group_detail),
     path('get_problem_detail', views_problem.get_single_problem_detail),
     path('problem_check', views_problem.problem_check),
+    path('get_user_tags', views_problem.get_user_tags),
 
     path('get_records_num', views_record.get_records_num, name='get_records_num'),
     path('get_records', views_record.get_records, name='get_records'),

@@ -254,7 +254,7 @@ const deleteProblemGroup = async (problem: any) => {
 <!--            <el-progress :percentage="scope.row.completionRate" :format="percentageFormat"></el-progress>-->
 <!--          </template>-->
         </el-table-column>
-        <el-table-column prop="problem_num" label="题目数量" width="320" sortable></el-table-column>
+        <el-table-column prop="problem_num" label="题目数量" width="250" sortable></el-table-column>
 <!--        <el-table-column prop="acceptedCount" label="通过数" width="100" sortable></el-table-column>-->
         <el-table-column label="操作" width="300">
           <template #default="scope">

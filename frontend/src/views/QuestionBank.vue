@@ -37,14 +37,39 @@ const allProblems = ref<data[]>([
 const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
-const tagCategories = ref([
-  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
-  {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
-  {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
-  {name: '题目类型', tags: ['选择题', '填空题']},
-])
+
 
 const filteredProblems = ref<data[]>([])
+const user_tags = ref<string[]>([])
+const tagCategories = ref<{ name: string; tags: string[] }[]>([])
+
+async function getUserTags() {
+  try {
+    const response = await API.post('/get_user_tags', {
+      username: route.query.username,
+    }, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+
+    if (response.data.code === 200) {
+      user_tags.value = response.data.data.filter((tag: string) =>
+          !["选择题", "选择", "填空题", "填空"].includes(tag)
+      )
+
+      tagCategories.value = [
+        { name: '所有标签', tags: user_tags.value },
+        { name: '题目类型', tags: ['选择题', '填空题'] },
+      ]
+
+      console.log("Get the tags", user_tags.value)
+    } else {
+      ElMessage.error(response.data.message)
+    }
+  } catch (error) {
+    console.error('Error fetching user tags:', error)
+    ElMessage.error('获取标签失败')
+  }
+}
 
 const problems = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
@@ -121,9 +146,11 @@ const jumpToQuestion = (problem: data) => {
 }
 
 const clearFilters = () => {
-  searchForm.keyword = ''
-  searchForm.tags = []
-  searchForm.selectedTags = []
+  searchForm.keyword = '';
+  searchForm.tags = [];
+  searchForm.selectedTags = [];
+  getProblems('');
+  selectedGroup.value = '';
   onSearch()
 }
 
@@ -246,22 +273,19 @@ const selectedGroup = ref('')
 
 const handleCommand = (command: any) => {
   selectedGroup.value = command
-  if (command !== '') {
-    if (command === '公开分享') {
-      getProblems('_shared_to_all');
-      // window.location.reload();
-    }
-    else {
-      console.log(command,666666666666666666666666666666)
-      getProblems(command as string);
-      // window.location.reload();
-    }
+  if (command === '公开分享') {
+    getProblems('_shared_to_all');
+    // window.location.reload();
+  }
+  else {
+    getProblems(command as string);
   }
 }
 
-onMounted(() => {
-  fetchProblems();
-  fetchGroups();
+onMounted(async () => {
+  await getUserTags()
+  await fetchProblems()
+  await fetchGroups()
 })
 </script>
 
@@ -296,6 +320,7 @@ onMounted(() => {
                     </span>
                     <template #dropdown>
                       <el-dropdown-menu>
+                        <el-dropdown-item command="">我可见的所有</el-dropdown-item>
                         <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
                         <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
                           {{ group }}
@@ -305,7 +330,7 @@ onMounted(() => {
                   </el-dropdown>
                   <el-form-item>
                     <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                              style="width: 310px; margin-left: 80px"
+                              style="width: 310px; margin-left: 60px"
                               @keyup.enter="onSearch"></el-input>
                   </el-form-item>
                   <el-form-item>
