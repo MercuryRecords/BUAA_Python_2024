@@ -71,6 +71,9 @@
             <el-button class="button-new-tag" size="small" @click="showInput">
               + 新标签
             </el-button>
+            <el-button class="button-new-tag" size="small" @click="getRecommendedTags" type="danger">
+              推荐标签
+            </el-button>
           </div>
         </el-form-item>
         <el-dialog v-model="inputVisible" title="添加新标签" width="30%">
@@ -263,7 +266,7 @@ const decreaseAnswerCount = () => {
 const submitProblem = () => {
   const submitData: Record<string, any> = {
     username: data.username,
-    problem_id:data.problem_id,
+    problem_id: data.problem_id,
     title: problemForm.title,
     problem_group_id: data.sheetId,
     type: problemForm.type,
@@ -289,17 +292,17 @@ const submitProblem = () => {
       'Content-Type': 'application/x-www-form-urlencoded'
     }
   }).then(response => {
-        if (response.data.code === 200) {
-          console.log('操作成功:', response.data)
-          ElMessage.success(data.problem_id ? '题目更新成功' : '题目提交成功')
-          setTimeout(() => {
-            router.go(-1)
-          }, 1000)
-        } else {
-          console.log('操作失败:', response.data)
-          ElMessage.error(data.problem_id ? '题目更新失败' : '题目提交失败')
-        }
-      })
+    if (response.data.code === 200) {
+      console.log('操作成功:', response.data)
+      ElMessage.success(data.problem_id ? '题目更新成功' : '题目提交成功')
+      setTimeout(() => {
+        router.go(-1)
+      }, 1000)
+    } else {
+      console.log('操作失败:', response.data)
+      ElMessage.error(data.problem_id ? '题目更新失败' : '题目提交失败')
+    }
+  })
       .catch(error => {
         console.error('操作失败:', error)
         ElMessage.error(data.problem_id ? '题目更新失败，请重试' : '题目提交失败，请重试')
@@ -307,6 +310,35 @@ const submitProblem = () => {
   setTimeout(() => {
     router.go(0)
   }, 1000);
+}
+
+const getRecommendedTags = async () => {
+  try {
+    console.log(data.username)
+    console.log(problemForm.content)
+    const response = await API.post('/extract_keywords', {
+      username: data.username,
+      text: problemForm.content
+    }, {
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+    });
+
+    if (response.data.code === 200) {
+      const recommendedTags = response.data.keywords;
+      // 将推荐的标签添加到现有标签中，避免重复
+      recommendedTags.forEach(tag => {
+        if (!problemForm.tags.includes(tag)) {
+          problemForm.tags.push(tag);
+        }
+      });
+      ElMessage.success('已添加推荐标签');
+    } else {
+      ElMessage.warning('获取推荐标签失败');
+    }
+  } catch (error) {
+    console.error('获取推荐标签出错:', error);
+    ElMessage.error('获取推荐标签失败，请重试');
+  }
 }
 
 onMounted(() => {
