@@ -757,7 +757,7 @@ def get_user_tags(request):
     user = user[0]
 
     # 获取用户有权限的所有问题
-    problems = _get_problems_with_permissions(username, "")
+    problems = _get_problems_with_permissions(user, "")
     if isinstance(problems, JsonResponse):
         return problems
 
