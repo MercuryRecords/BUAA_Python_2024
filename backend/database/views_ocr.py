@@ -95,10 +95,12 @@ def _extract_keywords(text):
 
     tags = [tag.name for tag in Tag.objects.all()]
     if tags:
+        # print(tags)
         tags_embeddings = st_model.encode(tags, convert_to_tensor=True)
 
         similarities = cosine_similarity(text_embedding, tags_embeddings)
-        tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities)]
+        # print(similarities)
+        tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities.tolist()[0])]
         keywords += tag_similarity_list
 
     print(keywords)
