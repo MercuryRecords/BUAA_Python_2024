@@ -37,14 +37,34 @@ const allProblems = ref<data[]>([
 const currentPage = ref(1)
 const pageSize = ref(20)
 const tagDialogVisible = ref(false)
+const user_tags = ref([])
 const tagCategories = ref([
-  {name: '数学', tags:['多项式','矩阵','行列式','线性代数']},
-  {name: '算法', tags: ['动态规划', '贪心', '搜索', '图论', '数论', '字符串']},
-  {name: '数据结构', tags: ['栈', '队列', '链表', '树', '图', '堆']},
+  {name: '所有标签', tags: user_tags.value},
   {name: '题目类型', tags: ['选择题', '填空题']},
 ])
 
 const filteredProblems = ref<data[]>([])
+const getUserTags = () => {
+  API.post('/get_user_tags', {
+    username: route.query.username,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  }).then(
+      function (response) {
+        if (response.data.code === 200) {
+          // 创建成功
+          console.log("Get the tags", response.data.data);
+          user_tags.value = response.data.data;
+        } else {
+          ElMessage.error(response.data.message);
+        }
+      }
+  ).catch(
+      function () {
+        console.log('error submit!')
+      }
+  )
+}
 
 const problems = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
@@ -262,6 +282,7 @@ const handleCommand = (command: any) => {
 onMounted(() => {
   fetchProblems();
   fetchGroups();
+  getUserTags();
 })
 </script>
 
@@ -305,7 +326,7 @@ onMounted(() => {
                   </el-dropdown>
                   <el-form-item>
                     <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                              style="width: 310px; margin-left: 80px"
+                              style="width: 310px; margin-left: 60px"
                               @keyup.enter="onSearch"></el-input>
                   </el-form-item>
                   <el-form-item>
