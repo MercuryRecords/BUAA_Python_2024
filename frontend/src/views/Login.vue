@@ -98,7 +98,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
         if (response.data.code === 200) {
           ElMessage.success(response.data.message);
           router.push({
-            path: '/home',
+            path: '/abilityShowed',
             query: {
               username: data.username,
               mode: data.usertype
