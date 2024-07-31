@@ -57,8 +57,6 @@ def text_split_to_questions(text):
             continue
 
         if not is_choice(text[i]) and not processing_content:
-            # tmp = content + " ".join(choices)
-            # keywords = _extract_keywords(tmp)
             ques = {"content": content,
                     "choices": choices}
 
@@ -94,11 +92,9 @@ def _extract_keywords(text):
 
     tags = [tag.name for tag in Tag.objects.all()]
     if tags:
-        # print(tags)
         tags_embeddings = st_model.encode(tags, convert_to_tensor=True)
 
         similarities = cosine_similarity(text_embedding, tags_embeddings)
-        # print(similarities)
         tag_similarity_list = [(tag, sim) for tag, sim in zip(tags, similarities.tolist()[0])]
         keywords += tag_similarity_list
 
@@ -112,7 +108,7 @@ def ocr_view(request):
     upload_file = request.FILES['file']
     if upload_file.name.split('.')[-1] == 'pdf':
         text = []
-        # boxs = []
+
         fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'upload/pdf'))
         filename = fs.save(upload_file.name, upload_file)
         uploaded_file_path = fs.path(filename)
@@ -123,11 +119,7 @@ def ocr_view(request):
             result = ocr_model.ocr(page_img_path)
             if result and result[0]:
                 text += [line[1][0] for line in result[0]]
-        #         boxs += [line[0] for line in result[0]]
-        #
-        # print(boxs)
-        # # 存储 boxs
-        # boxs = json.dumps(boxs)
+
 
         os.remove(uploaded_file_path)
         shutil.rmtree(output_folder)
