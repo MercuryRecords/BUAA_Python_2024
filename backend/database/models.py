@@ -1,4 +1,5 @@
 import time
+import uuid
 
 from django.db import models
 from django.db.models import Q
@@ -36,7 +37,7 @@ class Group(models.Model):
 
 
 class JoinRequest(models.Model):
-    # uid = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    uid = models.UUIDField(primary_key=True, default=uuid.uuid4)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     apply_reason = models.TextField(max_length=200, blank=True)
