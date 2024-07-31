@@ -15,7 +15,7 @@ sensitive_keys = {
     '/api/problem_group_update': ['title', 'description', 'tags[]'],
     '/api/problem_create': ['title', 'content', 'field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'tags[]'],
     '/api/problem_update': ['title', 'content', 'field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'tags[]'],
-
+    '/api/comment_add': ['content'],
 }
 sensitive_words = []
 compiled_patterns = []
