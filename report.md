@@ -158,21 +158,53 @@ class Problem(models.Model):
     title = models.CharField(max_length=30)  # 题目，默认情况下需要截取
     content = models.TextField(max_length=1000)  # 题干
     # ...
-
-class ProblemPermission(models.Model):
-    group = models.ForeignKey(Group, null=True, on_delete=models.CASCADE, related_name="permissions")  # 用户群组
-    problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE, related_name="permissions")  # 问题群组
-    permission = models.SmallIntegerField()  # 权限，0 仅可查看，1 可查看并添加问题
 ```
 
 ### 2.3 题单权限与分享功能
 
-我们实现了题单的权限控制，包括私有、公开和分享给特定用户。用户可以创建私有题单，只有创建者可以查看和编辑。公开题单可以被所有用户查看，但只有创建者可以编辑。分享题单则允许特定用户查看和编辑。
+我们实现了题单的权限控制，包括私有、公开分享和分享给特定群组。用户可以自行创建私有题单，此时默认只有创建者拥有此题单权限。用户可以选择仅查看、查看并编辑两种权限之一，将私有题单公开分享或分享给特定群组，此时分享的目标群组同样拥有此题单权限。但在任何情况下，只有题单创建者（或管理员）可以删除题单。
 
 在数据库中，我们定义了题单权限的模型，并在相关的视图函数中进行了权限控制。
 
-# TODO: 补充示例代码，说明相关的视图函数
+```python
+# backend/database/models.py
 
+class ProblemPermission(models.Model):
+    group = models.ForeignKey(Group, null=True, on_delete=models.CASCADE, related_name="permissions")  # 分享题单的目标群组，为空则表示公开分享
+    problem_group = models.ForeignKey(ProblemGroup, on_delete=models.CASCADE, related_name="permissions")  # 被分享的题单
+    permission = models.SmallIntegerField()  # 权限，0 仅可查看，1 可查看并修改
+```
+```python
+# backend/database/views_problem.py
+
+# 获取用户正在请求的题单，并检查权限
+# 0 为仅查看权限，1 为修改权限，2 为删除权限（仅创建者有）
+def _get_problem_group(request, permission):
+    username = request.POST.get('username')
+    problem_group_id = request.POST.get('problem_group_id')
+
+    # 检查题单是否存在
+    check = ProblemGroup.objects.filter(id=problem_group_id)
+    if not check:
+        return E_PROBLEM_GROUP_NOT_FIND
+    problem_group = check[0]
+
+    # 如果用户不是题单的创建者，则需要检查权限
+    if username != problem_group.user.username:
+        check = User.objects.filter(username=username)
+        if not check:
+            return E_USER_NOT_FIND
+        user = check[0]
+
+        # 检查用户是否有权限
+        # 即该题单是否在 Permission 数据库中有被公开分享的记录
+        # 或是否存在包含该用户的某个群组，在 Permission 数据库中有该题单被分享至该群组的记录
+        groups = user.groups.all()
+        if not ProblemPermission.objects.filter(group__isnull=True, problem_group=problem_group, permission__gte=permission).exists() and not ProblemPermission.objects.filter(group__in=groups, problem_group=problem_group, permission__gte=permission).exists():
+            return E_PERMISSION_DENIED
+
+    return problem_group
+```
 ### 2.4 题目讨论区功能
 
 我们实现了题目讨论区功能，用户可以在题目下方发表评论，并查看其他用户的评论。
