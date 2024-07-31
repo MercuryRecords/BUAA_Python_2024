@@ -104,7 +104,7 @@
         >
           <el-menu-item v-for="(question, index) in problems" :key="index" :index="index.toString()" class="question-menu-item">
           <span class="question-item">
-            <span class="question-title">{{ question.problem_title }}</span>
+            <span class="question-title-menu">{{ question.problem_title }}</span>
           </span>
           </el-menu-item>
         </el-menu>
@@ -554,6 +554,12 @@ h2, h3 {
 
 .question-title {
   font-size: 20px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.question-title-menu {
+  font-size: 14px;
   color: #333;
   line-height: 1.4;
 }
