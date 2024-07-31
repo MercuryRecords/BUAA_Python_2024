@@ -110,7 +110,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mysql_demo',  # TODO 数据库设置
         'USER': 'root',
-        'PASSWORD': '123456',
+        'PASSWORD': 'Psswrd4MySQL!',
         'HOST': 'localhost',
         'PORT': '3306',
     }

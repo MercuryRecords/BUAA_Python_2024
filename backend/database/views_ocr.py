@@ -27,7 +27,7 @@ kw_model = KeyBERT(model=st_model)
 
 # PaddleOCR 初始化
 img_formats = ["jpeg", "jpg", "png", "tiff", "tif", "bmp"]
-ocr_model = PaddleOCR(lang="ch", use_angle_cls=True, use_gpu=True)
+ocr_model = PaddleOCR(lang="ch", use_angle_cls=True, use_gpu=False)
 
 patterns = []
 for char in 'ABCDEFGabcdefg':
