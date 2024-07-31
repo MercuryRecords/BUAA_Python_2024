@@ -25,7 +25,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 SECRET_KEY = 'django-insecure-kzt6#%!-1**ya$cgdt%l03sg(q!#qta!ch-pq2v(gffy$u27on'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 CORS_ORIGIN_ALLOW_ALL = True
 
@@ -37,6 +37,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 # AUTH_USER_MODEL = 'database.User'
 
+ALLOWED_HOSTS = ['localhost']
 # ALLOWED_HOSTS = ['192.168.137.1'] # 服务器 IP 地址
 
 LANGUAGE_CODE = 'zh-hans'

@@ -3,13 +3,13 @@
     <div class="avatar-section">
       <img :src="avatarUrl" alt="User Avatar" class="avatar-image"/>
       <h2>{{ props.username }}</h2>
-      <p>最擅长的tag：
+      <p>最擅长的标签：
         <template v-if="bestTags.length > 0">
           <span v-for="tag in bestTags" :key="tag" class="tag" @click="updateChart(tag)">{{ tag }}</span>
         </template>
         <span v-else class="no-tag">暂无</span>
       </p>
-      <p>最薄弱的tag：
+      <p>最薄弱的标签：
         <template v-if="weakestTags.length > 0">
           <span v-for="tag in weakestTags" :key="tag" class="tag" @click="updateChart(tag)">{{ tag }}</span>
         </template>

@@ -19,7 +19,7 @@ def _comment_to_dict(comment: Comment):
 def comment_get_comments_from_id(request):
     parent_id = request.POST.get("parent_id")
     is_sub_comment = request.POST.get("is_sub_comment") == "y"
-    print(f"parent_id: {parent_id}, is_sub_comment: {is_sub_comment}")
+    # print(f"parent_id: {parent_id}, is_sub_comment: {is_sub_comment}")
     comments = Comment.objects.filter(parent_id=parent_id, is_sub_comment=is_sub_comment)
 
     return success_data("获取评论成功", [_comment_to_dict(comment) for comment in comments])

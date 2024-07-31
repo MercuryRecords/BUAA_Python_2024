@@ -6,19 +6,19 @@ from .errors import *
 from .views_assessment import calc_single_problem_master_rate
 
 
-# 定义一个函数，用于获取问题组
+# 定义一个函数，用于获取题单
 def _get_problem_group(request, permission):
-    # 获取请求中的用户名和问题组id
+    # 获取请求中的用户名和题单id
     username = request.POST.get('username')
     problem_group_id = request.POST.get('problem_group_id')
 
-    # 检查问题组是否存在
+    # 检查题单是否存在
     check = ProblemGroup.objects.filter(id=problem_group_id)
     if not check:
         return E_PROBLEM_GROUP_NOT_FIND
     problem_group = check[0]
 
-    # 如果用户名不是问题组的用户，则检查用户是否存在
+    # 如果用户名不是题单的用户，则检查用户是否存在
     if username != problem_group.user.username:
         check = User.objects.filter(username=username)
         if not check:
@@ -37,8 +37,8 @@ def _get_problem_group(request, permission):
 
 
 def __get_problem(user, problem_id, permission):
-    # 对 permission 参数，1 题目上传者和问题组管理者 2 题目上传者
-    # 题目上传者和问题组管理者可以删除该题目
+    # 对 permission 参数，1 题目上传者和题单管理者 2 题目上传者
+    # 题目上传者和题单管理者可以删除该题目
     # 仅题目上传者可修改该题目
 
     check = Problem.objects.filter(id=problem_id)
@@ -125,7 +125,7 @@ def problem_group_create(request):
         tags = _get_and_create_tags(request)
         problem_group.tags.set(tags)
 
-    return success_data("问题组创建成功", problem_group.id)
+    return success_data("题单创建成功", problem_group.id)
 
 
 @require_http_methods(["POST"])
@@ -155,7 +155,7 @@ def problem_group_update(request):
         tags = _get_and_create_tags(request)
         problem_group.tags.set(tags)
 
-    return success("问题组修改成功")
+    return success("题单修改成功")
 
 
 @require_http_methods(["POST"])
@@ -165,7 +165,7 @@ def problem_group_delete(request):
         return problem_group
 
     problem_group.delete()
-    return success("问题组删除成功")
+    return success("题单删除成功")
 
 
 @require_http_methods(["POST"])
@@ -199,7 +199,7 @@ def problem_share(request):
 
     permission.permission = newpermission
     permission.save()
-    return success("问题组分享成功")
+    return success("题单分享成功")
 
 
 @require_http_methods(["POST"])
@@ -440,7 +440,7 @@ def get_problem_groups_num(request):
 
         problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
-    return success_data("问题组数量查询成功", problem_groups.count())
+    return success_data("题单数量查询成功", problem_groups.count())
 
 
 @require_http_methods(["POST"])
@@ -472,18 +472,18 @@ def get_problem_groups(request):
 
         problem_groups = problem_groups.exclude(id__in=exclude_ids)
 
-    # 如果问题组不存在，返回错误信息
+    # 如果题单不存在，返回错误信息
     if not problem_groups:
         return E_NO_PROBLEM_GROUP
 
-    # 调用_cut_to_page函数，分页问题组
+    # 调用_cut_to_page函数，分页题单
     problem_groups = _cut_to_page(request, problem_groups)
     # 如果返回的是JsonResponse，直接返回
     if isinstance(problem_groups, JsonResponse):
         return problem_groups
 
-    # 返回成功信息，以及问题组列表
-    return success_data("问题组查询成功", _problem_groups_to_list(problem_groups))
+    # 返回成功信息，以及题单列表
+    return success_data("题单查询成功", _problem_groups_to_list(problem_groups))
 
 
 def _get_problems_with_permissions(user, group_name):
@@ -594,7 +594,7 @@ def temporary_problem_group_create(request):
 
     temp_group = TemporaryProblemGroup.objects.create(user=user)
     temp_group.problems.set(problem_list)
-    return success_data("临时问题组创建成功", temp_group.id)
+    return success_data("临时题单创建成功", temp_group.id)
 
 
 def temporary_problem_group_clear(user):
@@ -636,7 +636,7 @@ def get_problem_group_content(request):
     if isinstance(problems, JsonResponse):
         return problems
 
-    return success_data("问题组内容获取成功", _problems_to_list(user, problems))
+    return success_data("题单内容获取成功", _problems_to_list(user, problems))
 
 
 @require_http_methods(["POST"])
@@ -667,7 +667,7 @@ def get_single_problem_group_detail(request):
 
         data = _problem_group_to_dict(problem_group)
 
-    return success_data("问题组详情查询成功", data)
+    return success_data("题单详情查询成功", data)
 
 
 @require_http_methods(["POST"])
@@ -767,7 +767,7 @@ def get_user_tags(request):
         for tag in problem.tags.all():
             tags.add(tag.name)
 
-    print(tags)
+    # print(tags)
     return success_data("获取用户有权限的所有标签成功", list(tags))
 
 # # 高级搜索问题
