@@ -398,16 +398,76 @@ def get_ability_trace(request):
 
 ### 4.1 功能设计
 
-敏感词系统是本项目的一个辅助功能，它可以避免用户上传含有敏感信息的题目，从而保证系统的内容安全。敏感词系统通过对用户上传的文本内容进行敏感词检测，如内容中包含敏感词，则系统会将其替换为星号。对管理员而言，敏感词系统可以方便地查看和管理敏感词，从而更好地维护系统的内容安全。如确实需要上传含有敏感信息的题目，管理员可以手动修改题目内容，保证题目表达意思的准确性。
+敏感词系统是本项目的一个辅助功能，它可以避免用户发布含有敏感信息的题目或评论，从而保证系统的内容安全。敏感词系统通过对用户上传的文本内容进行敏感词检测，如内容中包含敏感词，则系统会将其替换为星号。对管理员而言，可以在管理员界面查看和管理敏感词，从而更好地维护系统的内容安全。敏感词系统不会影响管理员上传的内容，如用户确实需要上传含有敏感信息的题目，管理员可以在用户上传题目后，手动将被屏蔽为“*”的敏感词改回原有内容，保证题目表达意思的准确性。
 
 ### 4.2 代码实现
+为了方便地对用户上传的多处内容进行敏感词过滤，我们使用了 django 的中间件功能，将敏感词系统作为 django 的中间件实现。
+```python
+# backend/backend/middleware/sensitive_detection.py
+from django.utils.deprecation import MiddlewareMixin
+from database.models import SensitiveWord
 
-# TODO
+import re
 
+# 此处设置要屏蔽敏感词的接口和参数
+sensitive_keys = {
+    '/api/user_register': ['username'], # 用户名不能出现敏感词
+    '/api/group_create': ['group_name', 'group_description'], # 群组名称和描述不能出现敏感词
+    '/api/group_apply_to_join': ['apply_reason'],
+    '/api/problem_group_create': ['title', 'description', 'tags[]'], # 题单名称和描述不能出现敏感词
+    '/api/problem_group_update': ['title', 'description', 'tags[]'],
+    '/api/problem_create': ['title', 'content', 'field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'tags[]'], # 题目中不能出现敏感词
+    '/api/problem_update': ['title', 'content', 'field1', 'field2', 'field3', 'field4', 'field5', 'field6', 'field7', 'tags[]'],
+    '/api/comment_add': ['content'], # 评论内容不能出现敏感词
+}
+sensitive_words = []
+compiled_patterns = []
+dirty_flag = True # 脏标记，只有当管理员增加/删除敏感词时，才重新从数据库中读取敏感词
 
+# 将 text 中的敏感词替换为等长的 '*'
+def _censor(text):
+    def _replace_sensitive_content(match):
+        return '*' * len(match.group(0))
+    for pattern in compiled_patterns:
+        text = pattern.sub(_replace_sensitive_content, text)
+    return text
 
+# 管理员增加/删除敏感词后调用此函数
+def setflag():
+    global dirty_flag
+    dirty_flag = True
 
+class SensitiveDetection(MiddlewareMixin):
+    def process_request(self, request):
+        request_path = request.path_info
+        if request_path.endswith('/'):
+            request_path = request_path[:-1]
+        
+        for path in sensitive_keys.keys():
+            if path == request_path:
+                keys = sensitive_keys[path]
+                # 开始准备敏感词过滤
+                global sensitive_words, compiled_patterns, dirty_flag
+                if dirty_flag:
+                    # 从数据库重新读取敏感词
+                    sensitive_words = SensitiveWord.objects.values_list('content', flat=True)
+                    # 支持敏感词为正则表达式
+                    compiled_patterns = [re.compile(pattern, re.IGNORECASE) for pattern in sensitive_words]
+                    dirty_flag = False
+                
+                request.POST._mutable = True # 允许修改请求内容
 
+                for key in keys:
+                    if key in request.POST:
+                        # 为同时兼容参数为单值和列表的情况，使用 getlist / setlist
+                        content_list = request.POST.getlist(key)
+                        new_content_list = [_censor(s) for s in content_list]
+                        request.POST.setlist(key, new_content_list)
+                
+                request.POST._mutable = False
+                break
+
+```
 # 四、项目运行过程
 
 # TODO

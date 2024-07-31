@@ -6,7 +6,7 @@ import re
 # import django.http.request
 # request.POST 为该库文件中 QueryDict 类型，其中包含 setlist 方法
 
-# 此处设置要屏蔽敏感词的接口和字段
+# 此处设置要屏蔽敏感词的接口和参数
 sensitive_keys = {
     '/api/user_register': ['username'],
     '/api/group_create': ['group_name', 'group_description'],
@@ -52,7 +52,7 @@ class SensitiveDetection(MiddlewareMixin):
 
                 for key in keys:
                     if key in request.POST:
-                        # 为同时兼容字段为单值和列表的情况，使用 getlist / setlist
+                        # 为同时兼容参数为单值和列表的情况，使用 getlist / setlist
                         content_list = request.POST.getlist(key)
                         new_content_list = [_censor(s) for s in content_list]
                         request.POST.setlist(key, new_content_list)
