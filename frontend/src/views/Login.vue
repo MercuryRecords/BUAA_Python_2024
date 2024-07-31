@@ -97,13 +97,24 @@ const submitForm = (formEl: FormInstance | undefined) => {
         console.log("successfully login!")
         if (response.data.code === 200) {
           ElMessage.success(response.data.message);
-          router.push({
-            path: '/abilityShowed',
-            query: {
-              username: data.username,
-              mode: data.usertype
-            },
-          });
+          if (ruleForm.mode == 0) { // 管理员模式
+            router.push({
+              path: '/adminCenters',
+              query: {
+                username: data.username,
+                mode: data.usertype
+              },
+            });
+          }
+          else {
+            router.push({
+              path: '/abilityShowed',
+              query: {
+                username: data.username,
+                mode: data.usertype
+              },
+            });
+          }
         } else {
           console.log(response.data.code)
           ElMessage.error("Login" + response.data.message)
