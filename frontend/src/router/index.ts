@@ -82,13 +82,13 @@ const router = createRouter({ //创建路由器
             component: () => import('@/views/UserManagement.vue')
         },
         {
-            // 管理员的用户组管理页面
+            // 管理员的用户群组管理页面
             path: '/groups',
             name: 'groups',
             component: () => import('@/views/GroupManagement.vue')
         },
         {
-            // 管理员的用户组管理页面
+            // 管理员的用户群组管理页面
             path: '/questions',
             name: 'questions',
             component: () => import('@/views/QuestionManagement.vue')

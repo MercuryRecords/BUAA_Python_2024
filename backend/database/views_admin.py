@@ -69,55 +69,55 @@ def admin_delete_user(request):
 
 @require_http_methods(["POST"])
 def admin_delete_group(request):
-    # 删除用户组
+    # 删除用户群组
     group_name = request.POST.get('group_name')
     check = Group.objects.filter(name=group_name)
 
     if not check:
-        # 用户组不存在，返回错误信息
-        res = {"code": 401, "message": "用户组不存在"}
+        # 用户群组不存在，返回错误信息
+        res = {"code": 401, "message": "用户群组不存在"}
         return JsonResponse(res)
 
     check.delete()
-    res = {"code": 200, "message": "用户组删除成功"}
+    res = {"code": 200, "message": "用户群组删除成功"}
     return JsonResponse(res)
 
 
 @require_http_methods(["POST"])
 def admin_add_user_to_group(request):
-    # 使用户加入用户组
+    # 使用户加入用户群组
     username = request.POST.get('name')
     group_name = request.POST.get('group_name')
     check = User.objects.filter(username=username)
     check2 = Group.objects.filter(name=group_name)
     if not check or not check2:
-        # 用户或用户组不存在，返回错误信息
-        res = {"code": 401, "message": "用户或用户组不存在"}
+        # 用户或用户群组不存在，返回错误信息
+        res = {"code": 401, "message": "用户或用户群组不存在"}
         return JsonResponse(res)
 
     if check[0] in check2[0].members.all():
-        res = {"code": 402, "message": "用户已经在该用户组中"}
+        res = {"code": 402, "message": "用户已经在该用户群组中"}
         return JsonResponse(res)
 
     check2[0].members.add(check[0])
-    res = {"code": 200, "message": "用户加入用户组成功"}
+    res = {"code": 200, "message": "用户加入用户群组成功"}
     return JsonResponse(res)
 
 
 @require_http_methods(["POST"])
 def admin_remove_user_from_group(request):
-    # 使用户退出用户组
+    # 使用户退出用户群组
     username = request.POST.get('name')
     group_name = request.POST.get('group_name')
     check = User.objects.filter(username=username)
     check2 = Group.objects.filter(name=group_name)
     if not check or not check2:
-        # 用户或用户组不存在，返回错误信息
-        res = {"code": 401, "message": "用户或用户组不存在"}
+        # 用户或用户群组不存在，返回错误信息
+        res = {"code": 401, "message": "用户或用户群组不存在"}
         return JsonResponse(res)
 
     if not check[0] in check2[0].members.all():
-        res = {"code": 402, "message": "用户不在该用户组中"}
+        res = {"code": 402, "message": "用户不在该用户群组中"}
         return JsonResponse(res)
 
     check2[0].members.remove(check[0])
@@ -126,25 +126,25 @@ def admin_remove_user_from_group(request):
         res = {"code": 200, "message": "踢出群主，群已解散成功"}
         return JsonResponse(res)
 
-    res = {"code": 200, "message": "用户退出用户组成功"}
+    res = {"code": 200, "message": "用户退出用户群组成功"}
     return JsonResponse(res)
 
 
 @require_http_methods(["POST"])
 def admin_edit_group_info(request):
-    # 修改用户组信息
+    # 修改用户群组信息
     group_name = request.POST.get('group_name')
     new_description = request.POST.get('new_description')
 
     check = Group.objects.filter(name=group_name)
 
     if not check:
-        # 用户组不存在，返回错误信息
-        res = {"code": 401, "message": "用户组不存在"}
+        # 用户群组不存在，返回错误信息
+        res = {"code": 401, "message": "用户群组不存在"}
         return JsonResponse(res)
 
     check.update(description=new_description)
-    res = {"code": 200, "message": "用户组信息修改成功"}
+    res = {"code": 200, "message": "用户群组信息修改成功"}
     return JsonResponse(res)
 
 
@@ -171,7 +171,7 @@ def admin_get_user_list_num(request):
 
 
 @require_http_methods(["POST"])
-# 管理员获得第 i 页的用户组名单
+# 管理员获得第 i 页的用户群组名单
 def admin_get_group_list(request):
     groups = Group.objects.all()
     groups = _cut_to_page(request, groups)
@@ -179,8 +179,8 @@ def admin_get_group_list(request):
     if isinstance(groups, JsonResponse):
         return groups
 
-    # 返回用户组相关信息
-    res = {"code": 200, "message": "用户组列表获取成功", "data": [
+    # 返回用户群组相关信息
+    res = {"code": 200, "message": "用户群组列表获取成功", "data": [
         {"name": group.name, "description": group.description, "creator": group.created_by.username,
          "create_time": group.created_at, "members": [user.username for user in group.members.all()]} for group in
         groups]}
@@ -190,7 +190,7 @@ def admin_get_group_list(request):
 @require_http_methods(["POST"])
 def admin_get_group_list_num(request):
     groups = Group.objects.all()
-    res = {"code": 200, "message": "用户组列表获取成功", "data": groups.count()}
+    res = {"code": 200, "message": "用户群组列表获取成功", "data": groups.count()}
     return JsonResponse(res)
 
 
@@ -228,24 +228,24 @@ def admin_get_problem_groups(request):
         # 在 problem_groups 范围内进一步搜索，利用 search
         problem_groups = problem_groups.search(to_search)
 
-    # 如果问题组不存在，返回错误信息
+    # 如果题单不存在，返回错误信息
     if not problem_groups:
         return E_NO_PROBLEM_GROUP
 
-    # 调用_cut_to_page函数，分页问题组
+    # 调用_cut_to_page函数，分页题单
     problem_groups = _cut_to_page(request, problem_groups)
     # 如果返回的是JsonResponse，直接返回
     if isinstance(problem_groups, JsonResponse):
         return problem_groups
 
-    # 返回成功信息，以及问题组列表
-    return success_data("问题组查询成功", _problem_groups_to_list(problem_groups))
+    # 返回成功信息，以及题单列表
+    return success_data("题单查询成功", _problem_groups_to_list(problem_groups))
 
 
 def _admin_get_problem_group(request):
     problem_group_id = request.POST.get('problem_group_id')
 
-    # 检查问题组是否存在
+    # 检查题单是否存在
     check = ProblemGroup.objects.filter(id=problem_group_id)
     if not check:
         return E_PROBLEM_GROUP_NOT_FIND
@@ -281,7 +281,7 @@ def admin_problem_group_update(request):
         tags = _get_and_create_tags(request)
         problem_group.tags.set(tags)
 
-    return success("问题组修改成功")
+    return success("题单修改成功")
 
 
 @require_http_methods(["POST"])
@@ -292,7 +292,7 @@ def admin_problem_group_delete(request):
 
     problem_group.delete()
 
-    return success("问题组删除成功")
+    return success("题单删除成功")
 
 
 def _admin_problem_to_dict(problem):
@@ -427,10 +427,10 @@ def admin_problem_update(request):
     problem.save()
 
     if 'tags[]' in request.POST:
-        print([tag.name for tag in problem.tags.all()])
+        # print([tag.name for tag in problem.tags.all()])
         tags = _get_and_create_tags(request)
         problem.tags.set(tags)
-        print([tag.name for tag in problem.tags.all()])
+        # print([tag.name for tag in problem.tags.all()])
 
     return success("题目修改成功")
 
@@ -462,4 +462,4 @@ def admin_get_problem_group_content(request):
     if isinstance(problems, JsonResponse):
         return problems
 
-    return success_data("问题组内容获取成功", _admin_problems_to_list(problems))
+    return success_data("题单内容获取成功", _admin_problems_to_list(problems))

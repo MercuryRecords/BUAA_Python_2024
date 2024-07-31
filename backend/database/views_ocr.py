@@ -99,7 +99,7 @@ def _extract_keywords(text):
         keywords += tag_similarity_list
 
     keywords = [keyword for keyword in keywords if keyword[1] > 0.4]
-    print(keywords)
+    # print(keywords)
     return keywords
 
 
