@@ -14,7 +14,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 from .models import Tag
 
-
 patterns = []
 for char in 'ABCDEFGabcdefg':
     for left in '(（':
@@ -70,6 +69,7 @@ def pdf_to_images(pdf_path, output_folder):
         page = doc[page_num]
         pix = page.get_pixmap()
         pix.save(f"{output_folder}/page_{page_num}.png")
+    return doc.page_count
 
 
 def _extract_keywords(text):
@@ -105,18 +105,23 @@ def ocr_view(request):
     if upload_file.name.split('.')[-1] == 'pdf':
         text = []
         # PaddleOCR 初始化
-        ocr_model = PaddleOCR(lang="ch", use_angle_cls=True, use_gpu=False)
         fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'upload/pdf'))
         filename = fs.save(upload_file.name, upload_file)
         uploaded_file_path = fs.path(filename)
         output_folder = os.path.join(settings.MEDIA_ROOT, f'upload/pdf/{filename.split(".")[0]}')
-        pdf_to_images(uploaded_file_path, output_folder)
+        num = pdf_to_images(uploaded_file_path, output_folder)
+
+        # 如果总页数大于 7 页，则返回错误信息
+        if num > 7:
+            os.remove(uploaded_file_path)
+            shutil.rmtree(output_folder)
+            return JsonResponse({"code": 402, 'text': 'PDF文件页数超过限制（大于 7 页）'})
+        ocr_model = PaddleOCR(lang="ch", use_angle_cls=False, use_gpu=False)
         for page_img in os.listdir(output_folder):
             page_img_path = os.path.join(output_folder, page_img)
             result = ocr_model.ocr(page_img_path)
             if result and result[0]:
                 text += [line[1][0] for line in result[0]]
-
 
         os.remove(uploaded_file_path)
         shutil.rmtree(output_folder)
@@ -139,7 +144,7 @@ def ocr_view(request):
 
         return JsonResponse({"code": 200, 'text': text, 'questions': text_split_to_questions(text)})
 
-    return JsonResponse({"code": 400, 'text': '上传文件格式错误'})
+    return JsonResponse({"code": 401, 'text': '上传文件格式错误'})
 
 
 @require_http_methods(["POST"])
