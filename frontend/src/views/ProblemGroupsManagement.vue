@@ -33,7 +33,7 @@ import ProblemGroups from "@/components/Base/ProblemGroups.vue";
 <style scoped>
 .shifted-content {
   margin-left: 80px;
-  margin-right: 80px;
+  margin-right: 225px;
 }
 
 .el-menu {

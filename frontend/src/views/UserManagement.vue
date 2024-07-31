@@ -42,6 +42,7 @@ const toggleNavigator = () => {
 
 .main-container {
   height: calc(100vh - 60px); /* 假设 el-header 高度为 60px */
+  overflow: hidden; /* 添加这一行 */
 }
 
 .content-container {
@@ -49,6 +50,7 @@ const toggleNavigator = () => {
   max-width: 1200px; /* 或者您想要的任何最大宽度 */
   margin: 0 auto 0 12%;
   padding: 0 20px;
+  overflow-y: auto; /* 添加这一行 */
 }
 
 .el-main {

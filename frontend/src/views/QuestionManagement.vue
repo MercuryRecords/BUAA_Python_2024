@@ -232,7 +232,7 @@ function getPlaceholder() {
     case 'key':
       return '输入题目关键字';
     case 'group':
-      return '输入用户组名称';
+      return '输入群组名称';
     case 'user':
       return '输入用户名称';
     default:
@@ -352,7 +352,7 @@ onMounted(async() => {
                   <el-form-item>
                     <el-select v-model="searchForm.searchType" placeholder="搜索方式" style="width: 180px">
                       <el-option label="按题目关键字搜索" value="key"></el-option>
-                      <el-option label="按用户组搜索" value="group"></el-option>
+                      <el-option label="按群组搜索" value="group"></el-option>
                       <el-option label="按用户搜索" value="user"></el-option>
                     </el-select>
                   </el-form-item>
@@ -472,7 +472,7 @@ onMounted(async() => {
 <style scoped>
 .shifted-content {
   margin-left: 80px;
-  margin-right: 80px;
+  margin-right: 225px;
 }
 
 .problem-list {

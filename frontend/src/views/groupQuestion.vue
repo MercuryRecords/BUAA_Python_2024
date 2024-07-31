@@ -319,12 +319,12 @@ onMounted(async () => {
 
                   <el-dropdown @command="handleCommand">
                     <span class="el-dropdown-link">
-                      {{ selectedGroup || '选择用户组' }}
+                      {{ selectedGroup || '选择群组' }}
                       <el-icon class="el-icon--right"></el-icon>
                     </span>
                     <template #dropdown>
                       <el-dropdown-menu>
-                        <el-dropdown-item command="">全部用户组</el-dropdown-item>
+                        <el-dropdown-item command="">全部群组</el-dropdown-item>
                         <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
                           {{ group }}
                         </el-dropdown-item>

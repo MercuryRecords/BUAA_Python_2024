@@ -340,7 +340,7 @@ onMounted(async () => {
 
                 <el-dropdown @command="handleCommand">
                     <span class="el-dropdown-link">
-                      {{ selectedGroup || '选择用户组' }}
+                      {{ selectedGroup || '选择群组' }}
                       <el-icon class="el-icon--right"></el-icon>
                     </span>
                   <template #dropdown>

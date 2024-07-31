@@ -1,59 +1,50 @@
 <template>
   <div class="group-management">
-    <div class="search-container">
-      <el-input
-          v-model="searchQuery"
-          placeholder="搜索群组"
-          @input="handleSearch"
-          clearable
-          style="width: 70%;"
-      >
-        <template #prefix>
-          <el-icon><Search /></el-icon>
-        </template>
-      </el-input>
-    </div>
-
-    <div class="table-container">
-      <div class="table-header">
-        <h2>群组列表</h2>
+    <el-card class="main-card">
+      <div class="search-container">
+        <el-input
+            v-model="searchQuery"
+            placeholder="搜索群组"
+            @input="handleSearch"
+            clearable
+        >
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
       </div>
-      <div class="table-wrapper">
+
+      <div class="table-container">
+        <div class="table-header">
+          <h2>群组列表</h2>
+        </div>
         <el-table :data="displayedGroups" style="width: 100%">
-          <el-table-column prop="name" label="群组名" width="180" />
-          <el-table-column prop="creator" label="创建者" width="180" />
-          <el-table-column label="详细信息" width="120">
+          <el-table-column prop="name" label="群组名" min-width="25%" />
+          <el-table-column prop="creator" label="创建者" min-width="25%" />
+          <el-table-column label="操作" min-width="50%">
             <template #default="scope">
               <el-button @click="showGroupDetails(scope.row)">详细信息</el-button>
-            </template>
-          </el-table-column>
-          <el-table-column label="成员管理" width="120">
-            <template #default="scope">
               <el-button @click="showMemberManagement(scope.row)">管理成员</el-button>
-            </template>
-          </el-table-column>
-          <el-table-column label="删除群组" width="120">
-            <template #default="scope">
               <el-button type="danger" @click="deleteGroup(scope.row.name)">删除</el-button>
             </template>
           </el-table-column>
         </el-table>
       </div>
-    </div>
 
-    <el-pagination
-        v-model:current-page="currentPage"
-        :page-size="pageSize"
-        :total="filteredGroups.length"
-        @current-change="handlePageChange"
-        layout="prev, pager, next"
-        class="pagination"
-    />
+      <el-pagination
+          v-model:current-page="currentPage"
+          :page-size="pageSize"
+          :total="filteredGroups.length"
+          @current-change="handlePageChange"
+          layout="prev, pager, next"
+          class="pagination"
+      />
+    </el-card>
 
     <el-dialog v-model="groupDetailsVisible" title="详细信息">
       <p><strong>群组名：</strong>{{ selectedGroup.name }}</p>
       <p><strong>创建者：</strong>{{ selectedGroup.creator }}</p>
-      <p><strong>创建时间：</strong>{{ selectedGroup.create_time }}</p>
+      <p><strong>创建时间：</strong>{{ formatRelativeDate(selectedGroup.create_time) }}</p>
       <div class="description-container">
         <p>
           <strong>描述：</strong>
@@ -329,6 +320,20 @@ const saveDescription = async () => {
   }
 }
 
+const formatRelativeDate = (dateString) => {
+  const date = new Date(dateString); // 后端获得的时间
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  const weekday = weekdays[date.getDay()];
+
+  return `${year}年${month}月${day}日 星期${weekday} ${hours}:${minutes}:${seconds}`;
+};
+
 onMounted(() => {
   fetchGroups();
 })
@@ -336,48 +341,61 @@ onMounted(() => {
 
 <style scoped>
 .group-management {
-  padding: 20px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
+  padding: 20px;
   font-size: 16px;
+  height: 100%; /* 改为100% */
+  overflow: visible;
+}
+
+.main-card {
+  width: 100%;
+  max-width: 1200px;
+  overflow-y: auto; /* 添加这一行 */
+  max-height: calc(100vh - 120px); /* 添加这一行，根据实际情况调整 */
 }
 
 .search-container {
-  width: 90%;
-  max-width: 1000px;
   margin-bottom: 20px;
 }
 
 .table-container {
-  width: 90%;
-  max-width: 1000px;
   margin-bottom: 20px;
+  overflow-y: auto;
 }
 
 .table-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 20px;
 }
 
 .pagination {
+  display: flex;
+  justify-content: flex-end;
   margin-top: 20px;
 }
 
+:deep(.el-card__body) {
+  padding: 20px;
+}
+
 :deep(.el-table) {
+  margin-top: 20px;
   font-size: 14px;
+}
+
+:deep(.el-table__cell) {
+  padding: 8px 0;
 }
 
 :deep(.el-button) {
   font-size: 14px;
   padding: 8px 15px;
-  width: auto;
-  min-width: 90px;
+  margin-right: 10px;
 }
 
 :deep(.el-dialog__body) {
+  padding: 30px 20px;
   font-size: 16px;
 }
 
@@ -397,15 +415,14 @@ onMounted(() => {
   margin-left: 5px;
 }
 
+.description-container {
+  position: relative;
+  padding-bottom: 40px;
+}
+
 .save-button {
   position: absolute;
   bottom: 0;
   right: 0;
 }
-
-.description-container {
-  position: relative;
-  padding-bottom: 40px; /* Add some space at the bottom for the button */
-}
-
 </style>

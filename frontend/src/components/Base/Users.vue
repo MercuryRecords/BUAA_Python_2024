@@ -194,7 +194,7 @@ onMounted(() => {
           :total="totalUsers"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
-          layout="total, sizes, prev, pager, next, jumper"
+          layout="total, sizes, jumper, ->, prev, pager, next"
           class="pagination"
       />
     </el-card>
@@ -228,14 +228,19 @@ onMounted(() => {
 
 <style scoped>
 .user-management {
+  display: flex;
+  justify-content: center;
   padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
   font-size: 16px;
+  height: 100%;
+  overflow: visible;
 }
 
 .table-container {
-  margin-bottom: 20px;
+  width: 100%;
+  max-width: 1200px;
+  overflow-y: auto; /* 添加这一行 */
+  max-height: calc(100vh - 120px); /* 添加这一行，根据实际情况调整 */
 }
 
 .table-header {
@@ -298,19 +303,5 @@ onMounted(() => {
 
 :deep(.el-input__inner) {
   font-size: 16px;
-}
-
-.user-management {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  padding: 20px;
-  font-size: 16px;
-}
-
-.table-container {
-  width: 100%;
-  max-width: 1200px;
 }
 </style>
