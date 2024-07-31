@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import {ref, reactive, computed, onMounted} from 'vue'
+import {ElMessage} from 'element-plus'
 import axios from 'axios'
 import Navigator from "@/components/Base/Navigator.vue";
 import router from "@/router";
-import { useRoute } from 'vue-router'
+import {useRoute} from 'vue-router'
 import API from "@/plugins/axios";
 
 const route = useRoute()
@@ -48,7 +48,7 @@ async function getUserTags() {
     const response = await API.post('/get_user_tags', {
       username: route.query.username,
     }, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     })
 
     if (response.data.code === 200) {
@@ -57,8 +57,8 @@ async function getUserTags() {
       )
 
       tagCategories.value = [
-        { name: '所有标签', tags: user_tags.value },
-        { name: '题目类型', tags: ['选择题', '填空题'] },
+        {name: '所有标签', tags: user_tags.value},
+        {name: '题目类型', tags: ['选择题', '填空题']},
       ]
 
       console.log("Get the tags", user_tags.value)
@@ -127,7 +127,7 @@ const jumpToQuestion = (problem: data) => {
     username: route.query.username,
     problem_ids: problemIds,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -182,7 +182,7 @@ function getProblems(group_label: string) {
     username: route.query.username,
     filter_group: group_label
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -190,7 +190,7 @@ function getProblems(group_label: string) {
           for (let i = 0; i < response.data.data.length; i++) {
             console.log(response.data.data[i]);
             allProblems.value[i] = response.data.data[i];
-            allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 :response.data.data[i].all_right_count / response.data.data[i].all_count
+            allProblems.value[i].accuracy = response.data.data[i].all_count == 0 ? 0 : response.data.data[i].all_right_count / response.data.data[i].all_count
             // if (response.data.data[i].type == 'b') {
             //   allProblems.value[i].tags.push("填空题");
             // } else {
@@ -219,7 +219,7 @@ function getProblemsNumber() {
   API.post('/get_problems_num', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -247,11 +247,11 @@ const fetchProblems = async () => {
 
 const userGroups: string[] = reactive([])
 
-const fetchGroups = async() => {
+const fetchGroups = async () => {
   API.post('/group_get_groups', {
     username: route.query.username,
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -276,8 +276,7 @@ const handleCommand = (command: any) => {
   if (command === '公开分享') {
     getProblems('_shared_to_all');
     // window.location.reload();
-  }
-  else {
+  } else {
     getProblems(command as string);
   }
 }
@@ -304,7 +303,7 @@ onMounted(async () => {
           <el-main class="shifted-content">
             <div class="problem-list">
               <el-card>
-                <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+                <el-form :inline="true" :model="searchForm" class="demo-form-inline" @submit.prevent>
                   <el-form-item>
                     <el-button @click="openTagDialog">选择标签</el-button>
                   </el-form-item>
@@ -326,13 +325,14 @@ onMounted(async () => {
                   </el-dropdown>
 
                   <el-form-item>
-                    <el-button type="primary" @click="clearFilters" style="margin-left: 20px">清除所有筛选条件</el-button>
+                    <el-button type="primary" @click="clearFilters" style="margin-left: 20px">清除所有筛选条件
+                    </el-button>
                   </el-form-item>
 
                   <el-form-item>
                     <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
                               style="width: 310px; margin-left: 60px"
-                              @keyup.enter="onSearch"></el-input>
+                    ></el-input>
                   </el-form-item>
                   <el-form-item>
                     <el-button @click="onSearch">搜索</el-button>
