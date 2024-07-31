@@ -110,6 +110,7 @@
       <v-navigation-drawer
           expand-on-hover
           rail
+          style="background-color: rgb(52, 73, 94); color: rgb(221, 221, 221);"
       >
         <v-list>
           <v-list-item
