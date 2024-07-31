@@ -218,7 +218,7 @@ const cancelAddMember = () => {
 
 const addMember = () => {
   if (addMemberForm.value) {
-    addMemberForm.value.validate((valid) => {
+    addMemberForm.value.validate((valid: boolean) => {
       if (valid) {
         API.post('/admin_add_user_to_group', {
           username: data.username, // TODO: 修改为实际的管理员用户名
@@ -239,7 +239,7 @@ const addMember = () => {
           ElMessage.error('添加成员失败');
         });
       } else {
-        return false;
+        console.log('表单验证失败');
       }
     });
   }
@@ -320,7 +320,7 @@ const saveDescription = async () => {
   }
 }
 
-const formatRelativeDate = (dateString) => {
+const formatRelativeDate = (dateString:any) => {
   const date = new Date(dateString); // 后端获得的时间
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
