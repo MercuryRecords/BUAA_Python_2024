@@ -553,7 +553,7 @@ h2, h3 {
 }
 
 .question-title {
-  font-size: 14px;
+  font-size: 20px;
   color: #333;
   line-height: 1.4;
 }
