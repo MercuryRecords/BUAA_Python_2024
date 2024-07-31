@@ -553,7 +553,7 @@ class SensitiveDetection(MiddlewareMixin):
 - 使用命令行 `mysql -u root -p` 进入 MySQL 数据库，运行 `CREATE DATABASE mysql_demo` 建立项目数据库。
 - 在项目根目录使用命令行 `mysql -u root -p mysql_demo < database_sample.sql` 导入项目示例数据库，**或者**在项目 backend 目录下依次使用命令行 `python manage.py makemigrations` 和 `python manage.py migrate` 初始化空的数据库。
 - 在项目 backend 目录下使用命令行 `python manage.py runserver` 启动服务。 
-# Vue 配置流程
+## Vue 配置流程
 
 前端依赖安装：
 
@@ -564,12 +564,39 @@ npm install
 
 安装完毕后可以执行：
 
-```
+```powershell
 npm run dev
 ```
 
-点击`Local`处超链接即可访问
+点击 `Local` 处超链接即可访问。
+## 服务器配置流程
+经过上述步骤，可在本地环境下访问项目。若希望模拟项目在服务器上运行（例如将个人电脑临时作为局域网服务器），可参考以下步骤。
 
+- 在 frontend/package.json 加入本机在局域网中的 IP 地址，如：
+```json
+  "scripts": {
+    "dev": "vite --host 192.168.137.1",
+    "build": "run-p type-check \"build-only {@}\" --",
+    "preview": "vite preview",
+    "build-only": "vite build",
+    "type-check": "vue-tsc --build --force"
+  }
+```
+- 在 frontend/src/plugins/axios.ts 中，将 baseURL 更改为本机 IP 地址的 8000 端口，如：
+```Typescript
+const API = axios.create({
+    timeout: 500000,
+    headers: {'X-Requested-With': 'XMLHttpRequest'},
+    baseURL: 'http://192.168.137.1:8000/api/',
+    withCredentials : true
+})
+```
+- 在项目 backend 目录下运行  `python manage.py runserver {本机 IP 地址的 8000 端口}`，如：
+```powershell
+python manage.py runserver 192.168.137.1:8000
+```
+
+- 在项目 frontend 目录下运行 `npm run dev`。
 # 五、项目总结
 
 总体上来说，我们认为我们的项目完成情况还不错。大作业给出的基础功能和选做功能我们均以实现。在大作业发表后，我们就迅速确定了前后端的分工，并计划采用 Django+Vue 的前后端进行项目开发。负责后端的同学针对性地去学习 Django、MySQL，负责前端的同学先后学习了 html、css、JavaScript，然后学习了 Vue3 相关知识。因为是做题平台，所以说我们的风格是追求简约舒适沉浸，在满足功能的情况下尽可能使其好看。
