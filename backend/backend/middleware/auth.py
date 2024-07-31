@@ -11,7 +11,7 @@ class Authentication(MiddlewareMixin):
         # if request.method != "POST":
         #     return JsonResponse({"code": 400, "message": "请求方式错误"})
         # 不检查一些路径
-        if request.path_info in ['/api/user_register', '/api/user_login', '/api/user_register/', '/api/user_login/']:
+        if request.path_info in ['/api/user_register', '/api/user_login', '/api/user_register/', '/api/user_login/', '/api/get_avatar', '/api/get_avatar/']:
             return
 
         register_name = request.session.get("username")
