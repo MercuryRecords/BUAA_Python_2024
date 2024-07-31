@@ -300,6 +300,24 @@ def _get_problems_with_permissions(user, group_name):
     problems = Problem.objects.filter(problem_group__in=problem_groups)
     return problems
 ```
+为减少前后端过多的数据传输，题库界面具体题目的筛选与搜索由前端实现：即前端在从后端获得第一次筛选（用户群组筛选）的题目后，在当前的题目清单下使用`filter`进行对问题标题、id、创建者、群组名、内容、标签的筛选，最终呈现在界面上的数据是`filteredProblems.value`。
+```vue
+const onSearch = () => {
+    filteredProblems.value = allProblems.value.filter(problem => {
+        const matchKeyword = searchForm.keyword === '' ||
+        problem.problem_title.includes(searchForm.keyword) ||
+        problem.id === parseInt(searchForm.keyword) ||
+        problem.creator.includes(searchForm.keyword) ||
+        problem.problem_group_title.includes(searchForm.keyword) ||
+        problem.content.includes(searchForm.keyword)
+        const matchTags = searchForm.selectedTags.length === 0 ||
+        searchForm.selectedTags.every(tag => problem.tags.includes(tag))
+        return matchKeyword && matchTags
+    })
+    currentPage.value = 1
+    ElMessage.success(`找到 ${total.value} 个匹配的题目`)
+}
+```
 
 ### 2.7 辅助功能
 
