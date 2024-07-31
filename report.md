@@ -253,7 +253,53 @@ class Tag(models.Model):
 
 ### 2.6 筛选搜索功能
 
-# TODO
+为了让用户清晰地查看、搜索自己可见的所有题单中的题目，故设置题库板块，用户访问时，首先在数据库中查找用户具有查看权限的全部题目供用户查看。用户还可以根据群组、标签等方式在题目中进行筛选，或根据题目中的关键字搜索题目，并点击解题按钮快速进入答题页面。
+```python
+# backend/database/views_problem.py
+
+def _get_problem_groups_with_permissions__gte(user, group_name, permission):
+    if group_name == '_created_by_self': # 筛选用户自行创建的题单
+        problem_groups = ProblemGroup.objects.filter(user=user)
+    else:
+        if group_name == '_shared_to_all': # 筛选所有公开题单
+            # 查找题单被公开分享的记录
+            permissions = ProblemPermission.objects.filter(group__isnull=True, permission__gte=permission)
+        elif group_name: # 筛选某个群组下的所有题单
+            group = Group.objects.filter(name=group_name)
+            if not group:
+                return E_GROUP_NOT_FIND
+            group = group[0]
+
+            if not user in group.members.all():
+                return E_USER_NOT_IN_GROUP
+            # 查找题单被分享至该群组的记录
+            permissions = ProblemPermission.objects.filter(group=group, permission__gte=permission)
+        else: # 获取用户可见的全部题单
+            # 获取用户所在的所有群组
+            groups = user.groups.all()
+            # 查找题单被公开分享的记录或被分享至 groups 中某个群组的记录
+            query = Q(group__isnull=True) | Q(group__in=groups)
+            permissions = ProblemPermission.objects.filter(query, permission__gte=permission)
+        problem_group_ids = permissions.values_list('problem_group', flat=True)
+
+        query = Q(id__in=problem_group_ids)
+        if not group_name:
+            query |= Q(user=user)
+
+        problem_groups = ProblemGroup.objects.filter(query)
+
+    return problem_groups
+
+def _get_problems_with_permissions(user, group_name):
+    # 获取用户可见的所有题单
+    problem_groups = _get_problem_groups_with_permissions__gte(user, group_name, 0)
+    if isinstance(problem_groups, JsonResponse):
+        return problem_groups
+
+    # 返回可见题单中的所有题
+    problems = Problem.objects.filter(problem_group__in=problem_groups)
+    return problems
+```
 
 ### 2.7 辅助功能
 
