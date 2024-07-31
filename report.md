@@ -660,7 +660,5 @@ python manage.py runserver 192.168.137.1:8000
 
 
 ## 七、主要参考资料
-
+[手把手教你（web+Django+vue开发实战）学完可就业](https://www.bilibili.com/video/BV1kK411o7z3)
 [尚硅谷Vue3入门到实战，最新版vue3+TypeScript前端开发教程_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1Za4y1r7KE/?spm_id_from=333.337.search-card.all.click)
-
-# 后端可补充！
