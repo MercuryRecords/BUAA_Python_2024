@@ -341,19 +341,19 @@ onMounted(() => {
 
 <style scoped>
 .group-management {
-  padding: 20px;
   display: flex;
-  justify-content: flex-start;
-  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
   font-size: 16px;
-  min-height: calc(100vh - 40px); /* 减去padding的高度 */
+  height: 100%; /* 改为100% */
+  overflow: visible;
 }
 
 .main-card {
   width: 100%;
   max-width: 1200px;
-  margin-left: 20px;
-  margin-top: 20px;
+  overflow-y: auto; /* 添加这一行 */
+  max-height: calc(100vh - 120px); /* 添加这一行，根据实际情况调整 */
 }
 
 .search-container {
@@ -362,6 +362,7 @@ onMounted(() => {
 
 .table-container {
   margin-bottom: 20px;
+  overflow-y: auto;
 }
 
 .table-header {

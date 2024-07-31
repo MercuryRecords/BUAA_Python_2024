@@ -232,13 +232,15 @@ onMounted(() => {
   justify-content: center;
   padding: 20px;
   font-size: 16px;
-  height: auto;
+  height: 100%;
   overflow: visible;
 }
 
 .table-container {
   width: 100%;
   max-width: 1200px;
+  overflow-y: auto; /* 添加这一行 */
+  max-height: calc(100vh - 120px); /* 添加这一行，根据实际情况调整 */
 }
 
 .table-header {
