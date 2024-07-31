@@ -182,7 +182,7 @@ const fetchProblemDetails = async () => {
       // 更新答案数组
       problemForm.answers = []
       for (let i = 1; i <= problemForm.ans_count; i++) {
-        problemForm.answers.push(problemForm[`field${i}`] || '')
+        problemForm.answers.push((problemForm as any)[`field${i}`] || '')
       }
     } else {
       ElMessage.error('获取题目信息失败')
@@ -334,7 +334,7 @@ const getRecommendedTags = async () => {
     if (response.data.code === 200) {
       const recommendedTags = response.data.keywords;
       // 将推荐的标签添加到现有标签中，避免重复
-      recommendedTags.forEach(tag => {
+      recommendedTags.forEach((tag: any) => {
         if (!problemForm.tags.includes(tag)) {
           problemForm.tags.push(tag);
         }

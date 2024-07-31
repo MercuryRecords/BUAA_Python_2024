@@ -45,7 +45,7 @@ async function getUserTags() {
     const response = await API.post('/get_user_tags', {
       username: route.query.username,
     }, {
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     })
 
     if (response.data.code === 200) {
@@ -54,8 +54,8 @@ async function getUserTags() {
       )
 
       tagCategories.value = [
-        { name: '所有标签', tags: user_tags.value },
-        { name: '题目类型', tags: ['选择题', '填空题'] },
+        {name: '所有标签', tags: user_tags.value},
+        {name: '题目类型', tags: ['选择题', '填空题']},
       ]
 
       console.log("Get the tags", user_tags.value)
@@ -245,9 +245,9 @@ const formatDate = (dateString: string): string => {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
-const formatRelativeDate = (dateString) => {
-  const now = new Date(); // 当前时间
-  const pastDate = new Date(dateString); // 后端获得的时间
+const formatRelativeDate = (dateString: any) => {
+  const now = new Date().getTime(); // 当前时间
+  const pastDate = new Date(dateString).getTime(); // 后端获得的时间
   const diffInSeconds = Math.floor((now - pastDate) / 1000); // 计算时间差，单位为秒
 
   const units = [
@@ -324,110 +324,111 @@ onMounted(async () => {
     <el-container>
       <el-header>
       </el-header>
-    <el-container class="main-container">
-      <el-aside width="200px">
-        <Navigator :username="$route.query.username"></Navigator>
-      </el-aside>
+      <el-container class="main-container">
+        <el-aside width="200px">
+          <Navigator :username="$route.query.username"></Navigator>
+        </el-aside>
 
-      <el-container class="content-container">
-        <el-main class="shifted-content">
-          <div class="problem-list">
-            <el-card>
-              <el-form :inline="true" :model="searchForm" class="demo-form-inline">
-                <el-form-item>
-                  <el-button @click="openTagDialog">选择标签</el-button>
-                </el-form-item>
+        <el-container class="content-container">
+          <el-main class="shifted-content">
+            <div class="problem-list">
+              <el-card>
+                <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+                  <el-form-item>
+                    <el-button @click="openTagDialog">选择标签</el-button>
+                  </el-form-item>
 
-                <el-dropdown @command="handleCommand">
+                  <el-dropdown @command="handleCommand">
                     <span class="el-dropdown-link">
                       {{ selectedGroup || '选择群组' }}
                       <el-icon class="el-icon--right"></el-icon>
                     </span>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="">我可见的所有</el-dropdown-item>
-                      <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
-                      <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
-                        {{ group }}
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="">我可见的所有</el-dropdown-item>
+                        <el-dropdown-item command="公开分享">公开分享</el-dropdown-item>
+                        <el-dropdown-item v-for="group in userGroups" :key="group" :command="group">
+                          {{ group }}
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
 
-                <el-form-item>
-                  <el-button type="primary" @click="clearFilters" style="margin-left: 20px">清除所有筛选条件</el-button>
-                </el-form-item>
+                  <el-form-item>
+                    <el-button type="primary" @click="clearFilters" style="margin-left: 20px">清除所有筛选条件
+                    </el-button>
+                  </el-form-item>
 
-                <el-form-item>
-                  <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
-                            style="width: 310px; margin-left: 60px"
-                            @keyup.enter="onSearch"></el-input>
-                </el-form-item>
-                <el-form-item>
-                  <el-button @click="onSearch">搜索</el-button>
-                </el-form-item>
+                  <el-form-item>
+                    <el-input v-model="searchForm.keyword" placeholder="搜索关键词（题号、标题、上传者、所属题单）"
+                              style="width: 310px; margin-left: 60px"
+                              @keyup.enter="onSearch"></el-input>
+                  </el-form-item>
+                  <el-form-item>
+                    <el-button @click="onSearch">搜索</el-button>
+                  </el-form-item>
 
 
-              </el-form>
+                </el-form>
 
-              <div v-if="searchForm.selectedTags.length > 0" class="selected-tags">
-                <el-tag
-                    v-for="tag in searchForm.selectedTags"
-                    :key="tag"
-                    closable
-                    @close="removeTag(tag)"
-                    class="tag"
-                >
-                  {{ tag }}
-                </el-tag>
-              </div>
-            </el-card>
-
-            <el-table :data="problems" style="width: 100%" class="problem-table">
-              <el-table-column label="最近错误时间" min-width="150">
-                <template #default="scope">
-                  {{ formatRelativeDate(scope.row.last_error_time) }}
-                </template>
-              </el-table-column>
-              <el-table-column prop="id" label="题号" min-width="80"></el-table-column>
-              <el-table-column prop="problem_title" label="题目名称" min-width="150"></el-table-column>
-              <el-table-column prop="creator" label="上传者" min-width="100"></el-table-column>
-              <el-table-column prop="problem_group_title" label="所属题单" min-width="150"></el-table-column>
-              <el-table-column label="标签" min-width="150">
-                <template #default="scope">
-                  <el-tag v-for="tag in scope.row.tags" :key="tag" size="small" class="tag">
+                <div v-if="searchForm.selectedTags.length > 0" class="selected-tags">
+                  <el-tag
+                      v-for="tag in searchForm.selectedTags"
+                      :key="tag"
+                      closable
+                      @close="removeTag(tag)"
+                      class="tag"
+                  >
                     {{ tag }}
                   </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="accuracy" label="正确率" min-width="100">
-                <template #default="scope">
-                  <el-tag :type="getAccuracyColor(scope.row.accuracy)" size="small">
-                    {{ (scope.row.accuracy * 100).toFixed(2) }}%
-                  </el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column label="操作" min-width="80">
-                <template #default="scope">
-                  <el-button type="text" size="small" @click="jumpToQuestion(scope.row)">解题</el-button>
-                </template>
-              </el-table-column>
-            </el-table>
+                </div>
+              </el-card>
 
-            <el-pagination
-                class="pagination"
-                @size-change="handleSizeChange"
-                @current-change="handleCurrentChange"
-                :current-page="currentPage"
-                :page-sizes="[10, 20, 50, 100]"
-                :page-size="pageSize"
-                layout="total, sizes, jumper, ->, prev, pager, next"
-                :total="total">
-            </el-pagination>
-          </div>
-        </el-main>
+              <el-table :data="problems" style="width: 100%" class="problem-table">
+                <el-table-column label="最近错误时间" min-width="150">
+                  <template #default="scope">
+                    {{ formatRelativeDate(scope.row.last_error_time) }}
+                  </template>
+                </el-table-column>
+                <el-table-column prop="id" label="题号" min-width="80"></el-table-column>
+                <el-table-column prop="problem_title" label="题目名称" min-width="150"></el-table-column>
+                <el-table-column prop="creator" label="上传者" min-width="100"></el-table-column>
+                <el-table-column prop="problem_group_title" label="所属题单" min-width="150"></el-table-column>
+                <el-table-column label="标签" min-width="150">
+                  <template #default="scope">
+                    <el-tag v-for="tag in scope.row.tags" :key="tag" size="small" class="tag">
+                      {{ tag }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="accuracy" label="正确率" min-width="100">
+                  <template #default="scope">
+                    <el-tag :type="getAccuracyColor(scope.row.accuracy)" size="small">
+                      {{ (scope.row.accuracy * 100).toFixed(2) }}%
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="操作" min-width="80">
+                  <template #default="scope">
+                    <el-button type="text" size="small" @click="jumpToQuestion(scope.row)">解题</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+
+              <el-pagination
+                  class="pagination"
+                  @size-change="handleSizeChange"
+                  @current-change="handleCurrentChange"
+                  :current-page="currentPage"
+                  :page-sizes="[10, 20, 50, 100]"
+                  :page-size="pageSize"
+                  layout="total, sizes, jumper, ->, prev, pager, next"
+                  :total="total">
+              </el-pagination>
+            </div>
+          </el-main>
+        </el-container>
       </el-container>
-    </el-container>
     </el-container>
 
     <!-- 标签选择对话框 -->

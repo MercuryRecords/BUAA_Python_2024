@@ -1,5 +1,4 @@
-<script setup lang="ts">
-// @ts-ignore
+<script setup>
 import Navigator from "@/components/Base/Navigator.vue";
 import ShowAbility from "@/components/Base/ShowAbility.vue";
 </script>

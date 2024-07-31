@@ -1,7 +1,7 @@
 <script lang="ts" setup>
-import { ref, reactive, onMounted, computed } from 'vue';
-import { ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage } from 'element-plus';
-import type { FormInstance, FormRules } from 'element-plus'
+import {ref, reactive, onMounted, computed} from 'vue';
+import {ElButton, ElDialog, ElForm, ElFormItem, ElInput, ElMessage} from 'element-plus';
+import type {FormInstance, FormRules} from 'element-plus'
 import 'element-plus/dist/index.css';
 import API from '@/plugins/axios';
 
@@ -16,10 +16,10 @@ const form = reactive({
 // 定义表单验证规则
 const rules = reactive<FormRules>({
   name: [
-    { required: true, message: '请输入群组名称', trigger: 'blur' },
+    {required: true, message: '请输入群组名称', trigger: 'blur'},
   ],
   description: [
-    { required: true, message: '请输入申请理由', trigger: 'blur' },
+    {required: true, message: '请输入申请理由', trigger: 'blur'},
   ],
 });
 
@@ -69,7 +69,7 @@ function showData() {
 
 function handleSubmit(formEl: FormInstance | undefined) {
   if (!formEl) return
-  formEl.validate((valid) => {
+  formEl.validate((valid: boolean) => {
     if (valid) {
       dialogVisible.value = false;
       API.post('/group_join_forced',
@@ -102,7 +102,6 @@ function handleSubmit(formEl: FormInstance | undefined) {
           });
     } else {
       console.log('error submit!');
-      return false
     }
   })
 }
@@ -206,7 +205,7 @@ function showDetails(row: Group) {
       />
 
       <el-table :data="search.length === 0 ? tableData : searchData" style="width: 100%" class="group-table">
-        <el-table-column label="群组名称" prop="name" />
+        <el-table-column label="群组名称" prop="name"/>
         <el-table-column label="创建者" prop="creator">
           <template #default="{ row }">
             <el-tag size="small" type="info">
@@ -214,7 +213,7 @@ function showDetails(row: Group) {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="人数" prop="number" width="80" />
+        <el-table-column label="人数" prop="number" width="80"/>
         <el-table-column label="操作" align="center" width="280">
           <template #default="{ row }">
             <el-button type="" size="small" @click="showDetails(row)">
@@ -245,7 +244,7 @@ function showDetails(row: Group) {
     <el-dialog v-model="dialogVisible" :title="dialogTitle" width="30%">
       <el-form ref="formRef" :model="form" :rules="rules" label-width="80px" status-icon>
         <el-form-item label="群组名称" prop="name">
-          <el-input v-model="form.name" autocomplete="off" clearable />
+          <el-input v-model="form.name" autocomplete="off" clearable/>
         </el-form-item>
         <el-form-item label="申请理由" prop="description">
           <el-input

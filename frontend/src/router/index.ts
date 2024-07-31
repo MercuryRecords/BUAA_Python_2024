@@ -117,7 +117,7 @@ const router = createRouter({ //创建路由器
             // 管理员敏感词管理
             path: '/sensitive',
             name: 'sensitive_words',
-            component: () => import('@/views/SensitiveWord.vue')
+            component: () => import('@/views/SensitiveWord.vue' as any)
         },
         {
             path: '/problemGroups',
@@ -142,7 +142,7 @@ const router = createRouter({ //创建路由器
         {
             path: '/abilityShowed',
             name: 'abilityShowed',
-            component: () => import('@/views/AbilityShowed.vue')
+            component: () => import('@/views/AbilityShowed.vue' as any)
         }
     ]
 })

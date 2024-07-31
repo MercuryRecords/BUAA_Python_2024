@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, reactive, onMounted, computed} from 'vue';
+import {ref, reactive, onMounted, computed} from 'vue';
 import {
   ElButton,
   ElDialog,
@@ -82,11 +82,11 @@ onMounted(async () => showData());
 async function showData() {
   try {
     const response = await API.post('/group_get_groups',
-        { username: data.username },
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }}
+        {username: data.username},
+        {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
     );
     if (response.data.code === 200) {
-      tableData.value = response.data.groups.filter(group => group.creator === data.username);
+      tableData.value = response.data.groups.filter((group: any) => group.creator === data.username);
       await getGroupMembers();
     } else {
       ElMessage.error(response.data.message);
@@ -109,7 +109,7 @@ const handleSubmit = async (formEl: FormInstance | undefined) => {
               group_name: form.name,
               group_description: form.description,
             },
-            { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }}
+            {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
         );
         if (response.data.code === 200) {
           ElMessage.success(response.data.message);
@@ -149,7 +149,7 @@ async function handleDelete(row: Group) {
           group_name: row.name,
           username: data.username
         },
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }}
+        {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
     );
     if (response.data.code === 200) {
       ElMessage.success(response.data.message);
@@ -171,7 +171,7 @@ async function handleDeleteMember(row: Member) {
           group_name: currentGroupName.value,
           username: data.username
         },
-        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }}
+        {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
     );
     if (response.data.code === 200) {
       editVisible.value = false;
@@ -194,10 +194,10 @@ async function getGroupMembers() {
             group_name: group.name,
             username: data.username
           },
-          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }}
+          {headers: {'Content-Type': 'application/x-www-form-urlencoded'}}
       );
       if (response.data.code === 200) {
-        allGroupMembers.value[group.name] = response.data.members.map(username => ({ username }));
+        allGroupMembers.value[group.name] = response.data.members.map((username: any) => ({username}));
       } else {
         ElMessage.error(response.data.message);
       }
@@ -244,7 +244,7 @@ function openDescriptionDialog(group: Group) {
       />
 
       <el-table :data="filterTableData" style="width: 100%" class="group-table">
-        <el-table-column label="群组名称" prop="name" />
+        <el-table-column label="群组名称" prop="name"/>
         <el-table-column label="创建者" prop="creator">
           <template #default="{ row }">
             <el-tag size="small" :type="row.creator === data.username ? 'success' : 'info'">
@@ -252,7 +252,7 @@ function openDescriptionDialog(group: Group) {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="人数" prop="number" width="80" />
+        <el-table-column label="人数" prop="number" width="80"/>
         <el-table-column label="操作" align="center" width="280">
           <template #default="{ row }">
             <el-button type="" size="small" @click="openDescriptionDialog(row)">
@@ -279,7 +279,7 @@ function openDescriptionDialog(group: Group) {
     <el-dialog v-model="dialogVisible" title="新建群组" width="30%">
       <el-form :model="form" label-width="80px" :rules="rules" ref="ruleFormRef">
         <el-form-item label="群组名称" prop="name">
-          <el-input v-model="form.name" autocomplete="off" clearable />
+          <el-input v-model="form.name" autocomplete="off" clearable/>
         </el-form-item>
         <el-form-item label="描述">
           <el-input

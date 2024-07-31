@@ -17,7 +17,7 @@
                }"
                @click="selectAnswer(index - 1)">
             <span class="option-label">{{ ['A', 'B', 'C', 'D', 'E', 'F', 'G'][index - 1] }}.</span>
-            {{ currentQuestion[`field${index}`] }}
+            {{ (currentQuestion as any)[`field${index}`] }}
           </div>
         </div>
 

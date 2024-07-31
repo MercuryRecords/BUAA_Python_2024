@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { ElMessage, type FormInstance } from 'element-plus'
+import {ref, onMounted, computed} from 'vue'
+import {ElMessage, type FormInstance} from 'element-plus'
 import API from "@/plugins/axios"
 
 const data = defineProps(['username'])
@@ -18,15 +18,15 @@ const totalUsers = ref(0)
 const userDetailsVisible = ref(false)
 const selectedUser = ref<User>({} as User)
 const addUserDialogVisible = ref(false)
-const newUser = ref({ username: '', password: '' })
+const newUser = ref({username: '', password: ''})
 const addUserForm = ref<FormInstance>()
 
 const rules = {
   username: [
-    { required: true, message: '请输入用户名', trigger: 'blur' },
+    {required: true, message: '请输入用户名', trigger: 'blur'},
   ],
   password: [
-    { required: true, message: '请输入密码', trigger: 'blur' },
+    {required: true, message: '请输入密码', trigger: 'blur'},
   ],
 }
 
@@ -69,7 +69,7 @@ const deleteUser = async (username: string) => {
     username: data.username,
     name: username
   }, {
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'}
   }).then(
       function (response) {
         if (response.data.code === 200) {
@@ -100,14 +100,14 @@ const showAddUserDialog = () => {
 
 const addUser = async () => {
   if (!addUserForm.value) return
-  addUserForm.value.validate((valid) => {
+  addUserForm.value.validate((valid: boolean) => {
     if (valid) {
       API.post('/admin_register_user', {
         username: data.username,
         name: newUser.value.username,
         password: newUser.value.password
       }, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'}
       }).then(
           function (response) {
             if (response.data.code === 200) {
@@ -127,7 +127,6 @@ const addUser = async () => {
       )
     } else {
       console.log('error submit!')
-      return false
     }
   })
 }
@@ -138,7 +137,7 @@ const cancelAddUser = () => {
 }
 
 const resetNewUserForm = () => {
-  newUser.value = { username: '', password: '' }
+  newUser.value = {username: '', password: ''}
   if (addUserForm.value) {
     addUserForm.value.resetFields()
   }
@@ -167,7 +166,7 @@ onMounted(() => {
             {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
           </template>
         </el-table-column>
-        <el-table-column prop="username" label="用户名" />
+        <el-table-column prop="username" label="用户名"/>
         <el-table-column label="操作" width="240" align="center">
           <template #default="scope">
             <el-button @click="showUserDetails(scope.row)">
