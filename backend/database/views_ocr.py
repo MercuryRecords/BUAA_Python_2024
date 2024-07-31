@@ -15,20 +15,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from .models import Tag
 
 
-# KeyBERT 初始化
-def tokenize_zh(text):
-    words = jieba.lcut(text)
-    return words
-
-
-vectorizer = CountVectorizer(tokenizer=tokenize_zh)
-st_model = SentenceTransformer(f'{settings.BASE_DIR}/model_path/paraphrase-multilingual-MiniLM-L12-v2')
-kw_model = KeyBERT(model=st_model)
-
-# PaddleOCR 初始化
-img_formats = ["jpeg", "jpg", "png", "tiff", "tif", "bmp"]
-ocr_model = PaddleOCR(lang="ch", use_angle_cls=True, use_gpu=False)
-
 patterns = []
 for char in 'ABCDEFGabcdefg':
     for left in '(（':
@@ -87,6 +73,15 @@ def pdf_to_images(pdf_path, output_folder):
 
 
 def _extract_keywords(text):
+    # KeyBERT 初始化
+    def tokenize_zh(text):
+        words = jieba.lcut(text)
+        return words
+
+    vectorizer = CountVectorizer(tokenizer=tokenize_zh)
+    st_model = SentenceTransformer(f'{settings.BASE_DIR}/model_path/paraphrase-multilingual-MiniLM-L12-v2')
+    kw_model = KeyBERT(model=st_model)
+
     text_embedding = st_model.encode(text, convert_to_tensor=True).reshape(1, -1)
     keywords = kw_model.extract_keywords(text, vectorizer=vectorizer)
 
@@ -105,10 +100,12 @@ def _extract_keywords(text):
 
 @require_http_methods(["POST"])
 def ocr_view(request):
+    img_formats = ["jpeg", "jpg", "png", "tiff", "tif", "bmp"]
     upload_file = request.FILES['file']
     if upload_file.name.split('.')[-1] == 'pdf':
         text = []
-
+        # PaddleOCR 初始化
+        ocr_model = PaddleOCR(lang="ch", use_angle_cls=True, use_gpu=False)
         fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'upload/pdf'))
         filename = fs.save(upload_file.name, upload_file)
         uploaded_file_path = fs.path(filename)
@@ -128,6 +125,8 @@ def ocr_view(request):
 
     elif upload_file.name.split('.')[-1] in img_formats:
         text = []
+        # PaddleOCR 初始化
+        ocr_model = PaddleOCR(lang="ch", use_angle_cls=True, use_gpu=False)
         fs = FileSystemStorage(location=os.path.join(settings.MEDIA_ROOT, 'upload/img'))
         filename = fs.save(upload_file.name, upload_file)
         uploaded_file_path = fs.path(filename)
