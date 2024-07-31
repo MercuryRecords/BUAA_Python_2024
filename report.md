@@ -547,8 +547,13 @@ class SensitiveDetection(MiddlewareMixin):
 
 ```
 # 四、项目运行过程
-
-# TODO
+## Django 配置流程
+- 安装 MySQL 数据库，建议为 8.4.0 版本。
+- 修改 backend/backend/settings.py 的 DATABASE 配置，将 PASSWORD 修改为数据库 root 用户的密码，其余键值使用默认即可。
+- 使用命令行 `mysql -u root -p` 进入 MySQL 数据库，运行 `CREATE DATABASE mysql_demo` 建立项目数据库。
+- 在项目根目录使用命令行 `mysql -u root -p mysql_demo < database_sample.sql` 导入项目示例数据库，**或者**在项目 backend 目录下依次使用命令行 `python manage.py makemigrations` 和 `python manage.py migrate` 初始化空的数据库。
+- 在项目 backend 目录下使用命令行 `python manage.py runserver` 启动服务。 
+# Vue 配置流程
 
 
 
