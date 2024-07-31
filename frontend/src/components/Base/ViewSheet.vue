@@ -323,10 +323,10 @@ const searchProblems = () => {
         <el-form-item label="用户名">
           <el-input v-model="newProblemGroup.username" disabled></el-input>
         </el-form-item>
-        <el-form-item label="问题组标题">
+        <el-form-item label="题单标题">
           <el-input v-model="newProblemGroup.title"></el-input>
         </el-form-item>
-        <el-form-item label="问题组描述">
+        <el-form-item label="题单描述">
           <el-input v-model="newProblemGroup.description" type="textarea"></el-input>
         </el-form-item>
       </el-form>
@@ -344,13 +344,13 @@ const searchProblems = () => {
         <el-form-item label="用户名">
           <el-input v-model="updateProblemGroup.username" disabled></el-input>
         </el-form-item>
-        <el-form-item label="问题组ID">
+        <el-form-item label="题单ID">
           <el-input v-model="updateProblemGroup.problem_group_id" disabled></el-input>
         </el-form-item>
-        <el-form-item label="问题组标题">
+        <el-form-item label="题单标题">
           <el-input v-model="updateProblemGroup.title"></el-input>
         </el-form-item>
-        <el-form-item label="问题组描述">
+        <el-form-item label="题单描述">
           <el-input v-model="updateProblemGroup.description" type="textarea"></el-input>
         </el-form-item>
       </el-form>
@@ -368,7 +368,7 @@ const searchProblems = () => {
         <el-form-item label="用户名">
           <el-input v-model="shareProblemGroup.username" disabled></el-input>
         </el-form-item>
-        <el-form-item label="问题组ID">
+        <el-form-item label="题单ID">
           <el-input v-model="shareProblemGroup.problem_group_id" disabled></el-input>
         </el-form-item>
         <el-form-item label="分享目标群组">
