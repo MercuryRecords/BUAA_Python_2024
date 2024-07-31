@@ -62,18 +62,32 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import API from "@/plugins/axios";
 
+interface User {
+  username: string;
+}
+
+interface Comment {
+  id: number;
+  user: User;
+  content: string;
+  create_time: string;
+  avatar?: string;
+  replies?: Comment[];
+  showReplies?: boolean;
+}
+
 const props = defineProps(['username', 'questionId']);
-const comments = ref([]);
+const comments = ref<Comment[]>([]);
 const newComment = ref('');
-const replyingTo = ref(null);
+const replyingTo = ref<number | null>(null);
 const replyContent = ref('');
 
-const getReply = async (parent_id, is_sub_comment) => {
+const getReply = async (parent_id: number, is_sub_comment: string) => {
   try {
     const response = await API.post('/comment_get_comments_from_id', {
       username: props.username,
@@ -83,7 +97,7 @@ const getReply = async (parent_id, is_sub_comment) => {
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     });
     if (response.data.code === 200) {
-      return Promise.all(response.data.data.map(async (reply) => {
+      return Promise.all(response.data.data.map(async (reply:any) => {
         const avatar = await getAvatar(reply.user.username);
         return { ...reply, avatar };
       }));
@@ -96,7 +110,7 @@ const getReply = async (parent_id, is_sub_comment) => {
   }
 };
 
-const getComments = async (parent_id, is_sub_comment) => {
+const getComments = async (parent_id:number, is_sub_comment:string) => {
   try {
     const response = await API.post('/comment_get_comments_from_id', {
       username: props.username,
@@ -106,7 +120,7 @@ const getComments = async (parent_id, is_sub_comment) => {
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
     });
     if (response.data.code === 200) {
-      comments.value = await Promise.all(response.data.data.map(async (comment) => {
+      comments.value = await Promise.all(response.data.data.map(async (comment:any) => {
         const avatar = await getAvatar(comment.user.username);
         const replies = await getReply(comment.id, 'y');
         return { ...comment, avatar, replies, showReplies: false };
@@ -119,7 +133,7 @@ const getComments = async (parent_id, is_sub_comment) => {
   }
 };
 
-const getAvatar = async (username) => {
+const getAvatar = async (username:string) => {
   try {
     const response = await API.post('/get_avatar', { username }, {
       headers: {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -159,12 +173,12 @@ const submitComment = async () => {
   }
 };
 
-const showReplyForm = (commentId) => {
+const showReplyForm = (commentId:number) => {
   replyingTo.value = commentId;
   replyContent.value = '';
 };
 
-const submitReply = async (commentId) => {
+const submitReply = async (commentId:number) => {
   if (!replyContent.value.trim()) {
     ElMessage.warning('回复内容不能为空');
     return;
@@ -191,14 +205,14 @@ const submitReply = async (commentId) => {
   }
 };
 
-const toggleReplies = (commentId) => {
+const toggleReplies = (commentId:number) => {
   const comment = comments.value.find(c => c.id === commentId);
   if (comment) {
     comment.showReplies = !comment.showReplies;
   }
 };
 
-const formatDate = (timestamp) => {
+const formatDate = (timestamp:string) => {
   const date = new Date(timestamp);
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

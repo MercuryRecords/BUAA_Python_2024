@@ -54,7 +54,7 @@
                         class="mb-3"
                     >
                       <template #append>
-                        <el-button type="danger" @click="deleteSensitiveWord(wordToDelete.value)">删除敏感词</el-button>
+                        <el-button type="danger" @click="deleteSensitiveWord(wordToDelete)">删除敏感词</el-button>
                       </template>
                     </el-input>
 
@@ -87,9 +87,9 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import {ref, onMounted} from 'vue'
-import {ElMessage, ElMessageBox} from 'element-plus'
+import {ElMessage, ElMessageBox, type UploadFile} from 'element-plus'
 import axios from 'axios'
 import API from "@/plugins/axios";
 import {useRoute} from "vue-router";
@@ -100,7 +100,7 @@ const wordsToAdd = ref('')
 const wordToDelete = ref('')
 const message = ref('')
 const dialogVisible = ref(false)
-const file = ref(null)
+const file = ref<File | null | undefined>(null)
 const sensitiveWords = ref([])
 
 const fetchSensitiveWords = async () => {
@@ -112,7 +112,7 @@ const fetchSensitiveWords = async () => {
       function (response) {
         if (response.data.code === 200) {
           console.log(response.data.data);
-          sensitiveWords.value = response.data.data.map(word => ({word}))
+          sensitiveWords.value = response.data.data.map((word:string) => ({word}))
         } else {
           ElMessage.error(response.data.message);
         }
@@ -150,8 +150,12 @@ const addSensitiveWords = async () => {
   )
 }
 
-const handleFileUpload = (uploadFile) => {
-  file.value = uploadFile.raw
+const handleFileUpload = (uploadFile: UploadFile) => {
+  if (uploadFile.raw) {
+    file.value = uploadFile.raw
+  } else {
+    file.value = null
+  }
 }
 
 const addSensitiveWordsFromFile = async () => {
@@ -161,7 +165,7 @@ const addSensitiveWordsFromFile = async () => {
     return
   }
   const formData = new FormData()
-  formData.append('username', route.query.username)
+  formData.append('username', (route.query.username as string))
   formData.append('file', file.value)
 
   API.post('/admin_add_sensitive_words_by_txt_file', formData, {
