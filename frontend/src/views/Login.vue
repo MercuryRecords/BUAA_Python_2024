@@ -1,7 +1,7 @@
 <template>
   <div class="login-container">
     <div class="login-box">
-      <h1 class="logo">Shared Platform</h1>
+      <h1 class="logo">Liberal Shared Platform</h1>
       <el-form
           ref="ruleFormRef"
           :model="ruleForm"
