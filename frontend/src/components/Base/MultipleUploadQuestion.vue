@@ -57,7 +57,7 @@
               :key="index"
               :label="`选项${String.fromCharCode(65 + index)}`"
           >
-            <el-input v-model="problemForm[`field${index + 1}`]"></el-input>
+            <el-input v-model="(problemForm as any)[`field${index + 1}`]"></el-input>
           </el-form-item>
           <el-form-item label="题目标签">
             <div class="tags-container">
@@ -190,7 +190,7 @@ const fillProblemForm = (question: any) => {
   const optionLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
   question.choices.forEach((choice: string, index: number) => {
     const fieldName = `field${index + 1}` as keyof typeof problemForm
-    problemForm[fieldName] = choice
+    (problemForm as any)[fieldName] = choice
     console.log(fieldName)
     console.log(problemForm[fieldName])
   })
@@ -329,7 +329,7 @@ const getRecommendedTags = async () => {
     if (response.data.code === 200) {
       const recommendedTags = response.data.keywords;
       // 将推荐的标签添加到现有标签中，避免重复
-      recommendedTags.forEach(tag => {
+      recommendedTags.forEach((tag: any) => {
         if (!problemForm.tags.includes(tag)) {
           problemForm.tags.push(tag);
         }

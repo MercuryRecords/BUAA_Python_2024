@@ -127,10 +127,14 @@ const handleAvatarChange = (file: any) => {
       const reader = new FileReader()
       reader.readAsDataURL(file.raw)
       reader.onload = (e) => {
-        // 更新头像
-        userInfo.avatar = e.target.result as string
-        ElMessage.success('头像更新成功')
-        console.log(file.raw)
+        if (e.target && e.target.result) {
+          // Update the avatar
+          userInfo.avatar = e.target.result as string;
+          ElMessage.success('头像更新成功');
+          console.log(file.raw);
+        } else {
+          ElMessage.error('头像加载失败');
+        }
       }
     } else {
       ElMessage.error('头像更新失败: ' + response.data.message)
