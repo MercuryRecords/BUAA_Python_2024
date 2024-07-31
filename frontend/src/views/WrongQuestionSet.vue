@@ -333,7 +333,7 @@ onMounted(async () => {
           <el-main class="shifted-content">
             <div class="problem-list">
               <el-card>
-                <el-form :inline="true" :model="searchForm" class="demo-form-inline">
+                <el-form :inline="true" :model="searchForm" class="demo-form-inline" @submit.prevent>
                   <el-form-item>
                     <el-button @click="openTagDialog">选择标签</el-button>
                   </el-form-item>
