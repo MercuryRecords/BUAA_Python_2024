@@ -550,9 +550,20 @@ class SensitiveDetection(MiddlewareMixin):
 
 # TODO
 
+前端依赖安装：
 
+```powershell
+cd frontend
+npm install
+```
 
+安装完毕后可以执行：
 
+```
+npm run dev
+```
+
+点击`Local`处超链接即可访问
 
 # 五、项目总结
 
